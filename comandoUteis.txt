@@ -1,0 +1,16 @@
+# Para atualizar o requirements.
+
+```bash
+pip freeze > requirements.txt
+```
+
+
+# Para rodar
+
+```bash
+# Gerar uma instância (parâmetros em data_generator.py)
+python src/utils/data_generator.py
+
+# Rodar experimento: <instancia> <repetições_heurística> <tempo_limite_heurística_segundos>
+python src/main.py pequeno 3 15
+```

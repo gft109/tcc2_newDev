@@ -1,0 +1,13 @@
+
+# Arquivos pessoais
+comandosUteis.txt
+TCC___2026.pdf
+CLAUDE.md
+
+# Ambientes Virtuais Python
+venv/
+env/
+
+# Cache do Python
+__pycache__/
+*.pyc
