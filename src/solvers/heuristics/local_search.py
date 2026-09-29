@@ -199,11 +199,31 @@ class LocalSearch:
 
     # -- candidate pools --
 
-    def _candidate_rooms(self, exclude_room_id: int) -> list[int]:
+    def _candidate_rooms(
+        self, exclude_room_id: int, solution: Solution, days: list[int]
+    ) -> list[int]:
+        """Candidate rooms for N1/N3 moves. On instances where the room pool is bigger
+        than max_candidates, a uniform-random sample rarely lands on the specific room
+        that would relieve a capacity overflow (confirmed on "medio": 40 rooms vs.
+        max_candidates=10 means ~25% coverage per try, vs. ~100% on "pequeno" where the
+        whole pool fits — the heuristic never found a single capacity-feasible
+        individual there). To fix that without an O(all rooms) scan on large instances,
+        a widened random sample (3x max_candidates, still capped by pool size) is
+        ranked by how many of `days` it has spare capacity for and truncated back down
+        to max_candidates — biased toward capacity relief, still random beyond that."""
         pool = [room_id for room_id in self._all_room_ids if room_id != exclude_room_id]
         if len(pool) <= self.max_candidates:
             return pool
-        return self._rng.sample(pool, self.max_candidates)
+
+        sample_size = min(len(pool), self.max_candidates * 3)
+        sampled = self._rng.sample(pool, sample_size)
+
+        def overflow_days(room_id: int) -> int:
+            capacity = self.data_manager.rooms[room_id].capacity
+            return sum(1 for day in days if solution.occupancy(room_id, day) >= capacity)
+
+        sampled.sort(key=overflow_days)
+        return sampled[: self.max_candidates]
 
     def _overlapping_patients(self, patient_id: int) -> list[int]:
         patient = self.data_manager.patients[patient_id]
@@ -226,8 +246,9 @@ class LocalSearch:
         old_sequence = solution.get_room_sequence(patient_id)
         current_room = old_sequence[0]
         current_key = solution.sort_key()
+        patient_days = list(self.data_manager.patients[patient_id].stay_days)
 
-        for candidate_room in self._candidate_rooms(current_room):
+        for candidate_room in self._candidate_rooms(current_room, solution, patient_days):
             solution.set_room_for_stay(patient_id, candidate_room)
             self.last_run_evaluations += 1
             if solution.sort_key() < current_key:
@@ -274,7 +295,8 @@ class LocalSearch:
 
         for split_day in list(patient.stay_days)[1:]:
             exclude_room = old_sequence[split_day - patient.admission_day]
-            for candidate_room in self._candidate_rooms(exclude_room):
+            remaining_days = [day for day in patient.stay_days if day >= split_day]
+            for candidate_room in self._candidate_rooms(exclude_room, solution, remaining_days):
                 solution.set_room_from_day(patient_id, split_day, candidate_room)
                 self.last_run_evaluations += 1
                 if solution.sort_key() < current_key:
@@ -329,5 +351,3 @@ class LocalSearch:
             solution.set_room_sequence(other_id, old_sequence_b)
 
         return None
-
-        return False

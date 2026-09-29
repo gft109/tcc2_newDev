@@ -23,6 +23,7 @@ class GeneticAlgorithm:
         mutation_rate: float = 0.05,
         big_mutation_probability: float = 0.0,
         big_mutation_fraction: float = 0.25,
+        feasible_seed_fraction: float = 0.2,
         seed: int | None = None,
     ):
         self.data_manager = data_manager
@@ -33,6 +34,7 @@ class GeneticAlgorithm:
         self.mutation_rate = mutation_rate
         self.big_mutation_probability = big_mutation_probability
         self.big_mutation_fraction = big_mutation_fraction
+        self.feasible_seed_fraction = feasible_seed_fraction
         self._rng = random.Random(seed)
 
         self._all_room_ids = list(data_manager.rooms.keys())
@@ -46,7 +48,26 @@ class GeneticAlgorithm:
     # -- population initialization (Section 3.3: "Solução Inicial") --
 
     def create_initial_population(self) -> list[Solution]:
-        return [self.create_random_individual() for _ in range(self.population_size)]
+        """A feasible_seed_fraction of generation 0 is built capacity-aware (see
+        create_feasible_individual) so genuinely viable individuals are already present
+        in the gene pool from the start, instead of relying on mutation/local search to
+        stumble into one later — on "medio", they never reliably did (see CLAUDE.md
+        decision #1). The rest still comes from create_random_individual: tested
+        feasible_seed_fraction=1.0 (fully greedy-seeded) head-to-head against the
+        default 0.2 and it did WORSE (one seed never found a feasible individual at
+        all, vs. 2/3 seeds hitting capacity_violation==0 at 0.2) — create_feasible_individual
+        is itself order-dependent and not a feasibility guarantee, and a population
+        built entirely by the same greedy strategy is structurally homogeneous, which
+        starves crossover of anything different to recombine with. The random
+        constructor isn't there to keep "infeasible diversity" available for its own
+        sake (capacity stays soft everywhere during search regardless of how gen 0
+        starts) — it's there because mixing two differently-biased constructors gives
+        crossover more to work with than either one alone."""
+        n_seeded = round(self.population_size * self.feasible_seed_fraction)
+        return [
+            self.create_feasible_individual() if i < n_seeded else self.create_random_individual()
+            for i in range(self.population_size)
+        ]
 
     def create_random_individual(self) -> Solution:
         """Semi-greedy random construction: each patient gets a single randomly chosen
@@ -58,6 +79,45 @@ class GeneticAlgorithm:
             room_id = self._rng.choice(self._candidate_rooms_for(patient.required_specialty))
             assignment[patient_id] = [room_id] * patient.los
         return Solution(self.data_manager, assignment)
+
+    def create_feasible_individual(self) -> Solution:
+        """Greedy capacity-aware construction: patients are placed (in random order,
+        for diversity across seeded individuals) into a specialty-matching room with
+        spare capacity for their whole stay when one exists, tracked via a running
+        occupancy count as the assignment is built. Falls back to any room with spare
+        capacity (any specialty) if none of the specialty-matching ones fit, and only
+        as a last resort to a random specialty-matching room (same as
+        create_random_individual — a capacity violation there, since no room could fit
+        this patient at this point in the construction order)."""
+        patient_ids = list(self.data_manager.patients.keys())
+        self._rng.shuffle(patient_ids)
+
+        occupancy: dict[tuple[int, int], int] = {}
+        assignment: dict[int, list[int]] = {}
+
+        for patient_id in patient_ids:
+            patient = self.data_manager.patients[patient_id]
+            room_id = self._pick_room_with_spare_capacity(patient, occupancy)
+            assignment[patient_id] = [room_id] * patient.los
+            for day in patient.stay_days:
+                occupancy[room_id, day] = occupancy.get((room_id, day), 0) + 1
+
+        return Solution(self.data_manager, assignment)
+
+    def _pick_room_with_spare_capacity(self, patient, occupancy: dict[tuple[int, int], int]) -> int:
+        days = list(patient.stay_days)
+
+        def has_spare_capacity(room_id: int) -> bool:
+            capacity = self.data_manager.rooms[room_id].capacity
+            return all(occupancy.get((room_id, day), 0) < capacity for day in days)
+
+        specialty_pool = self._candidate_rooms_for(patient.required_specialty)
+        feasible = [room_id for room_id in specialty_pool if has_spare_capacity(room_id)]
+        if not feasible:
+            feasible = [room_id for room_id in self._all_room_ids if has_spare_capacity(room_id)]
+        if not feasible:
+            return self._rng.choice(specialty_pool)
+        return self._rng.choice(feasible)
 
     # -- selection --
 

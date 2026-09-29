@@ -157,6 +157,25 @@ class GurobiSolver:
             return None
         return self.model.ObjBound
 
+    @property
+    def gap(self) -> float | None:
+        """Relative optimality gap |ObjVal - ObjBound| / |ObjVal|. 0.0 once solved to
+        proven optimality; None when there is no incumbent to compare against."""
+        upper = self.objective_value
+        lower = self.best_bound
+        if upper is None or lower is None:
+            return None
+        if upper == 0:
+            return 0.0 if lower == 0 else float("inf")
+        return abs(upper - lower) / abs(upper)
+
+    @property
+    def is_optimal(self) -> bool:
+        """True iff Gurobi proved global optimality (status == GRB.OPTIMAL) before the
+        time limit, i.e. gap == 0. False when the solve was cut off by the time limit
+        (or otherwise ended) without a proof of optimality."""
+        return self.status == GRB.OPTIMAL
+
     def extract_assignment(self) -> dict[int, list[int]]:
         """Reads x_{p,r,d} == 1 back into the assignment format used by Solution
         (patient_id -> ordered list of room_id per day of stay). Requires a binary

@@ -37,6 +37,11 @@ class Patient:
 
 class DataManager:
     def __init__(self, instance_name: str):
+        """instance_name is joined onto DATA_BASE_DIR as-is, so it can be a plain
+        instance name ("pequeno", reading data_base/pequeno/) or a compound
+        "<instancia>/set_<NN>" path (reading data_base/<instancia>/set_<NN>/) — how
+        main.py selects one of data_generator.py's N_SETS_PER_INSTANCE generated
+        sets. No special-casing needed here either way."""
         self.instance_name = instance_name
         self.rooms: dict[int, Room] = {}
         self.patients: dict[int, Patient] = {}

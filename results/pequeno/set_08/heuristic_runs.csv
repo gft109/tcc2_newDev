@@ -1,0 +1,4 @@
+iteration,specialty_cost,transfer_cost,gender_cost,capacity_cost,initial_fitness,total_cost,runtime_seconds,evaluation_count,best_feasible_fitness,best_feasible_generation
+1,10200.0,850.0,1350.0,0,30075.0,12400.0,60,4494912,12400.0,3
+2,10000.0,1350.0,975.0,0,31250.0,12325.0,60,4487717,12325.0,13
+3,10100.0,1150.0,1575.0,0,35650.0,12825.0,60,4520896,12825.0,48

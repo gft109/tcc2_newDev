@@ -1,7 +1,11 @@
 """Synthetic instance generator for the Patient-Bed Allocation Problem (PBA).
 
-Generates deterministic room.csv / patient.csv pairs under data_base/<instance_name>/,
-used as input for both the exact (Gurobi) and heuristic (memetic) solvers.
+Generates N_SETS_PER_INSTANCE deterministic room.csv / patient.csv pairs per instance
+size, under data_base/<instance_name>/set_<NN>/, used as input for both the exact
+(Gurobi) and heuristic (memetic) solvers. Multiple independently-generated sets per
+size (rather than one) let main.py report results averaged/compared across different
+random instances of the same size, not just across heuristic repetitions on a single
+fixed one.
 """
 
 import os
@@ -29,6 +33,17 @@ INSTANCE_SIZES = {
     "grande": {"n_rooms": 160, "seed": 44},
     "muito_grande": {"n_rooms": 640, "seed": 45},
 }
+
+N_SETS_PER_INSTANCE = 10
+"""How many independently-seeded room/patient sets are generated per instance size.
+main.py's 4th CLI argument selects among these (a number, an "A-B" range, or "all")."""
+
+
+def _set_seed(base_seed: int, set_number: int) -> int:
+    """Deterministic, collision-free seed per (instance, set): base_seed distinguishes
+    instance sizes, *100 leaves room for up to 99 sets per instance without two
+    (instance, set) pairs ever landing on the same seed."""
+    return base_seed * 100 + set_number
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_BASE_DIR = os.path.join(PROJECT_ROOT, "data_base")
@@ -110,26 +125,30 @@ class DataGenerator:
             "required_specialty": required_specialties,
         })
 
-    def generate_instance(self, name: str, n_rooms: int) -> None:
+    def generate_instance(self, name: str, n_rooms: int, set_number: int) -> None:
         n_patients = n_rooms * PATIENTS_PER_ROOM
         total_capacity = n_rooms * ROOM_CAPACITY
 
         rooms_df = self._generate_rooms(n_rooms)
         patients_df = self._generate_patients(n_patients, total_capacity)
 
-        instance_dir = os.path.join(DATA_BASE_DIR, name)
-        os.makedirs(instance_dir, exist_ok=True)
-        rooms_df.to_csv(os.path.join(instance_dir, "room.csv"), index=False)
-        patients_df.to_csv(os.path.join(instance_dir, "patient.csv"), index=False)
+        set_dir = os.path.join(DATA_BASE_DIR, name, f"set_{set_number:02d}")
+        os.makedirs(set_dir, exist_ok=True)
+        rooms_df.to_csv(os.path.join(set_dir, "room.csv"), index=False)
+        patients_df.to_csv(os.path.join(set_dir, "patient.csv"), index=False)
 
         horizon = int((patients_df["admission_day"] + patients_df["los"] - 1).max())
-        print(f"{name}: {n_rooms} rooms, {n_patients} patients, horizon={horizon} days")
+        print(
+            f"{name}/set_{set_number:02d}: {n_rooms} rooms, {n_patients} patients, "
+            f"horizon={horizon} days"
+        )
 
 
 def main():
     for name, config in INSTANCE_SIZES.items():
-        generator = DataGenerator(seed=config["seed"])
-        generator.generate_instance(name, config["n_rooms"])
+        for set_number in range(1, N_SETS_PER_INSTANCE + 1):
+            generator = DataGenerator(seed=_set_seed(config["seed"], set_number))
+            generator.generate_instance(name, config["n_rooms"], set_number)
 
 
 if __name__ == "__main__":

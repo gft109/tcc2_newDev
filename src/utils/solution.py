@@ -1,8 +1,7 @@
 """Solution representation and evaluation for the Patient-Bed Allocation Problem (PBA).
 
 A single representation shared by the exact (Gurobi, via gurobi_formater.py) and the
-heuristic (memetic) solvers, so solution quality can be compared on equal footing using
-the formal objective Z from Eq. 3.6 of the TCC.
+heuristic (memetic) solvers, so solution quality can be compared using the objective function.
 """
 
 from __future__ import annotations
@@ -15,32 +14,24 @@ WEIGHTS = {
     "W_TRANSF": 50,
     "W_GEN": 75,
     "W_SPEC": 100,
-    "W_CAP": 1200,
+    "W_CAP": 1000,
 }
+"""W_CAP raised from 400 (2026-09-24): on the "medio" instance the heuristic never
+found a single capacity-feasible individual across 5 independent 300s runs, despite
+Gurobi confirming feasible solutions exist (hard constraint there). Part of a 3-pronged
+fix alongside biased room sampling (local_search.py) and a capacity-aware seeded
+fraction of the initial population (genetic.py) — see CLAUDE.md decision #1, which
+already flagged raising W_cap as the planned response to fitness_only's higher
+violation tolerance. W_CAP doesn't affect Gurobi (not in its objective), so this is
+safe re: the LP relaxation gap caution below, which is about W_transf/W_gen/W_spec."""
 
 COMPARISON_MODE = "fitness_only"
-"""Global switch for Solution.sort_key() (see there). "fitness_only" (default as of
-this A/B test) compares purely on `fitness`, letting capacity_violation compete on equal
-footing with the other cost components through W_CAP alone instead of getting an
-absolute lexicographic override. Measured across pequeno/medio/grande (3 seeds, 60s
-each): fitness_only reached 5-16% lower (better) total fitness than "lexicographic" on
-every instance, at the cost of roughly 2x the capacity violation — the lexicographic
-override was closing off search paths that traded a little more (still W_CAP=400
--weighted) capacity infeasibility for a bigger win elsewhere. "lexicographic" is kept
-available for going back to a hard feasibility-first ranking (CLAUDE.md's original
-decision #1) if W_CAP tuning under fitness_only doesn't bring capacity_violation back
-down to an acceptable level."""
+
 
 
 class Solution:
     """assignment[patient_id][i] is the room occupied by that patient on the i-th day
     of their stay (calendar day = patient.admission_day + i), mirroring x_{p,r,d}.
-
-    Costs are tracked incrementally (updated on every mutation, O(patient.los) per move)
-    rather than recomputed from scratch on read. This matters because the VNS local
-    search evaluates many candidate moves per patient — with thousands of patients per
-    instance, an O(total patient-days) recompute per candidate would make local search
-    impractical at the larger instance sizes.
     """
 
     def __init__(self, data_manager: DataManager, assignment: dict[int, list[int]]):
@@ -182,11 +173,17 @@ class Solution:
     def gender_cost(self) -> float:
         return self._gender_cost
 
+    def occupancy(self, room_id: int, day: int) -> int:
+        """Number of patients occupying room_id on day (may exceed room.capacity — see
+        capacity_violation). Used by LocalSearch to bias candidate-room sampling toward
+        rooms with spare capacity."""
+        return len(self._room_day_occupants.get((room_id, day), ()))
+
     @property
     def capacity_violation(self) -> int:
         """Total beds of capacity exceeded, summed over every (room, day). Always 0 for
         Gurobi solutions (capacity is a hard constraint there); can be > 0 for the
-        heuristic, which treats capacity as a soft constraint (see CLAUDE.md)."""
+        heuristic, which treats capacity as a soft constraint."""
         return self._capacity_violation
 
     @property
@@ -197,7 +194,7 @@ class Solution:
 
     @property
     def objective_value(self) -> float:
-        """Z from Eq. 3.6 — the formal PBA objective, comparable between Gurobi and the
+        """Z - the formal PBA objective, comparable between Gurobi and the
         heuristic (does not include the capacity penalty, which is not part of Z)."""
         return self.specialty_cost + self.transfer_cost + self.gender_cost
 
@@ -243,16 +240,35 @@ class SolverResult:
     solution: Solution
     runtime: float
     initial_fitness: float | None = None
-    """Fitness of the starting point before optimization (GA generation 0). Not
-    applicable to the exact model, which has no notion of an initial candidate — None
-    there (reported as NULL, per CLAUDE.md)."""
+    """Fitness of the starting point before optimization (GA generation 0)"""
     evaluation_count: int | None = None
     """How many times a candidate solution's cost was computed/compared. For the
     heuristic, the number of fitness evaluations across GA/VNS; for Gurobi, the simplex
     iteration count (IterCount) as the closest analogous measure of search effort."""
     convergence_history: list[float] = field(default_factory=list)
     """Best fitness found so far, indexed by generation (heuristic only; empty for
-    Gurobi). Used by results_representation.py for the convergence plot (Section 3.5)."""
+    Gurobi)."""
+    upper_bound: float | None = None
+    """Gurobi's incumbent (ObjVal) — the best feasible solution found. None for
+    heuristic results."""
+    lower_bound: float | None = None
+    """Gurobi's proven lower bound (ObjBound). None for heuristic results (the
+    heuristic has no notion of a proven bound)."""
+    gap: float | None = None
+    """Relative optimality gap between upper_bound and lower_bound (0.0 once proven
+    optimal). None for heuristic results."""
+    is_optimal: bool | None = None
+    """True iff Gurobi proved global optimality within the time limit. None for
+    heuristic results."""
+    best_feasible_fitness: float | None = None
+    """Lowest fitness among capacity-feasible (capacity_violation == 0) individuals
+    seen at any generation during the heuristic's search — independent of which
+    individual ultimately won by sort_key/COMPARISON_MODE, since "fitness_only" lets
+    an infeasible individual win on total cost alone. None if the run never produced a
+    feasible individual, or for Gurobi (always feasible; see total_cost instead)."""
+    best_feasible_generation: int | None = None
+    """Generation at which best_feasible_fitness was first reached (0 = initial
+    population). None iff best_feasible_fitness is None."""
 
     @property
     def specialty_cost(self) -> float:

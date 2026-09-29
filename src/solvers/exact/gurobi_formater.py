@@ -25,4 +25,8 @@ class GurobiFormatter:
             runtime=self.solver.runtime,
             initial_fitness=None,
             evaluation_count=int(self.solver.model.IterCount),
+            upper_bound=self.solver.objective_value,
+            lower_bound=self.solver.best_bound,
+            gap=self.solver.gap,
+            is_optimal=self.solver.is_optimal,
         )
