@@ -1,0 +1,3 @@
+instance,n_vars,n_constrs,build_time_seconds,solve_time_seconds,status,relaxation_bound,existing_mip_lower_bound
+grande/set_01,1783200,0,11.76178050006274,300.36190166696906,TIME_LIMIT,,0.0
+muito_grande/set_01,28581760,28597667,288.63,,BUILD_ALONE_EXCEEDED_BUDGET (não tentamos resolver),,

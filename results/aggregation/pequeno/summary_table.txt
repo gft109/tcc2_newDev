@@ -1,0 +1,30 @@
+====================================================================================================
+                      RESUMO AGREGADO ENTRE CONJUNTOS — PEQUENO (10 conjuntos)                      
+====================================================================================================
+Métrica                                   | Melhor                    | Melhor Viável
+----------------------------------------------------------------------------------------------------
+-- Gurobi ------------------------------------------------------------------------------------------
+Custo Total (Upper Bound)                 | 10370.0 ± 3461.4          | —
+Lower Bound                               | 9845.0 ± 3391.1           | —
+Gap de Otimalidade                        | 5.4% ± 3.6%               | —
+Rodadas com Ótimo Provado                 | 0/10                      | —
+-- Heurística --------------------------------------------------------------------------------------
+Custo Total                               | 10567.5 ± 3493.4          | 10567.5 ± 3493.4
+Vitórias sobre Gurobi                     | 0/10                      | —
+Conjuntos onde Melhor Viável = Melhor     | 10/10                     | —
+-- Métricas Operacionais ---------------------------------------------------------------------------
+Horizonte (dias)                          | 15.1 ± 0.6                | = Melhor (ver acima)
+Especialidade Incorreta (contagem)        | 93.3 ± 35.2               | = Melhor (ver acima)
+Transferências (contagem)                 | 6.3 ± 1.9                 | = Melhor (ver acima)
+Quarto-dias Mistos (contagem)             | 12.3 ± 4.4                | = Melhor (ver acima)
+Violação de Capacidade (instâncias)       | 0.0 ± 0.0                 | = Melhor (ver acima)
+Ocupação Média                            | 87.9% ± 1.9%              | = Melhor (ver acima)
+Ocupação (DP intra-solução)               | 29.7% ± 2.3%              | = Melhor (ver acima)
+Pico de Ocupação (pacientes)              | 30.0 ± 0.0                | = Melhor (ver acima)
+Pico de Ocupação (capacidade total)       | 30.0 ± 0.0                | = Melhor (ver acima)
+Pico de Ocupação (dia)                    | 1.0 ± 0.0                 | = Melhor (ver acima)
+Ocupação — Cardiology                     | 87.8% ± 3.8%              | = Melhor (ver acima)
+Ocupação — General                        | 88.3% ± 3.4%              | = Melhor (ver acima)
+Ocupação — Orthopedics                    | 88.9% ± 4.2%              | = Melhor (ver acima)
+Ocupação — Surgery                        | 90.6% ± 5.0%              | = Melhor (ver acima)
+====================================================================================================

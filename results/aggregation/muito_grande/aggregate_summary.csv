@@ -1,0 +1,3 @@
+set,gurobi_total_cost,gurobi_upper_bound,gurobi_lower_bound,gurobi_gap,gurobi_is_optimal,heur_melhor_total_cost,heur_bate_gurobi
+1,3273725.0,3273725.0,-inf,inf,False,519925.0,True
+2,3276950.0,3276950.0,-inf,inf,False,557000.0,True

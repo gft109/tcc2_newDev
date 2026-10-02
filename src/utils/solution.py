@@ -14,7 +14,7 @@ WEIGHTS = {
     "W_TRANSF": 50,
     "W_GEN": 75,
     "W_SPEC": 100,
-    "W_CAP": 1000,
+    "W_CAP": 1900,
 }
 """W_CAP raised from 400 (2026-09-24): on the "medio" instance the heuristic never
 found a single capacity-feasible individual across 5 independent 300s runs, despite
@@ -26,7 +26,6 @@ violation tolerance. W_CAP doesn't affect Gurobi (not in its objective), so this
 safe re: the LP relaxation gap caution below, which is about W_transf/W_gen/W_spec."""
 
 COMPARISON_MODE = "fitness_only"
-
 
 
 class Solution:
@@ -51,10 +50,6 @@ class Solution:
             self._transfer_cost += WEIGHTS["W_TRANSF"] * self._count_transfers(room_sequence)
 
     # -- accessors/mutators used by GA crossover and VNS neighborhoods (N1/N2/N3) --
-
-    def get_room(self, patient_id: int, day: int) -> int:
-        patient = self.data_manager.patients[patient_id]
-        return self.assignment[patient_id][day - patient.admission_day]
 
     def get_room_sequence(self, patient_id: int) -> list[int]:
         """Returns a snapshot (safe to mutate) of a patient's room sequence — used by the
@@ -153,12 +148,6 @@ class Solution:
         if room.specialty != patient.required_specialty:
             self._specialty_cost -= WEIGHTS["W_SPEC"]
 
-    def recomputed_from_scratch(self) -> "Solution":
-        """Rebuilds a Solution from this one's assignment via a fresh __init__ pass,
-        bypassing incremental bookkeeping entirely. Used to sanity-check that incremental
-        updates haven't drifted from the true cost (see verify_instances-style checks)."""
-        return Solution(self.data_manager, self.assignment)
-
     # -- evaluation --
 
     @property
@@ -172,6 +161,72 @@ class Solution:
     @property
     def gender_cost(self) -> float:
         return self._gender_cost
+
+    # -- operational metrics (counts/rates, not weighted costs) --
+    # Reported for a single already-chosen solution (e.g. the best heuristic result or
+    # the best feasible one), not evaluated during search — see
+    # ResultsReporter.export_solution_metrics_csv.
+
+    @property
+    def specialty_mismatch_count(self) -> int:
+        """Number of patient-days where the room's specialty didn't match the
+        patient's required one — recovered from specialty_cost since every mismatch
+        contributes exactly W_SPEC once."""
+        return round(self._specialty_cost / WEIGHTS["W_SPEC"])
+
+    @property
+    def transfer_count(self) -> int:
+        """Number of transfer events (a patient moving to a different room on a
+        consecutive day) — recovered from transfer_cost since every transfer
+        contributes exactly W_TRANSF once."""
+        return round(self._transfer_cost / WEIGHTS["W_TRANSF"])
+
+    @property
+    def mixed_room_day_count(self) -> int:
+        """Number of (room, day) pairs with both genders present — recovered from
+        gender_cost since every room-day that becomes mixed contributes exactly W_GEN
+        once (and stops contributing if it later un-mixes)."""
+        return round(self._gender_cost / WEIGHTS["W_GEN"])
+
+    def occupancy_rates(self) -> list[float]:
+        """occupants/capacity for every (room, day) across the whole horizon,
+        including empty room-days (rate 0.0) — the full distribution behind the mean/
+        std occupancy rate reported alongside a solution."""
+        rooms = self.data_manager.rooms
+        horizon = self.data_manager.horizon
+        return [
+            self.occupancy(room_id, day) / room.capacity
+            for room_id, room in rooms.items()
+            for day in range(1, horizon + 1)
+        ]
+
+    def occupancy_rate_by_specialty(self) -> dict[str, float]:
+        """Mean occupancy rate (occupants/capacity, averaged over every day in the
+        horizon), grouped by the room's specialty — e.g. are Cardiology rooms
+        consistently fuller than General ones in this solution?"""
+        rooms = self.data_manager.rooms
+        horizon = self.data_manager.horizon
+        rates_by_specialty: dict[str, list[float]] = {}
+        for room_id, room in rooms.items():
+            for day in range(1, horizon + 1):
+                rate = self.occupancy(room_id, day) / room.capacity
+                rates_by_specialty.setdefault(room.specialty, []).append(rate)
+        return {specialty: sum(rates) / len(rates) for specialty, rates in rates_by_specialty.items()}
+
+    def peak_occupancy(self) -> tuple[int, int, int]:
+        """(day, total patients in the hospital that day, total bed capacity) for the
+        single busiest day across the whole horizon — summed across every room, not
+        per-room, so this is "how full was the hospital overall" rather than any one
+        room's peak."""
+        rooms = self.data_manager.rooms
+        horizon = self.data_manager.horizon
+        totals = {
+            day: sum(self.occupancy(room_id, day) for room_id in rooms)
+            for day in range(1, horizon + 1)
+        }
+        peak_day = max(totals, key=totals.get)
+        total_capacity = sum(room.capacity for room in rooms.values())
+        return peak_day, totals[peak_day], total_capacity
 
     def occupancy(self, room_id: int, day: int) -> int:
         """Number of patients occupying room_id on day (may exceed room.capacity — see
@@ -269,6 +324,13 @@ class SolverResult:
     best_feasible_generation: int | None = None
     """Generation at which best_feasible_fitness was first reached (0 = initial
     population). None iff best_feasible_fitness is None."""
+    best_feasible_solution: Solution | None = None
+    """The actual Solution object behind best_feasible_fitness — NOT necessarily the
+    same object as `solution` (the run's final individual by sort_key, which can have
+    moved on to something cheaper-but-infeasible after this one was seen). Needed to
+    compute operational metrics (occupancy, violation counts) for "the best viable
+    solution found", since those need the full room assignment, not just a fitness
+    number. None iff best_feasible_fitness is None."""
 
     @property
     def specialty_cost(self) -> float:

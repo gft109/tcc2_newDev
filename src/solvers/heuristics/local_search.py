@@ -11,15 +11,7 @@ left in any of them — a local optimum (see the don't-look-bits paragraph below
 "active" is tracked).
 
 On its own, that descent is really a Variable Neighborhood Descent (VND): once it hits a
-local optimum it has nothing left to try and just stops there. `_shake` (perturb a
-growing number of patients at random, then descend again — "Basic VNS", Mladenović &
-Hansen) is available to push past that, but it's off by default (max_shake_level=0):
-each shake+re-descend cycle can consume a full individual's whole local-search time
-budget, which in testing meant far fewer GA generations completed overall — and for this
-problem, generation-over-generation diversity from crossover mattered more than
-exhaustively escaping any one individual's local optimum. Pass max_shake_level > 0 to
-re-enable it (it did help when local search was best-improvement rather than
-first-improvement, in case that trade-off is revisited later).
+local optimum it has nothing left to try and just stops there.
 
 `max_evaluations` bounds each call to a fixed amount of work. Without it, a single
 "descend to local optimum" call on a large instance could in principle consume an entire
@@ -79,8 +71,6 @@ class LocalSearch:
         self,
         data_manager: DataManager,
         max_candidates: int = 10,
-        max_shake_level: int = 0,
-        shake_fraction: float = 0.05,
         max_evaluations: int | None | str = "auto",
         seed: int | None = None,
     ):
@@ -95,45 +85,21 @@ class LocalSearch:
             max_evaluations = EVALUATIONS_PER_PATIENT * len(data_manager.patients)
         self.data_manager = data_manager
         self.max_candidates = max_candidates
-        self.max_shake_level = max_shake_level
-        self.shake_fraction = shake_fraction
         self.max_evaluations = max_evaluations
         self._rng = random.Random(seed)
         self._all_room_ids = list(data_manager.rooms.keys())
         self.last_run_evaluations = 0
 
     def run(self, solution: Solution, time_budget: float | None = None) -> Solution:
-        """Basic VNS: descend to a local optimum, then repeatedly shake + re-descend,
-        escalating the shake strength on failure and resetting it on any improvement,
-        until `max_shake_level` is exceeded, `max_evaluations` moves have been tried, or
-        `time_budget` seconds have elapsed. Returns the best solution found (a new object
-        once shaking kicks in — callers should use the return value, not assume in-place
-        mutation)."""
+        """Descends to a local optimum (VND: N1 -> N2 -> N3 -> N4, first improvement),
+        bounded by `max_evaluations` moves tried or `time_budget` seconds elapsed,
+        whichever comes first. Mutates `solution` in place and returns it."""
         deadline = time.perf_counter() + time_budget if time_budget is not None else None
         self.last_run_evaluations = 0
         patient_ids = list(self.data_manager.patients.keys())
 
         self._descend(solution, patient_ids, deadline)
-        best = solution
-
-        shake_level = 1
-        while shake_level <= self.max_shake_level:
-            if deadline is not None and time.perf_counter() >= deadline:
-                break
-            if self._budget_exhausted():
-                break
-
-            candidate = best.copy()
-            self._shake(candidate, shake_level)
-            self._descend(candidate, patient_ids, deadline)
-
-            if candidate.sort_key() < best.sort_key():
-                best = candidate
-                shake_level = 1
-            else:
-                shake_level += 1
-
-        return best
+        return solution
 
     def _budget_exhausted(self) -> bool:
         return self.max_evaluations is not None and self.last_run_evaluations >= self.max_evaluations
@@ -186,16 +152,6 @@ class LocalSearch:
             return {patient_id, partial_swap_partner}
 
         return None
-
-    def _shake(self, solution: Solution, level: int) -> None:
-        """Randomly reassigns a growing number of patients (proportional to `level`) to
-        random rooms, in place. This is a blind perturbation — unlike the descent moves,
-        it is not checked for improvement; its only job is to kick the search out of the
-        local optimum's basin of attraction before the descent runs again."""
-        patient_ids = list(self.data_manager.patients.keys())
-        n_to_shake = min(len(patient_ids), max(1, round(level * self.shake_fraction * len(patient_ids))))
-        for patient_id in self._rng.sample(patient_ids, n_to_shake):
-            solution.set_room_for_stay(patient_id, self._rng.choice(self._all_room_ids))
 
     # -- candidate pools --
 

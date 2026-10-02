@@ -1,0 +1,3 @@
+condition,generations_mean,generations_std,fitness_mean,fitness_std,objective_value_mean,objective_value_std,capacity_violation_mean,capacity_violation_std
+padrao,251.0,13.729530217745982,12645.0,159.49137907736582,12645.0,159.49137907736582,0,0.0
+refine_elites,201.8,9.364827814754525,12350.0,103.07764064044152,12350.0,103.07764064044152,0,0.0

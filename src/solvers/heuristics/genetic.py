@@ -21,8 +21,6 @@ class GeneticAlgorithm:
         crossover_rate: float = 0.9,
         room_inherit_probability: float = 0.5,
         mutation_rate: float = 0.05,
-        big_mutation_probability: float = 0.0,
-        big_mutation_fraction: float = 0.25,
         feasible_seed_fraction: float = 0.2,
         seed: int | None = None,
     ):
@@ -32,8 +30,6 @@ class GeneticAlgorithm:
         self.crossover_rate = crossover_rate
         self.room_inherit_probability = room_inherit_probability
         self.mutation_rate = mutation_rate
-        self.big_mutation_probability = big_mutation_probability
-        self.big_mutation_fraction = big_mutation_fraction
         self.feasible_seed_fraction = feasible_seed_fraction
         self._rng = random.Random(seed)
 
@@ -179,18 +175,10 @@ class GeneticAlgorithm:
 
     def mutate(self, solution: Solution, rate: float | None = None) -> None:
         """Blind (non-improving) mutation for diversity — distinct from VNS, this never
-        checks whether a move helps. Every offspring gets the light per-patient version,
-        at `rate` if given or `self.mutation_rate` otherwise: each patient independently
-        has that probability of being mutated (see _mutate_patient for what "mutated"
-        means). With `big_mutation_probability` chance (0 by default — tested and found
-        to hurt more than help at a constant, always-on rate, see MemeticSolver's
-        immigrant_fraction for the mechanism that actually earned its keep), the whole
-        offspring instead gets `mutate_fraction` at `big_mutation_fraction` — a bigger,
-        guaranteed-size perturbation rather than a per-patient coin flip."""
-        if self._rng.random() < self.big_mutation_probability:
-            self.mutate_fraction(solution, self.big_mutation_fraction)
-        else:
-            self._light_mutation(solution, rate if rate is not None else self.mutation_rate)
+        checks whether a move helps. Each patient independently has `rate` (or
+        `self.mutation_rate` if not given) probability of being mutated (see
+        _mutate_patient for what "mutated" means)."""
+        self._light_mutation(solution, rate if rate is not None else self.mutation_rate)
 
     def _light_mutation(self, solution: Solution, rate: float) -> None:
         for patient_id in self.data_manager.patients:
@@ -201,8 +189,8 @@ class GeneticAlgorithm:
         """Mutates an exact fraction of patients (rounded, at least 1) rather than a
         per-patient probability — a probabilistic rate can, purely by chance, touch far
         fewer patients than intended, which matters when the caller specifically wants
-        a guaranteed bigger jump (constant-rate big_mutation_*, or MemeticSolver's
-        stagnation-triggered mutation boost — see its module docstring)."""
+        a guaranteed bigger jump (MemeticSolver's stagnation-triggered mutation boost —
+        see its module docstring)."""
         patient_ids = list(self.data_manager.patients.keys())
         n_to_mutate = max(1, round(len(patient_ids) * fraction))
         for patient_id in self._rng.sample(patient_ids, n_to_mutate):

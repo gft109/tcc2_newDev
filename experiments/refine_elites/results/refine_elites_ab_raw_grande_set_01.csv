@@ -1,0 +1,11 @@
+condition,repetition,fitness,objective_value,capacity_violation,generations,evaluation_count,best_feasible_fitness
+padrao,1,133450.0,93550.0,21,14,18024044,
+padrao,2,137950.0,105650.0,17,14,18153702,
+padrao,3,139375.0,114675.0,13,14,18189456,
+padrao,4,141300.0,103300.0,20,14,18100114,
+padrao,5,136300.0,104000.0,17,15,18338855,
+refine_elites,1,57650.0,57650.0,0,12,18472337,57650.0
+refine_elites,2,58925.0,57025.0,1,12,18486116,
+refine_elites,3,60800.0,57000.0,2,12,18477771,
+refine_elites,4,60650.0,56850.0,2,12,18376986,
+refine_elites,5,60875.0,57075.0,2,12,18270112,

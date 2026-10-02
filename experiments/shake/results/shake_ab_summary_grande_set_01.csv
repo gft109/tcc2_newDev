@@ -1,0 +1,3 @@
+condition,fitness_mean,fitness_std,objective_value_mean,objective_value_std,capacity_violation_mean,capacity_violation_std,n_shakes_mean
+baseline,137037.5,5275.093093288226,105687.5,7389.3866940555845,16.5,2.0,0.0
+shake,139853.125,2556.5545138218463,104703.125,8344.025209479449,18.5,3.9641248358604595,2.25

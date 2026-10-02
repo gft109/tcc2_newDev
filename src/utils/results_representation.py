@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 
-from utils.solution import WEIGHTS, COMPARISON_MODE, SolverResult
+from utils.solution import WEIGHTS, COMPARISON_MODE, Solution, SolverResult
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
@@ -200,6 +200,68 @@ class ResultsReporter:
                 convergence_rows.append({"iteration": i, "generation": generation, "best_fitness": fitness})
         pd.DataFrame(convergence_rows).to_csv(os.path.join(self.output_dir, "convergence.csv"), index=False)
 
+        self.export_solution_metrics_csv()
+
+    def export_solution_metrics_csv(self) -> None:
+        """Operational metrics (counts, occupancy rates — NOT weighted costs) for the
+        best heuristic solution overall and the best feasible one (when found) — the
+        same two singled out on the convergence plots (green "Fim" / crimson "Melhor
+        viável").
+
+        For "melhor_viavel" this reads best_feasible_solution, NOT .solution: the
+        latter is that repetition's FINAL individual (by sort_key), which can have
+        moved on to something cheaper-but-infeasible after the best feasible one was
+        seen (fitness_only, see CLAUDE.md decision #1) — best_feasible_solution is the
+        actual feasible Solution object memetic_solver.py tracked, independently of
+        what the run ended on.
+
+        Only meaningful for a live run: these need a real Solution (the full room
+        assignment), not the CSV-replayed stand-in regenerate_plots() uses — this
+        method is only reached from export_csv(), which that replay path never calls.
+
+        mesma_que_melhor (only set on the "melhor_viavel" row): True when the best
+        feasible solution found IS, assignment-for-assignment, the same object as
+        "melhor" — i.e. the overall winner already happened to be capacity-feasible,
+        so every other column on this row is necessarily identical to "melhor"'s.
+        Lets downstream reporting (aggregate_reporter.py) show that plainly instead of
+        repeating every number as if it were newly-informative."""
+        melhor_solution = self.best_result.solution if self.best_result is not None else None
+        targets = [
+            ("melhor", melhor_solution),
+            ("melhor_viavel", self.best_feasible_result.best_feasible_solution if self.best_feasible_result else None),
+        ]
+        rows = []
+        for label, solution in targets:
+            if not isinstance(solution, Solution):
+                continue
+
+            peak_day, peak_patients, total_capacity = solution.peak_occupancy()
+            rates = solution.occupancy_rates()
+            mean_occupancy = statistics.mean(rates)
+            std_occupancy = statistics.stdev(rates) if len(rates) > 1 else 0.0
+
+            row = {
+                "solucao": label,
+                "horizon_days": solution.data_manager.horizon,
+                "specialty_mismatch_count": solution.specialty_mismatch_count,
+                "transfer_count": solution.transfer_count,
+                "mixed_room_day_count": solution.mixed_room_day_count,
+                "capacity_violation": solution.capacity_violation,
+                "occupancy_rate_mean": mean_occupancy,
+                "occupancy_rate_std": std_occupancy,
+                "peak_occupancy_day": peak_day,
+                "peak_occupancy_patients": peak_patients,
+                "peak_occupancy_total_capacity": total_capacity,
+            }
+            for specialty, rate in solution.occupancy_rate_by_specialty().items():
+                row[f"occupancy_rate_{specialty}"] = rate
+            if label == "melhor_viavel" and isinstance(melhor_solution, Solution):
+                row["mesma_que_melhor"] = solution.assignment == melhor_solution.assignment
+            rows.append(row)
+
+        if rows:
+            pd.DataFrame(rows).to_csv(os.path.join(self.output_dir, "solution_metrics.csv"), index=False)
+
     # -- plots --
 
     def plot_boxplot(self) -> None:
@@ -291,21 +353,17 @@ class ResultsReporter:
         fig.savefig(os.path.join(self.output_dir, "gurobi_bounds.png"), dpi=150, bbox_inches="tight")
         plt.close(fig)
 
-    def _padded_convergence_histories(self) -> list[list[float]]:
-        """Pads every repetition's convergence_history to the same length by holding its
-        last value constant, so they can be averaged/plotted generation-by-generation
-        even when repetitions ran different numbers of generations before time ran out."""
-        max_len = max(len(r.convergence_history) for r in self.heuristic_results)
-        padded = []
-        for result in self.heuristic_results:
-            history = list(result.convergence_history)
-            if len(history) < max_len:
-                history = history + [history[-1]] * (max_len - len(history))
-            padded.append(history)
-        return padded
+    def _convergence_histories(self) -> list[list[float]]:
+        """Each repetition's convergence_history as-is, NOT stretched/padded to a
+        common length — a repetition that only reached generation 8 is plotted only up
+        to generation 8, not flattened out to match whichever repetition ran longest.
+        Repetitions genuinely do run different numbers of generations (the stopping
+        condition is wall-clock time, not a fixed generation count), so this is the
+        real, honest shape of each run rather than an artifact of matching axes."""
+        return [list(r.convergence_history) for r in self.heuristic_results]
 
     def _best_result_index(self) -> int:
-        """Index (within self.heuristic_results / _padded_convergence_histories) of the
+        """Index (within self.heuristic_results / _convergence_histories) of the
         repetition with the best sort_key() — the same repetition reported as
         "Heur. (Melhor)" in the summary table."""
         return next(i for i, r in enumerate(self.heuristic_results) if r is self.best_result)
@@ -338,11 +396,11 @@ class ResultsReporter:
     def _save_plain_convergence_plot(self, filename: str) -> None:
         fig, ax = plt.subplots(figsize=(7, 5))
 
-        padded_histories = self._padded_convergence_histories()
-        for history in padded_histories:
+        histories = self._convergence_histories()
+        for history in histories:
             ax.plot(history, color="steelblue", alpha=0.3, linewidth=1)
 
-        best_history = padded_histories[self._best_result_index()]
+        best_history = histories[self._best_result_index()]
         ax.plot(best_history, color="steelblue", linewidth=2.5, label="Melhor repetição")
 
         initial_value = best_history[0]
@@ -374,8 +432,8 @@ class ResultsReporter:
         where the actual convergence detail and inter-repetition spread live. Fixes what
         log-scale couldn't: a single huge outlier point compressing the interesting
         range into a few pixels."""
-        padded_histories = self._padded_convergence_histories()
-        best_history = padded_histories[self._best_result_index()]
+        histories = self._convergence_histories()
+        best_history = histories[self._best_result_index()]
         initial_value = best_history[0]
         final_value = best_history[-1]
 
@@ -387,12 +445,12 @@ class ResultsReporter:
         # No Gurobi reference line/bound here: including its value (often several times
         # the heuristic's, on grande/muito_grande) in the tail range would re-introduce
         # the exact scale-compression problem this broken-axis plot exists to fix.
-        tail_values = [value for history in padded_histories for value in history[1:]]
+        tail_values = [value for history in histories for value in history[1:]]
         tail_min, tail_max = min(tail_values), max(tail_values)
         tail_margin = (tail_max - tail_min) * 0.15 or tail_max * 0.05
 
-        initial_values = [history[0] for history in padded_histories]
-        top_min, top_max = min(initial_values), max(initial_values)
+        initial_values = [history[0] for history in histories]
+        top_max = max(initial_values)
 
         feasible_gen, feasible_value, feasible_iteration = self._global_best_feasible_point()
         if feasible_value is not None:
@@ -407,7 +465,7 @@ class ResultsReporter:
         )
 
         for ax in (ax_top, ax_bottom):
-            for history in padded_histories:
+            for history in histories:
                 ax.plot(history, color="steelblue", alpha=0.3, linewidth=1)
             ax.plot(best_history, color="steelblue", linewidth=2.5, label="Melhor repetição")
             ax.scatter([0], [initial_value], color="darkorange", zorder=5, label=f"Início: {initial_value:.1f}")

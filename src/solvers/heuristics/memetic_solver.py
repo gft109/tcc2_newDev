@@ -24,10 +24,7 @@ raising the rate: a per-patient coin flip can, purely by chance, touch far fewer
 patients than intended, which defeats the point of a boost meant to actually escape a
 stuck population. Since the loop never stops on stagnation, this can trigger and
 un-trigger repeatedly over a single run — every time the population stalls again after
-an improvement, it gets another boost. Unlike `big_mutation_*` (a fixed, always-on
-per-individual chance of a much larger jump, tested and found to hurt more than help at
-a constant rate — see genetic.py), this only ever applies while stagnation has actually
-been observed.
+an improvement, it gets another boost.
 """
 
 from __future__ import annotations
@@ -51,16 +48,12 @@ class MemeticSolver:
         room_inherit_probability: float = 0.5,
         mutation_rate: float = 0.05,
         boosted_mutation_fraction: float = 0.35,
-        big_mutation_probability: float = 0.0,
-        big_mutation_fraction: float = 0.25,
         feasible_seed_fraction: float = 0.2,
         immigrant_fraction: float = 0.1,
         elite_fraction: float = 0.1,
         local_search_fraction: float = 0.3,
-        refine_elites: bool = False,
+        refine_elites: bool = True,
         max_local_search_candidates: int = 10,
-        max_shake_level: int = 0,
-        shake_fraction: float = 0.05,
         max_local_search_evaluations: int | None | str = "auto",
         patience: int = 5,
         seed: int | None = None,
@@ -73,16 +66,12 @@ class MemeticSolver:
             crossover_rate=crossover_rate,
             room_inherit_probability=room_inherit_probability,
             mutation_rate=mutation_rate,
-            big_mutation_probability=big_mutation_probability,
-            big_mutation_fraction=big_mutation_fraction,
             feasible_seed_fraction=feasible_seed_fraction,
             seed=seed,
         )
         self.local_search = LocalSearch(
             data_manager,
             max_candidates=max_local_search_candidates,
-            max_shake_level=max_shake_level,
-            shake_fraction=shake_fraction,
             max_evaluations=max_local_search_evaluations,
             seed=seed,
         )
@@ -185,6 +174,7 @@ class MemeticSolver:
             convergence_history=convergence_history,
             best_feasible_fitness=best_feasible.fitness if best_feasible is not None else None,
             best_feasible_generation=best_feasible_generation,
+            best_feasible_solution=best_feasible,
         )
 
     @staticmethod
@@ -207,11 +197,25 @@ class MemeticSolver:
         return best_feasible, best_feasible_generation
 
     def _refine(self, offspring, elite_count, non_elite_indices, deadline, local_search_evaluations):
-        """Refines a sampled fraction of non-elite offspring (plus the elites too, if
-        refine_elites is set) via local search, overwriting each in place — the
-        refined genome is what next generation's crossover will see. Each individual's
-        time budget is an equal share of whatever time remains before `deadline`,
-        recomputed as the queue shrinks."""
+        """Refines a sampled fraction of non-elite offspring, plus the elites too
+        (refine_elites=True by default since 2026-10-01) via local search, overwriting
+        each in place — the refined genome is what next generation's crossover will
+        see. Each individual's time budget is an equal share of whatever time remains
+        before `deadline`, recomputed as the queue shrinks.
+
+        refine_elites defaulted to False until an A/B test (5 reps, 300s, pequeno/
+        medio/grande) found True won on every metric at every size — objective_value
+        improved 2%/23%/45% respectively, capacity_violation dropped to ~0 on
+        medio/grande — with no instance where it was worse. Without it, an elite is
+        completely frozen (never re-evaluated by local search) for as long as it keeps
+        winning its slot, which can be many generations even when generations are
+        abundant (pequeno/medio): crossover/mutation are blind (never check for
+        improvement, see GeneticAlgorithm.mutate), so nothing else in the loop can
+        polish that individual further — only local search can, and elites were the
+        one group it never touched. The win grows with instance size because fewer
+        total generations (large instances: ~12-15 in 300s, see local_search.py's
+        EVALUATIONS_PER_PATIENT) means each one frozen without refinement is a bigger
+        fraction of the whole run wasted."""
         n_refine_non_elite = min(len(non_elite_indices), round(len(offspring) * self.local_search_fraction))
         refine_indices = self._rng.sample(non_elite_indices, n_refine_non_elite)
         if self.refine_elites:
