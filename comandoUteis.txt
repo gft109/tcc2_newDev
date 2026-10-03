@@ -20,9 +20,10 @@ python src/main.py grande 5             # tempo=300 e conjunto=1 (defaults)
 ```
 
 
-# Para gerar graficos a partir do CSV da instancia
+# Para gerar graficos
 ```bash
 
 python utils/results_representation.py <instancia>
 
+python src/utils/aggregate_reporter.py <instancia>
 ```
