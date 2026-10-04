@@ -1,6 +1,4 @@
-"""Loads generated PBA instances (room.csv, patient.csv) into typed structures
-used by the exact (Gurobi) and heuristic (memetic) solvers.
-"""
+"""Loads an instance set (room.csv, patient.csv) into the structures used by both solvers."""
 
 import os
 from dataclasses import dataclass
@@ -37,11 +35,7 @@ class Patient:
 
 class DataManager:
     def __init__(self, instance_name: str):
-        """instance_name is joined onto DATA_BASE_DIR as-is, so it can be a plain
-        instance name ("pequeno", reading data_base/pequeno/) or a compound
-        "<instancia>/set_<NN>" path (reading data_base/<instancia>/set_<NN>/) — how
-        main.py selects one of data_generator.py's N_SETS_PER_INSTANCE generated
-        sets. No special-casing needed here either way."""
+        """instance_name is a path under data_base/, e.g. "pequeno/set_01"."""
         self.instance_name = instance_name
         self.rooms: dict[int, Room] = {}
         self.patients: dict[int, Patient] = {}

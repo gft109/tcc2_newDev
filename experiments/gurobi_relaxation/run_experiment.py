@@ -1,27 +1,7 @@
-"""Experiment (NOT a production change): is GurobiSolver(relaxation=True) — the LP
-relaxation of the exact model (all variables continuous in [0,1] instead of binary) —
-a practical way to get a cheap lower bound on "grande"/"muito_grande", where the full
-MIP solve barely leaves presolve in a 300s budget (see chat analysis: lower_bound
-stuck at 0.0, gap=100% on "grande")?
+"""Experiment: can the LP relaxation (GurobiSolver(relaxation=True)) give a cheap lower
+bound on the larger instances?
 
-This does NOT go through GurobiFormatter.to_solver_result() / extract_assignment():
-those read var.X > 0.5 to recover an integer room assignment, which is meaningless for
-a relaxed (fractional) solve — there is no feasible "solution" to extract, only a
-bound (model.ObjVal, which for a solved LP has no gap — it IS the lower bound).
-src/solvers/exact/gurobi.py and gurobi_formater.py are NOT touched; this script reads
-GurobiSolver's existing public attributes/properties directly instead.
-
-Reports, per instance: how long just building the model takes (build_model() is pure
-Python looping, scales with instance size independent of var_type — see chat analysis
-of "grande" taking ~12s to build 1.8M variables), then the relaxation solve's runtime,
-status, and resulting bound, compared against the existing MIP lower_bound already on
-file in results/<instance>/set_01/gurobi_run.csv (read for reference only).
-
-Usage:
-    python experiments/gurobi_relaxation/run_experiment.py [time_limit] [instances...]
-
-    time_limit   seconds for the relaxation solve itself (default: 300.0)
-    instances    space-separated instance paths (default: grande/set_01 muito_grande/set_01)
+Usage: python experiments/gurobi_relaxation/run_experiment.py [time_limit=300] [instances...]
 """
 
 from __future__ import annotations
@@ -56,9 +36,7 @@ DEFAULT_INSTANCES = ["grande/set_01", "muito_grande/set_01"]
 
 
 def _existing_mip_lower_bound(instance_path: str) -> float | None:
-    """Reads lower_bound from the already-committed results/<instance>/gurobi_run.csv
-    (the real MIP run), if present, purely for side-by-side reference in the report —
-    does not re-run anything."""
+    """Lower bound from the saved MIP run (results/<instance>/gurobi_run.csv), for reference."""
     path = os.path.join(RESULTS_ROOT, instance_path, "gurobi_run.csv")
     if not os.path.exists(path):
         return None
@@ -76,9 +54,7 @@ def run_relaxation(instance_path: str, time_limit: float) -> dict:
     build_start = time.perf_counter()
     solver.build_model()
     build_time = time.perf_counter() - build_start
-    # build_model() adds constraints via addConstr() without a trailing update() of
-    # its own (optimize() triggers one internally) — call it here too so NumConstrs
-    # reflects the pending constraints instead of reading as 0.
+    # update() so NumConstrs counts the pending constraints
     solver.model.update()
     n_vars = solver.model.NumVars
     n_constrs = solver.model.NumConstrs

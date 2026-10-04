@@ -1,13 +1,7 @@
-"""Terminal reporting, CSV export and plots (boxplot, convergence) comparing the exact
-(Gurobi) and heuristic (memetic) solvers, per Section 3.5 of the TCC. Called by main.py
-once both solvers have finished running on an instance.
+"""Summary table, CSV export and plots comparing Gurobi and the heuristic for one set.
 
-Plot generation (ResultsReporter.plot_all) is decoupled from the CSV export: main.py's
-live run does both (export_csv writes the CSVs, plot_all reads live SolverResult
-objects still in memory), but the CSVs alone carry everything plot_all needs, so plots
-can also be rebuilt later without re-running Gurobi/the heuristic at all — see
-regenerate_plots() / `python results_representation.py <instancia>` at the bottom of
-this file, which replays saved CSVs back into ResultsReporter through _ReplayedSolution.
+Standalone, regenerates only the plots from saved CSVs:
+    python src/utils/results_representation.py <instancia> [conjunto]
 """
 
 from __future__ import annotations
@@ -16,14 +10,7 @@ import os
 import statistics
 import sys
 
-# Lets `python utils/results_representation.py <instancia>` work run directly (see
-# regenerate_plots below), not just `python -m utils.results_representation`: running
-# this file as a script puts its own directory (src/utils/) on sys.path, not src/, so
-# the `from utils.solution import ...` below would otherwise fail to resolve the
-# `utils` package. Only applies when this IS the entry point — importing this module
-# normally (main.py's `from utils.results_representation import ResultsReporter`)
-# already has src/ on sys.path via main.py itself, so __package__ is set and this is a
-# no-op.
+# allows running this file directly as a script
 if __name__ == "__main__" and __package__ in (None, ""):
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -78,19 +65,12 @@ class ResultsReporter:
         self.plot_all()
 
     def plot_all(self) -> None:
-        """Every plot this reporter can produce, from whatever gurobi_result/
-        heuristic_results it was built with — either the live SolverResult objects
-        from a just-finished run (report_all's path) or ones replayed from saved CSVs
-        (regenerate_plots' path). The single place both paths call into, so there's
-        only one definition of "all the plots" to keep in sync."""
         self.plot_gurobi_bounds()
         if self.heuristic_results:
             self.plot_boxplot()
             self.plot_convergence()
             self.plot_convergence_broken_axis()
             self.plot_gurobi_vs_iterations()
-
-    # -- terminal table --
 
     def _row(self, label: str, gurobi_value: str, best_value: str, mean_std_value: str) -> str:
         return (
@@ -128,12 +108,7 @@ class ResultsReporter:
         print(self._cost_row("CUSTO TOTAL (FUNÇÃO OBJETIVO)", "total_cost"))
         print("-" * TABLE_WIDTH)
 
-        # Gurobi's solution is always capacity-feasible by construction (hard
-        # constraint, Eq. 3.8), so its own total_cost doubles as its "best feasible"
-        # value here. For the heuristic, this is best_feasible_fitness (see
-        # SolverResult) — the best capacity_violation == 0 individual ever seen during
-        # search, which can differ from "Heur. (Melhor)" above since that one is
-        # chosen by sort_key/fitness_only and may itself be infeasible.
+        # Gurobi solutions are always feasible, so their best feasible value is total_cost.
         gurobi_feasible = f"{self.gurobi_result.total_cost:.1f}" if self.gurobi_result else "N/A"
         best_feasible_value = (
             f"{self.best_feasible_result.best_feasible_fitness:.1f}" if self.best_feasible_result else "N/A"
@@ -158,8 +133,6 @@ class ResultsReporter:
         mean_evals = f"{mean:.1f} (±{std:.1f})" if eval_values else "N/A"
         print(self._row("Número de Comparações (Custo)", gurobi_evals, best_evals, mean_evals))
         print("=" * TABLE_WIDTH)
-
-    # -- CSV export --
 
     def export_csv(self) -> None:
         rows = []
@@ -203,28 +176,8 @@ class ResultsReporter:
         self.export_solution_metrics_csv()
 
     def export_solution_metrics_csv(self) -> None:
-        """Operational metrics (counts, occupancy rates — NOT weighted costs) for the
-        best heuristic solution overall and the best feasible one (when found) — the
-        same two singled out on the convergence plots (green "Fim" / crimson "Melhor
-        viável").
-
-        For "melhor_viavel" this reads best_feasible_solution, NOT .solution: the
-        latter is that repetition's FINAL individual (by sort_key), which can have
-        moved on to something cheaper-but-infeasible after the best feasible one was
-        seen (fitness_only, see CLAUDE.md decision #1) — best_feasible_solution is the
-        actual feasible Solution object memetic_solver.py tracked, independently of
-        what the run ended on.
-
-        Only meaningful for a live run: these need a real Solution (the full room
-        assignment), not the CSV-replayed stand-in regenerate_plots() uses — this
-        method is only reached from export_csv(), which that replay path never calls.
-
-        mesma_que_melhor (only set on the "melhor_viavel" row): True when the best
-        feasible solution found IS, assignment-for-assignment, the same object as
-        "melhor" — i.e. the overall winner already happened to be capacity-feasible,
-        so every other column on this row is necessarily identical to "melhor"'s.
-        Lets downstream reporting (aggregate_reporter.py) show that plainly instead of
-        repeating every number as if it were newly-informative."""
+        """Operational metrics of the best and best feasible heuristic solutions
+        (live runs only: needs the full assignment, which the CSV replay doesn't have)."""
         melhor_solution = self.best_result.solution if self.best_result is not None else None
         targets = [
             ("melhor", melhor_solution),
@@ -262,14 +215,8 @@ class ResultsReporter:
         if rows:
             pd.DataFrame(rows).to_csv(os.path.join(self.output_dir, "solution_metrics.csv"), index=False)
 
-    # -- plots --
-
     def plot_boxplot(self) -> None:
-        # No Gurobi reference line here: for instances where Gurobi's total cost is
-        # several times the heuristic's (grande, muito_grande), a horizontal line at
-        # that value forces the y-axis to stretch to include it, compressing the actual
-        # boxplot into a sliver. The terminal table and CSVs already report the Gurobi
-        # value directly, so nothing is lost by leaving it out of this plot.
+        # no Gurobi line: its much higher cost on large instances would squash the boxplot
         fig, ax = plt.subplots(figsize=(6, 5))
         ax.boxplot([r.total_cost for r in self.heuristic_results], tick_labels=["Heurística"])
         ax.set_ylabel("Custo total (função objetivo)")
@@ -279,15 +226,7 @@ class ResultsReporter:
         plt.close(fig)
 
     def plot_gurobi_bounds(self) -> None:
-        """Two vertical bars — Lower Bound (ObjBound, the proven floor) and Upper
-        Bound (ObjVal, the incumbent — same value as gurobi_result.total_cost
-        elsewhere) — each capped by its own dashed reference line spanning the full
-        plot width (rather than one diagonal line between them), plus a vertical
-        dashed connector between the bars labeled with the relative gap. Doesn't
-        depend on heuristic_results, so it's generated even for a Gurobi-only run.
-        Optimality status (is_optimal) goes in a legend below the axes, clear of the
-        bars/labels; when is_optimal, both bars/reference lines coincide (gap == 0),
-        which is the correct picture rather than a special case to hide."""
+        """Gurobi lower vs. upper bound, with the optimality gap between them."""
         if self.gurobi_result is None:
             return
 
@@ -307,20 +246,12 @@ class ResultsReporter:
         values = [lower, upper]
         ax.bar(labels, values, color=["steelblue", "darkorange"], width=0.5, zorder=3)
 
-        # Headroom above the taller bar so its value label and the gap label have
-        # room without getting clipped.
         top = max(lower, upper)
         ax.set_ylim(0, top * 1.15 if top > 0 else 1.0)
 
         for x, value in enumerate(values):
             ax.text(x, value + top * 0.015, f"{value:.1f}", ha="center", va="bottom", fontsize=10, fontweight="bold")
 
-        # A faint dashed reference line capping each bar's own height, colored to
-        # match that bar (not the status color) and spanning the full plot width, so
-        # the two heights read directly off a shared horizontal reference instead of
-        # one diagonal line between two points. Kept low-opacity and bar-colored, not
-        # status-colored, so red/green stays reserved for the actual gap indicator
-        # below (the vertical connector + label) instead of competing with it.
         x_min, x_max = ax.get_xlim()
         ax.hlines(
             [lower, upper], x_min, x_max, colors=["steelblue", "darkorange"],
@@ -328,9 +259,6 @@ class ResultsReporter:
         )
         ax.set_xlim(x_min, x_max)
 
-        # Vertical connector between the two reference lines, between the bars,
-        # labeled with the gap — this is what actually shows the gap's size, and the
-        # only dashed element that carries the status color.
         ax.plot([0.5, 0.5], [lower, upper], linestyle="--", color=status_color, linewidth=1.5, zorder=5)
         mid_y = (lower + upper) / 2
         ax.text(
@@ -338,10 +266,6 @@ class ResultsReporter:
             fontsize=11, fontweight="bold", color=status_color,
         )
 
-        # No line swatch in front of the text: a blank/invisible handle
-        # (handlelength=0) with the label colored directly (labelcolor) reads as
-        # plain colored status text, not a legend entry for a line that's drawn
-        # nowhere near it.
         status_handle = Line2D([0], [0], color="none", label=status_label)
         ax.legend(
             handles=[status_handle], loc="upper center", bbox_to_anchor=(0.5, -0.14),
@@ -354,31 +278,13 @@ class ResultsReporter:
         plt.close(fig)
 
     def _convergence_histories(self) -> list[list[float]]:
-        """Each repetition's convergence_history as-is, NOT stretched/padded to a
-        common length — a repetition that only reached generation 8 is plotted only up
-        to generation 8, not flattened out to match whichever repetition ran longest.
-        Repetitions genuinely do run different numbers of generations (the stopping
-        condition is wall-clock time, not a fixed generation count), so this is the
-        real, honest shape of each run rather than an artifact of matching axes."""
         return [list(r.convergence_history) for r in self.heuristic_results]
 
     def _best_result_index(self) -> int:
-        """Index (within self.heuristic_results / _convergence_histories) of the
-        repetition with the best sort_key() — the same repetition reported as
-        "Heur. (Melhor)" in the summary table."""
         return next(i for i, r in enumerate(self.heuristic_results) if r is self.best_result)
 
     def _global_best_feasible_point(self) -> tuple[int | None, float | None, int | None]:
-        """(generation, fitness, iteration) of the best capacity-feasible individual
-        found across ALL heuristic repetitions (self.best_feasible_result — same value
-        as "Melhor Solução Viável (Heur.)" in the summary table/CSV). Deliberately NOT
-        scoped to the bolded "melhor repetição" curve (chosen by sort_key/fitness_only,
-        see COMPARISON_MODE in solution.py): the repetition that wins overall isn't
-        necessarily the one that stumbled onto the best feasible individual, so the
-        marker can legitimately land off that curve, on a fainter one. `iteration` (the
-        1-based repetition number, matching heuristic_runs.csv) lets the plot label
-        which run it came from when that happens. (None, None, None) if no repetition
-        ever found a feasible individual."""
+        """(generation, fitness, repetition) of the best feasible individual across all repetitions."""
         if self.best_feasible_result is None:
             return None, None, None
         iteration = next(
@@ -427,11 +333,7 @@ class ResultsReporter:
         plt.close(fig)
 
     def plot_convergence_broken_axis(self) -> None:
-        """Two stacked panels sharing the x-axis: a thin top panel isolates the
-        generation-0 outlier, a large bottom panel zooms in (linearly) on the range
-        where the actual convergence detail and inter-repetition spread live. Fixes what
-        log-scale couldn't: a single huge outlier point compressing the interesting
-        range into a few pixels."""
+        """Convergence with a broken y-axis, so the generation-0 outlier doesn't flatten the rest."""
         histories = self._convergence_histories()
         best_history = histories[self._best_result_index()]
         initial_value = best_history[0]
@@ -442,9 +344,7 @@ class ResultsReporter:
             self._save_plain_convergence_plot("convergence_broken_axis.png")
             return
 
-        # No Gurobi reference line/bound here: including its value (often several times
-        # the heuristic's, on grande/muito_grande) in the tail range would re-introduce
-        # the exact scale-compression problem this broken-axis plot exists to fix.
+        # no Gurobi line here, for the same scale reason as the boxplot
         tail_values = [value for history in histories for value in history[1:]]
         tail_min, tail_max = min(tail_values), max(tail_values)
         tail_margin = (tail_max - tail_min) * 0.15 or tail_max * 0.05
@@ -454,10 +354,6 @@ class ResultsReporter:
 
         feasible_gen, feasible_value, feasible_iteration = self._global_best_feasible_point()
         if feasible_value is not None:
-            # Unlike the excluded Gurobi reference line (see the comment above), this
-            # marker is one repetition's own data point, not an external scale — so
-            # it's safe (and necessary) to extend the top panel to keep it visible
-            # instead of leaving it out.
             top_max = max(top_max, feasible_value)
 
         fig, (ax_top, ax_bottom) = plt.subplots(
@@ -503,15 +399,7 @@ class ResultsReporter:
         plt.close(fig)
 
     def plot_gurobi_vs_iterations(self) -> None:
-        """Bar chart directly comparing Gurobi's total cost against each heuristic
-        iteration's (one full independent run of the algorithm — same "iteration"
-        used as the CSV column name, not a GA generation) — the comparison the dashed
-        reference line used to show on the convergence/boxplot charts, before it was
-        removed for distorting their shared y-axis (see
-        plot_boxplot/plot_convergence_broken_axis). A bar chart doesn't have that
-        problem: a tall Gurobi bar next to shorter heuristic bars, each with its own
-        independent height, IS the comparison being shown, not an artifact to work
-        around like it was on a shared-axis line plot."""
+        """Gurobi's total cost vs. each heuristic repetition, sorted by cost."""
         if self.gurobi_result is None:
             return
 
@@ -519,19 +407,11 @@ class ResultsReporter:
         values = [self.gurobi_result.total_cost] + [r.total_cost for r in self.heuristic_results]
         colors = ["darkorange"] + ["steelblue"] * len(self.heuristic_results)
 
-        # Extra bar for the best capacity-feasible individual found across ALL
-        # repetitions (self.best_feasible_result — same value as "Melhor Solução
-        # Viável (Heur.)" in the summary table/CSV), distinct from whichever
-        # iteration's own final result happens to win by sort_key/fitness_only.
-        # Skipped if no repetition ever found a feasible individual.
         if self.best_feasible_result is not None:
             labels = labels + ["Melhor Viável"]
             values = values + [self.best_feasible_result.best_feasible_fitness]
             colors = colors + ["forestgreen"]
 
-        # Sorted ascending by cost for readability — color stays tied to what each bar
-        # IS (Gurobi vs. a heuristic iteration vs. the best-viável reference), not to
-        # its position after sorting.
         labels, values, colors = zip(*sorted(zip(labels, values, colors), key=lambda row: row[1]))
 
         fig, ax = plt.subplots(figsize=(max(6.0, 1.0 + 0.6 * len(labels)), 5))
@@ -544,16 +424,8 @@ class ResultsReporter:
         plt.close(fig)
 
 
-# -- standalone plot regeneration, from saved CSVs, without re-running Gurobi/the
-# heuristic (see module docstring) --
-
-
 class _ReplayedSolution:
-    """Minimal stand-in for utils.solution.Solution, built from a saved CSV row
-    instead of a live assignment. Exposes exactly what SolverResult's properties and
-    ResultsReporter's plots read from a Solution (specialty_cost, transfer_cost,
-    gender_cost, capacity_cost, fitness, sort_key()) so regenerate_plots() can drive
-    ResultsReporter without changing anything about how it plots."""
+    """Stand-in for Solution rebuilt from a CSV row, with just what the plots need."""
 
     def __init__(self, specialty_cost: float, transfer_cost: float, gender_cost: float, capacity_violation: int):
         self.specialty_cost = specialty_cost
@@ -570,9 +442,7 @@ class _ReplayedSolution:
         return self.specialty_cost + self.transfer_cost + self.gender_cost + self.capacity_cost
 
     def sort_key(self):
-        # Mirrors Solution.sort_key() (solution.py) exactly, via the same
-        # COMPARISON_MODE constant, so a replayed ranking matches what the live run
-        # would have produced regardless of which mode was active.
+        # mirrors Solution.sort_key()
         if COMPARISON_MODE == "fitness_only":
             return self.fitness
         return (self.capacity_violation, self.fitness)
@@ -640,11 +510,7 @@ def _load_heuristic_results(output_dir: str) -> list[SolverResult]:
 
 
 def regenerate_plots(instance_name: str) -> None:
-    """Rebuilds every plot (plot_all) for an instance from its already-saved CSVs in
-    results/<instance_name>/ — gurobi_run.csv, heuristic_runs.csv, convergence.csv —
-    without re-running Gurobi or the heuristic. Requires main.py to have run at least
-    once for this instance already (the CSVs must exist); raises if neither result CSV
-    is found."""
+    """Rebuilds every plot of a set from its saved CSVs, without running the solvers."""
     output_dir = os.path.join(RESULTS_DIR, instance_name)
     gurobi_result = _load_gurobi_result(output_dir)
     heuristic_results = _load_heuristic_results(output_dir)
@@ -665,9 +531,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Uso: python results_representation.py <instancia> [conjunto]")
         sys.exit(1)
-    # Optional 2nd arg mirrors main.py's set numbering (data_base/<instancia>/set_NN/,
-    # results/<instancia>/set_NN/); omit it to target a flat results/<instancia>/
-    # folder directly, e.g. one predating the per-set layout.
+    # optional 2nd arg: set number; without it, reads the flat results/<instancia>/ folder
     instance_arg = sys.argv[1]
     if len(sys.argv) > 2:
         instance_arg = f"{instance_arg}/set_{int(sys.argv[2]):02d}"

@@ -1,24 +1,7 @@
-"""Aggregates results across however many generated sets (set_01..set_NN) of an
-instance size have already been run, into one consolidated report under
-results/aggregation/<instancia>/ — the cross-INSTANCE-GENERATION view, complementary
-to the cross-REPETITION view main.py already reports within a single set.
+"""Aggregates all saved sets of an instance into results/aggregation/<instancia>/
+(summary CSV, plots and LaTeX table), without re-running the solvers.
 
-Two different sources of variance, both worth seeing:
-  - Across repetitions (existing, within one set_NN/): how much does the outcome vary
-    due to the heuristic's own search randomness, holding the instance fixed?
-  - Across sets (this file): how much does the outcome vary due to the random
-    instance GENERATION itself, holding instance SIZE fixed? Running main.py with
-    "all"/a range deliberately does NOT answer this on its own (see CLAUDE.md) — each
-    set is reported independently, by design, until now.
-
-Reads whatever results/<instancia>/set_NN/ directories already exist on disk
-(gurobi_run.csv, heuristic_runs.csv, solution_metrics.csv) — does not re-run any
-solver, and works with however many sets have been run so far (not all 10 need to
-exist). solution_metrics.csv in particular may be missing for sets generated before
-that file existed; those columns are simply NaN for that set, not an error.
-
-Usage:
-    python src/utils/aggregate_reporter.py <instancia>
+Usage: python src/utils/aggregate_reporter.py <instancia>
 """
 
 from __future__ import annotations
@@ -43,8 +26,6 @@ SET_DIR_PATTERN = re.compile(r"set_(\d{2})$")
 
 
 def discover_sets(instance_name: str) -> list[str]:
-    """Sorted set_NN directory names that actually exist under results/<instance_name>/
-    — not assumed to be 1..10, so this works with partial completion."""
     base = os.path.join(RESULTS_DIR, instance_name)
     if not os.path.isdir(base):
         return []
@@ -57,8 +38,7 @@ def _read_csv_or_none(path: str) -> pd.DataFrame | None:
 
 
 def collect_set_row(instance_name: str, set_dir: str) -> dict:
-    """One row of aggregate_summary.csv for a single set — pulls together whatever of
-    gurobi_run.csv / heuristic_runs.csv / solution_metrics.csv exists for it."""
+    """One aggregate_summary.csv row, from whichever CSVs exist for the set."""
     set_number = int(SET_DIR_PATTERN.fullmatch(set_dir).group(1))
     base = os.path.join(RESULTS_DIR, instance_name, set_dir)
     row: dict = {"set": set_number}
@@ -143,10 +123,7 @@ OPERATIONAL_METRICS = [
 
 
 def plot_operational_metrics(df: pd.DataFrame, instance_name: str, out_dir: str) -> None:
-    """Mean ± std ACROSS SETS (not across room-days within one solution, nor across
-    repetitions within one set) of each operational metric from solution_metrics.csv's
-    "melhor" row — how consistent is each one across different random instances of
-    this same size?"""
+    """Mean ± std across sets of each operational metric."""
     available = [(col, label) for col, label in OPERATIONAL_METRICS if col in df.columns and df[col].notna().any()]
     if not available:
         print("  (sem solution_metrics.csv em nenhum conjunto — pulando métricas operacionais)")
@@ -190,10 +167,7 @@ OPERATIONAL_METRIC_SPECS = [
 
 
 def _mean_std_n(series: pd.Series) -> tuple[float, float, int]:
-    """Mean/std/count across sets, dropping NaN AND non-finite values (e.g. Gurobi's
-    lower_bound can be -inf when it never leaves presolve, see muito_grande) — those
-    aren't a real number to average, so they're excluded rather than poisoning the
-    mean with inf/nan."""
+    """Mean/std/count ignoring NaN and infinite values (e.g. Gurobi lower bound = -inf)."""
     values = [v for v in series.dropna().tolist() if math.isfinite(v)]
     n = len(values)
     if n == 0:
@@ -222,11 +196,7 @@ def _count_stats(df: pd.DataFrame, col: str) -> dict | None:
 
 
 def build_summary_rows(df: pd.DataFrame) -> list[dict]:
-    """All of aggregate_summary.csv's information, one row per metric, each holding
-    mean±std ACROSS SETS (or a count/total pair for boolean columns) for both the
-    "melhor" and "melhor_viavel" solutions side by side, grouped into sections. No
-    per-row coverage count — once every set has run this is uniform, and partial runs
-    are easy to tell apart already (that metric's row is just missing)."""
+    """Summary table rows: mean ± std across sets for the best and best feasible solutions."""
     rows: list[dict] = []
 
     def add(section: str, label: str, melhor=None, viavel=None, is_pct: bool = False, collapse_viavel: bool = False) -> None:
@@ -245,12 +215,7 @@ def build_summary_rows(df: pd.DataFrame) -> list[dict]:
     add("Heurística", "Custo Total", _metric_stats(df, "heur_melhor_total_cost"), _metric_stats(df, "heur_melhor_viavel_fitness"))
     add("Heurística", "Vitórias sobre Gurobi", {"count_pair": _count_stats(df, "heur_bate_gurobi")})
 
-    # True only when EVERY set that found a feasible solution had it coincide exactly
-    # with that set's overall winner (viavel_mesma_que_melhor, written by
-    # ResultsReporter.export_solution_metrics_csv) — in that case every operational
-    # metric below is, by construction, identical between the two columns, so the
-    # "Melhor Viável" column is collapsed to a plain note instead of repeating every
-    # number as if it were new information.
+    # if the best feasible always equals the best solution, collapse that column into a note
     coincidence = _count_stats(df, "viavel_mesma_que_melhor")
     if coincidence:
         add("Heurística", "Conjuntos onde Melhor Viável = Melhor", {"count_pair": coincidence})
@@ -270,7 +235,6 @@ def build_summary_rows(df: pd.DataFrame) -> list[dict]:
             is_pct, collapse_viavel=all_coincide,
         )
 
-    # Drop placeholder rows whose only content was a None count_pair (e.g. no is_optimal data at all)
     return [row for row in rows if row["melhor"] is not None or row["viavel"] is not None]
 
 
@@ -312,8 +276,7 @@ def render_txt_table(rows: list[dict], instance_name: str, n_sets: int) -> str:
 
 
 def _latex_number(value: float, decimals: int = 1) -> str:
-    """Matches analiseResultados.tex's existing number style: \\, as the thousands
-    separator, comma as the decimal point (e.g. 10225.0 -> "10\\,225,0")."""
+    """Formats numbers like 10\\,225,0 (thin-space thousands, decimal comma)."""
     formatted = f"{value:,.{decimals}f}"
     integer_part, _, decimal_part = formatted.partition(".")
     integer_part = integer_part.replace(",", r"\,")
@@ -333,9 +296,6 @@ def _format_value_latex(value: dict | None, is_pct: bool) -> str:
 
 
 def render_latex_table(rows: list[dict], instance_name: str, n_sets: int) -> str:
-    """longtable + booktabs, matching the style already used in analiseResultados.tex
-    (both packages are already in its preamble) — plain `table`+`tabular` would risk
-    overflowing a page given how many metrics this covers."""
     display_name = instance_name.replace("_", " ").capitalize()
     label = instance_name.replace("_", "-")
     lines = [

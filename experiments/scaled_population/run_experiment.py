@@ -1,37 +1,7 @@
-"""A/B test (NOT a production change): does scaling population_size — and,
-proportionally, elite_count and the non-elite local-search-refined count — with
-instance size improve outcomes, instead of MemeticSolver's fixed population_size=30
-regardless of patient count?
+"""A/B test: population size scaled with instance size vs. the fixed default (30).
 
-Today's fixed defaults (population_size=30, elite_fraction=0.1 => elite_count=3,
-local_search_fraction=0.3 => 9 non-elite refined) happen to be exactly 30%/3%/9% of
-"pequeno"'s 100 patients — but only 0.47%/0.047%/0.14% of "muito_grande"'s 6400. This
-tests generalizing those SAME ratios to scale with patient count instead of staying
-fixed:
-
-    population_size = ceil(0.30 * n_patients)
-    elite_count     = ceil(0.03 * n_patients)
-    refine_count    = ceil(0.09 * n_patients)
-
-(ceiling, not round, per the requested scaling rule — guarantees at least 1 of each
-and reproduces today's exact 30/3/9 on "pequeno", 100 patients, as a sanity check: the
-"escalado" condition should behave ~identically to "fixo" there.)
-
-No subclass needed: population_size, elite_fraction, and local_search_fraction are all
-existing MemeticSolver constructor parameters (src/solvers/heuristics/memetic_solver.py
-is NOT touched) — elite_fraction/local_search_fraction are passed as elite_count/
-population_size and refine_count/population_size respectively, so MemeticSolver's own
-internal round(population_size * fraction) reconstructs the exact integer counts above
-(exact, since e.g. population_size * (elite_count/population_size) == elite_count).
-Both conditions use refine_elites=True (today's default, see CLAUDE.md decision #1),
-so this isolates population scaling alone on top of that.
-
-Usage:
-    python experiments/scaled_population/run_experiment.py [repetitions] [time_limit] [instance_path]
-
-    repetitions    independent runs per condition (fixo, escalado) (default: 5)
-    time_limit     seconds per run (default: 300.0)
-    instance_path  default: grande/set_01
+Usage: python experiments/scaled_population/run_experiment.py [repetitions=5] [time_limit=300]
+       [instance_path=grande/set_01]
 """
 
 from __future__ import annotations

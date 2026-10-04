@@ -1,33 +1,8 @@
-"""A/B test (NOT a production change): does calibrating local_search_fraction per
-instance — instead of MemeticSolver's fixed default (0.3) regardless of size — to
-target at least `target_generations` completed GA generations improve outcomes on
-"grande/set_01", where the fixed fraction currently yields only ~11-15 generations in
-a 300s run?
+"""A/B test: calibrate local_search_fraction per instance to reach target_generations,
+vs. the fixed default.
 
-Why that's the bottleneck (see chat analysis): each generation's _refine() phase runs
-local_search_fraction * population_size individuals (9 of 30, by default) to near-full
-VNS convergence. LocalSearch's own module docstring measures that convergence cost at
-~150-190 evaluations/patient on "grande" (1600 patients) — a few seconds per
-individual — so 9 of them dominate a generation's wall-clock time, leaving only
-~11-15 generations total in 300s. Too few for population-level mechanisms
-(crossover-driven exploration, stagnation-escape triggers) to do much.
-
-AdaptiveRefineMemeticSolver is a LOCAL subclass defined only in this file. It measures
-(calibrates) this instance's actual per-individual local-search cost with one
-discarded probe call at the start of solve(), then derives the local_search_fraction
-that should let the run complete target_generations generations in the given
-time_limit — capped at the constructor-provided default, never raised above it (no
-evidence more refinement helps instances that already exceed the target comfortably,
-e.g. pequeno/medio). src/solvers/heuristics/memetic_solver.py is NOT touched; this is
-a side-by-side comparison to decide whether it's worth promoting into the real solver.
-
-Usage:
-    python experiments/generations/run_experiment.py [repetitions] [time_limit] [instance_path] [target_generations]
-
-    repetitions         independent runs per condition (baseline, adaptive) (default: 5)
-    time_limit          seconds per run — same budget main.py uses by default (300.0)
-    instance_path       default: grande/set_01
-    target_generations  minimum generations the adaptive condition aims for (default: 25)
+Usage: python experiments/generations/run_experiment.py [repetitions=5] [time_limit=300]
+       [instance_path=grande/set_01] [target_generations=25]
 """
 
 from __future__ import annotations
@@ -61,11 +36,7 @@ DEFAULT_TARGET_GENERATIONS = 25
 
 
 class AdaptiveRefineMemeticSolver(MemeticSolver):
-    """MemeticSolver that calibrates local_search_fraction at the start of solve()
-    (see module docstring) instead of using a fixed value regardless of instance
-    size. Only __init__ and solve() are overridden; _refine() and
-    _track_best_feasible() are inherited unchanged and read self.local_search_fraction
-    as usual — calibration just adjusts that attribute before the main loop starts."""
+    """MemeticSolver that sets local_search_fraction from a timing probe at the start of solve()."""
 
     def __init__(
         self, *args, target_generations: int = DEFAULT_TARGET_GENERATIONS, calibration_fraction: float = 0.1,
@@ -79,11 +50,8 @@ class AdaptiveRefineMemeticSolver(MemeticSolver):
         self.calibration_cost: float | None = None
 
     def _calibrate_local_search_fraction(self, population: list[Solution], time_limit: float) -> float:
-        """Times one discarded local-search call (on a copy of the current best, so
-        the real population is untouched) to estimate this instance's per-individual
-        VNS cost, then derives the largest local_search_fraction that should let the
-        run complete target_generations generations in time_limit seconds — capped at
-        the constructor-provided fraction, never raised above it."""
+        """Times one discarded local-search call and derives the largest fraction (capped at
+        the default) that still fits target_generations in the time limit."""
         probe = population[0].copy()
         calibration_budget = min(self.max_calibration_time, time_limit * self.calibration_fraction)
 
@@ -107,9 +75,7 @@ class AdaptiveRefineMemeticSolver(MemeticSolver):
         population = self.genetic.create_initial_population()
         population.sort(key=Solution.sort_key)
 
-        # Calibration: a small, bounded slice of the budget spent measuring this
-        # instance's actual local-search cost, then local_search_fraction is adjusted
-        # in place before the main loop — the inherited _refine() reads it as usual.
+        # spend a small slice of the budget measuring local-search cost
         self.calibrated_fraction = self._calibrate_local_search_fraction(population, time_limit)
         self.local_search_fraction = self.calibrated_fraction
 

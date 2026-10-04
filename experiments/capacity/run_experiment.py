@@ -1,36 +1,6 @@
-"""Capacity-penalty sweep: how does W_CAP (the heuristic's soft capacity-penalty
-weight — see CLAUDE.md design decision #1, capacity is a hard constraint for Gurobi
-but soft for the heuristic) trade off fitness against solution quality, measured as
-the number of capacity constraints still violated (capacity_violation)?
+"""W_cap sweep on medio/set_01: fitness vs. capacity violation for each penalty weight.
 
-Runs the memetic heuristic on a single fixed instance (medio/set_01) across a range of
-W_CAP values, several repetitions each, and plots cost vs. W_CAP (mean ± std,
-capacity_violation on a second axis). Gurobi is intentionally not part of this
-experiment: it doesn't use W_CAP at all (capacity is always a hard constraint there),
-so its result wouldn't change across the sweep.
-
-The chart plots `objective_value` (specialty + transfer + gender cost), NOT raw
-`fitness` — fitness = objective_value + W_CAP * capacity_violation, so raw fitness at
-W_CAP=5000 and W_CAP=200 aren't on a comparable scale even for the same underlying
-solution quality: the penalty term itself dwarfs everything else once W_CAP gets
-large, which would make the chart mostly show "how big is W_CAP" rather than "how
-good is the solution". Subtracting the penalty back out (objective_value = fitness -
-capacity_cost, where capacity_cost = W_CAP * capacity_violation) puts every point on
-the same footing. Both `fitness` and `objective_value` are still saved to the CSVs —
-only the plot is restricted to the comparable one.
-
-Standalone and self-contained under experiments/ — does not import from or get
-imported by main.py, and writes only under experiments/capacity/results/, never under
-results/<instancia>/. The one shared piece of state it touches is
-utils.solution.WEIGHTS["W_CAP"], mutated only for the duration of this script's own
-process (restored before exit) — main.py running separately is unaffected, since it
-reads WEIGHTS fresh in whatever process it's running in.
-
-Usage:
-    python experiments/capacity/run_experiment.py [repetitions] [time_limit]
-
-    repetitions   independent heuristic runs per W_CAP value (default: 3)
-    time_limit    seconds per run, same meaning as main.py's (default: 60.0)
+Usage: python experiments/capacity/run_experiment.py [repetitions=3] [time_limit=60]
 """
 
 from __future__ import annotations
@@ -58,9 +28,6 @@ INSTANCE_PATH = "medio/set_01"
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 
 W_CAP_VALUES = [200, 400, 600, 800, 1000, 1400, 1900, 2500, 3300, 5000]
-"""Sweep points. Includes 0 (capacity effectively unpenalized) and the current
-project default (1000, see CLAUDE.md's weights section) so it's directly visible
-where "today's setting" sits on the curve."""
 
 DEFAULT_REPETITIONS = 3
 DEFAULT_TIME_LIMIT = 60.0
@@ -93,9 +60,7 @@ def run_sweep(repetitions: int, time_limit: float) -> pd.DataFrame:
                     f"| violação={solution.capacity_violation}"
                 )
     finally:
-        # Restored even on error/interrupt — nothing about this experiment should
-        # leak into whatever else imports utils.solution.WEIGHTS afterward, in this
-        # same process (e.g. re-running this script's functions from a REPL).
+        # restore W_CAP even on error
         WEIGHTS["W_CAP"] = original_w_cap
 
     return pd.DataFrame(rows)
@@ -126,11 +91,7 @@ def summarize(raw: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_fitness_vs_capacity_penalty(summary: pd.DataFrame) -> None:
-    """The chart asked for: cost vs. W_CAP, with capacity_violation (mean) on a
-    second y-axis so the trade-off this experiment is about — solution quality vs.
-    actually satisfying capacity — is visible in one plot rather than two separate
-    ones. Plots objective_value (mean ± std), NOT raw fitness — see the module
-    docstring for why raw fitness isn't comparable across different W_CAP values."""
+    """Cost vs. W_cap, with mean capacity violation on a second y-axis."""
     x = range(len(summary))
     x_labels = [str(w) for w in summary["w_cap"]]
 

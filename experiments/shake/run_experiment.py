@@ -1,36 +1,8 @@
-"""A/B test (NOT a production change): does an escalating, infrequent "big shake" —
-replace a growing fraction of the non-elite population with brand-new random
-individuals once stagnation persists well past the existing boosted-mutation trigger
-— reduce capacity_violation / change fitness on "grande/set_01", versus the current
-MemeticSolver unmodified?
+"""A/B test: replace a growing fraction of the non-elite population with random individuals
+on persistent stagnation (shake) vs. the current MemeticSolver.
 
-ShakeMemeticSolver is a LOCAL subclass defined only in this file, overriding solve()
-with the shake inserted (everything else — __init__, _refine, _track_best_feasible —
-inherited unchanged from MemeticSolver). src/solvers/heuristics/memetic_solver.py is
-NOT touched. This is a side-by-side comparison to decide whether the shake is worth
-promoting into the real solver — see the chat analysis for the design rationale
-(escalation thresholds, why a stagnation-triggered shake should avoid the pitfall that
-made the already-existing-but-disabled big_mutation_probability (constant rate) hurt
-more than help).
-
-Shake design:
-  - Reuses stale_generations (already tracked). Once stale_generations >= patience +
-    shake_interval, shake level 1 fires ONCE: a fraction of the non-elite population
-    is replaced with create_random_individual() (fresh random individuals, same
-    constructor already used for the existing "immigrants" mechanism). Level 2 fires
-    at patience + 2*shake_interval, etc. — escalating, not repeating every generation.
-  - Resets to level 0 whenever stale_generations itself resets (a real improvement
-    was found) — same reset condition as the existing boosted-mutation trigger.
-  - Fraction replaced grows with level: SHAKE_FRACTIONS = (0.5, 0.7, 0.9), capped at
-    the last value for any further escalation.
-
-Usage:
-    python experiments/shake/run_experiment.py [repetitions] [time_limit]
-
-    repetitions   independent runs per condition (baseline, shake) (default: 3)
-    time_limit    seconds per run — same budget main.py uses by default (300.0),
-                  for an apples-to-apples comparison against results/grande/set_01/
-                  already on file
+Usage: python experiments/shake/run_experiment.py [repetitions=3] [time_limit=300]
+       [instance_path=grande/set_01] [shake_interval=2]
 """
 
 from __future__ import annotations
@@ -62,26 +34,12 @@ RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results"
 DEFAULT_REPETITIONS = 3
 DEFAULT_TIME_LIMIT = 300.0
 
-SHAKE_INTERVAL = 2
-"""Calibrated for grande/set_01, NOT a general-purpose default: a smoke test found
-this instance only completes ~11-15 total generations in a 300s run (population_size
-30 + local search scaled to 1600 patients makes each generation expensive) — the
-originally-proposed shake_interval=10 (patience=5 + shake_interval=10 => first shake
-at 15 stale generations) NEVER fired at all in that budget, since 15 stale generations
-alone would exceed the whole run's generation count. With shake_interval=2 (first
-shake at 7 stale generations), it does fire within the available budget — e.g. one
-test run fired at generation 9 and the population found a markedly better solution
-immediately after (145000 -> 134125, see chat analysis). Any real adoption of this
-mechanism would need shake_interval (and maybe patience) scaled per instance size,
-the same way local_search.py's EVALUATIONS_PER_PATIENT already scales its own cap —
-a fixed constant across instance sizes doesn't transfer."""
+SHAKE_INTERVAL = 2  # tuned for grande/set_01, which only reaches ~11-15 generations in 300 s
 SHAKE_FRACTIONS = (0.5, 0.7, 0.9)
 
 
 class ShakeMemeticSolver(MemeticSolver):
-    """MemeticSolver + an escalating population shake on persistent stagnation. See
-    module docstring for the design. Only solve() is overridden; __init__, _refine,
-    _track_best_feasible are inherited as-is."""
+    """MemeticSolver with an escalating population shake; only solve() is overridden."""
 
     def __init__(self, *args, shake_interval: int = SHAKE_INTERVAL, shake_fractions=SHAKE_FRACTIONS, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,7 +94,7 @@ class ShakeMemeticSolver(MemeticSolver):
             for index in self._rng.sample(non_elite_indices, n_immigrants):
                 offspring[index] = self.genetic.create_random_individual()
 
-            # --- escalating shake on persistent stagnation ---
+            # escalating shake on persistent stagnation
             current_shake_level = 0
             if stale_generations >= self.patience:
                 current_shake_level = (stale_generations - self.patience) // self.shake_interval
@@ -148,7 +106,6 @@ class ShakeMemeticSolver(MemeticSolver):
                     offspring[index] = self.genetic.create_random_individual()
                 shake_level_fired = current_shake_level
                 self.shake_events.append((generations, current_shake_level, fraction))
-            # --- end shake ---
 
             offspring, local_search_evaluations = self._refine(
                 offspring, elite_count, non_elite_indices, deadline, local_search_evaluations

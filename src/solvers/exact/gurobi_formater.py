@@ -1,7 +1,4 @@
-"""Converts a solved GurobiSolver into the shared SolverResult format (utils/solution.py),
-so the exact model's output can be compared fairly against the heuristic's — same cost
-breakdown, same fields, per the terminal output format documented in CLAUDE.md.
-"""
+"""Converts a solved GurobiSolver into a SolverResult comparable with the heuristic's."""
 
 from __future__ import annotations
 

@@ -1,8 +1,5 @@
-"""Genetic Algorithm component of the memetic solver for the PBA: population
-initialization (semi-greedy, Section 3.3 of the TCC), tournament selection, crossover
-and mutation. The population-level generational loop and the interleaving with VNS
-local search live in memetic_solver.py.
-"""
+"""Genetic Algorithm operators of the memetic solver: initial population, tournament
+selection, room-block crossover and mutation."""
 
 from __future__ import annotations
 
@@ -41,24 +38,9 @@ class GeneticAlgorithm:
     def _candidate_rooms_for(self, required_specialty: str) -> list[int]:
         return self._rooms_by_specialty.get(required_specialty) or self._all_room_ids
 
-    # -- population initialization (Section 3.3: "Solução Inicial") --
-
     def create_initial_population(self) -> list[Solution]:
-        """A feasible_seed_fraction of generation 0 is built capacity-aware (see
-        create_feasible_individual) so genuinely viable individuals are already present
-        in the gene pool from the start, instead of relying on mutation/local search to
-        stumble into one later — on "medio", they never reliably did (see CLAUDE.md
-        decision #1). The rest still comes from create_random_individual: tested
-        feasible_seed_fraction=1.0 (fully greedy-seeded) head-to-head against the
-        default 0.2 and it did WORSE (one seed never found a feasible individual at
-        all, vs. 2/3 seeds hitting capacity_violation==0 at 0.2) — create_feasible_individual
-        is itself order-dependent and not a feasibility guarantee, and a population
-        built entirely by the same greedy strategy is structurally homogeneous, which
-        starves crossover of anything different to recombine with. The random
-        constructor isn't there to keep "infeasible diversity" available for its own
-        sake (capacity stays soft everywhere during search regardless of how gen 0
-        starts) — it's there because mixing two differently-biased constructors gives
-        crossover more to work with than either one alone."""
+        """A feasible_seed_fraction of the population is built capacity-aware; the rest is random.
+        Mixing both constructors gave better results than seeding the whole population greedily."""
         n_seeded = round(self.population_size * self.feasible_seed_fraction)
         return [
             self.create_feasible_individual() if i < n_seeded else self.create_random_individual()
@@ -66,10 +48,7 @@ class GeneticAlgorithm:
         ]
 
     def create_random_individual(self) -> Solution:
-        """Semi-greedy random construction: each patient gets a single randomly chosen
-        room (matching their required specialty when possible) for their entire stay.
-        Capacity is ignored here on purpose — it's a soft constraint evaluated (and
-        pressured out) by the search, not something the constructor enforces."""
+        """One random specialty-matching room per patient for the whole stay; ignores capacity."""
         assignment: dict[int, list[int]] = {}
         for patient_id, patient in self.data_manager.patients.items():
             room_id = self._rng.choice(self._candidate_rooms_for(patient.required_specialty))
@@ -77,14 +56,8 @@ class GeneticAlgorithm:
         return Solution(self.data_manager, assignment)
 
     def create_feasible_individual(self) -> Solution:
-        """Greedy capacity-aware construction: patients are placed (in random order,
-        for diversity across seeded individuals) into a specialty-matching room with
-        spare capacity for their whole stay when one exists, tracked via a running
-        occupancy count as the assignment is built. Falls back to any room with spare
-        capacity (any specialty) if none of the specialty-matching ones fit, and only
-        as a last resort to a random specialty-matching room (same as
-        create_random_individual — a capacity violation there, since no room could fit
-        this patient at this point in the construction order)."""
+        """Greedy, capacity-aware: each patient (random order) goes to a specialty room with
+        free beds, then any room with free beds, and only as a last resort to a full room."""
         patient_ids = list(self.data_manager.patients.keys())
         self._rng.shuffle(patient_ids)
 
@@ -115,40 +88,13 @@ class GeneticAlgorithm:
             return self._rng.choice(specialty_pool)
         return self._rng.choice(feasible)
 
-    # -- selection --
-
     def tournament_select(self, population: list[Solution]) -> Solution:
         contenders = self._rng.sample(population, min(self.tournament_size, len(population)))
         return min(contenders, key=Solution.sort_key)
 
-    # -- crossover --
-
     def crossover(self, parent_a: Solution, parent_b: Solution) -> Solution:
-        """Room-block crossover: patients are grouped by which room they occupy on the
-        first day of their stay, in a randomly chosen "primary" parent (the other parent
-        is "secondary" — which one is primary is re-rolled on every call, so it's fair
-        across many generations even though any single call is asymmetric). Each
-        room-group is inherited as a whole block: either every patient who shared that
-        room in the primary parent comes across together, or none of them do. Patients
-        whose primary-parent room wasn't selected fall back to their own sequence in the
-        secondary parent, unchanged.
-
-        This replaces a plain per-patient 50/50 choice, which picked up or dropped
-        individual patients regardless of their room-mates and reliably re-introduced
-        gender mixing that neither parent actually had (confirmed by testing a
-        gender-aware weighting at the per-patient level, which made no measurable
-        difference — the room-mate interaction was being destroyed by the crossover
-        granularity itself, not by bad luck in the coin flips). Every patient's own room
-        sequence is still always inherited whole from a single parent — this only
-        changes which parent "wins" a given patient, never splices within their stay.
-
-        Known limitation: grouping uses the patient's first-day room, so someone who
-        transfers mid-stay (N3) technically belongs to two room-groups (before/after),
-        and only the first is used for the inherit/fallback decision — their post-
-        transfer room-mates can still end up from the other parent. Transfers are the
-        rarest, most heavily penalized move, so this affects few patients, and even for
-        those it's strictly less exposure than the old per-patient scheme had for
-        everyone."""
+        """Room-block crossover: patients sharing a room on their first day in the primary parent
+        are inherited together, preserving room-mate combinations (e.g. gender)."""
         if self._rng.random() > self.crossover_rate:
             return (parent_a if self._rng.random() < 0.5 else parent_b).copy()
 
@@ -171,13 +117,8 @@ class GeneticAlgorithm:
 
         return Solution(self.data_manager, assignment)
 
-    # -- mutation --
-
     def mutate(self, solution: Solution, rate: float | None = None) -> None:
-        """Blind (non-improving) mutation for diversity — distinct from VNS, this never
-        checks whether a move helps. Each patient independently has `rate` (or
-        `self.mutation_rate` if not given) probability of being mutated (see
-        _mutate_patient for what "mutated" means)."""
+        """Blind mutation: each patient is mutated with probability `rate`."""
         self._light_mutation(solution, rate if rate is not None else self.mutation_rate)
 
     def _light_mutation(self, solution: Solution, rate: float) -> None:
@@ -186,28 +127,14 @@ class GeneticAlgorithm:
                 self._mutate_patient(solution, patient_id)
 
     def mutate_fraction(self, solution: Solution, fraction: float) -> None:
-        """Mutates an exact fraction of patients (rounded, at least 1) rather than a
-        per-patient probability — a probabilistic rate can, purely by chance, touch far
-        fewer patients than intended, which matters when the caller specifically wants
-        a guaranteed bigger jump (MemeticSolver's stagnation-triggered mutation boost —
-        see its module docstring)."""
+        """Mutates an exact fraction of patients (used by the stagnation-triggered boost)."""
         patient_ids = list(self.data_manager.patients.keys())
         n_to_mutate = max(1, round(len(patient_ids) * fraction))
         for patient_id in self._rng.sample(patient_ids, n_to_mutate):
             self._mutate_patient(solution, patient_id)
 
     def _mutate_patient(self, solution: Solution, patient_id: int) -> None:
-        """Picks one of three move types for this patient, mirroring VNS's
-        neighborhoods (local_search.py) instead of always doing the same full-stay
-        reassignment — so mutation doesn't necessarily erase whatever partial-transfer
-        structure N3/N4 refinement already built into a parent:
-        - N1-style (_mutate_full_stay): the whole stay to one new room (the original,
-          and still the only option for a patient with no one to swap with).
-        - N3-style (_mutate_partial): only a random suffix of the stay, preserving the
-          prefix — introduces or moves a transfer instead of flattening one away.
-        - N4-style (_mutate_overlap_swap): swap rooms with a random overlapping
-          patient, only on the days they actually share — touches two patients per
-          mutation instead of one, and leaves the rest of both stays untouched."""
+        """Applies one random move mirroring the VND neighborhoods: N1, N3 or N4."""
         move = self._rng.choice((self._mutate_full_stay, self._mutate_partial, self._mutate_overlap_swap))
         move(solution, patient_id)
 

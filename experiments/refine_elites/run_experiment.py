@@ -1,19 +1,7 @@
-"""A/B test (NOT a production change): does refine_elites=True — letting elite
-individuals (the top elite_fraction carried over unchanged each generation by default)
-also compete for the local-search budget in _refine() — improve outcomes versus the
-default (False, elites never touched by local search)?
+"""A/B test: also apply local search to the elites (refine_elites=True) vs. not.
 
-Unlike the shake/generations experiments, this needs no subclass: refine_elites is
-already a constructor parameter of the unmodified MemeticSolver
-(src/solvers/heuristics/memetic_solver.py, not touched by this script). This is a
-side-by-side comparison to decide whether it's worth flipping the default.
-
-Usage:
-    python experiments/refine_elites/run_experiment.py [repetitions] [time_limit] [instance_path]
-
-    repetitions    independent runs per condition (default, refine_elites) (default: 5)
-    time_limit     seconds per run (default: 300.0)
-    instance_path  default: grande/set_01
+Usage: python experiments/refine_elites/run_experiment.py [repetitions=5] [time_limit=300]
+       [instance_path=grande/set_01]
 """
 
 from __future__ import annotations

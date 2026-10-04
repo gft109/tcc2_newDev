@@ -1,12 +1,5 @@
-"""Synthetic instance generator for the Patient-Bed Allocation Problem (PBA).
-
-Generates N_SETS_PER_INSTANCE deterministic room.csv / patient.csv pairs per instance
-size, under data_base/<instance_name>/set_<NN>/, used as input for both the exact
-(Gurobi) and heuristic (memetic) solvers. Multiple independently-generated sets per
-size (rather than one) let main.py report results averaged/compared across different
-random instances of the same size, not just across heuristic repetitions on a single
-fixed one.
-"""
+"""Generates the synthetic instances: N_SETS_PER_INSTANCE seeded room.csv/patient.csv
+sets per instance size, under data_base/<instance>/set_<NN>/."""
 
 import os
 
@@ -35,14 +28,10 @@ INSTANCE_SIZES = {
 }
 
 N_SETS_PER_INSTANCE = 10
-"""How many independently-seeded room/patient sets are generated per instance size.
-main.py's 4th CLI argument selects among these (a number, an "A-B" range, or "all")."""
 
 
 def _set_seed(base_seed: int, set_number: int) -> int:
-    """Deterministic, collision-free seed per (instance, set): base_seed distinguishes
-    instance sizes, *100 leaves room for up to 99 sets per instance without two
-    (instance, set) pairs ever landing on the same seed."""
+    """Unique seed per (instance, set): base_seed * 100 + set_number."""
     return base_seed * 100 + set_number
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -66,18 +55,8 @@ class DataGenerator:
         return np.maximum(LOS_MIN, np.round(raw)).astype(int)
 
     def _schedule_admissions(self, los: np.ndarray, total_capacity: int) -> np.ndarray:
-        """Assigns an admission_day to each patient such that, for every day of the
-        resulting horizon, the number of patients present never exceeds total_capacity.
-
-        Since room capacity is the only hard constraint tying x_{p,r,d} to specific rooms
-        (gender/specialty are soft penalties), this per-day aggregate check is enough to
-        guarantee a feasible room assignment exists for the exact (Gurobi) model.
-
-        Uses a first-fit-decreasing bin-packing strategy (longest stays placed first,
-        each into the earliest day where it fits) instead of pure random placement: random
-        placement can "get unlucky" and fragment capacity, forcing repeated horizon
-        extensions and collapsing the achieved occupancy far below TARGET_OCCUPANCY.
-        """
+        """First-fit decreasing: longest stays first, each admitted on the earliest day it fits.
+        The hospital is never over capacity on any day, so a feasible solution always exists."""
         n_patients = len(los)
         target_daily_census = TARGET_OCCUPANCY * total_capacity
         horizon = int(np.ceil(n_patients * los.mean() / target_daily_census)) + HORIZON_BUFFER_DAYS
