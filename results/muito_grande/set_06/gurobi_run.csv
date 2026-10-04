@@ -1,0 +1,2 @@
+specialty_cost,transfer_cost,gender_cost,capacity_cost,total_cost,runtime_seconds,evaluation_count,upper_bound,lower_bound,gap,is_optimal
+1834600.0,954900.0,467700.0,0,3257200.0,916,432,3257200.0,0.0,1.0,False
