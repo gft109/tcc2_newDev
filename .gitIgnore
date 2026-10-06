@@ -11,3 +11,4 @@ env/
 # Cache do Python
 __pycache__/
 *.pyc
+latex/resultados/

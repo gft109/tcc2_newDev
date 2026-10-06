@@ -1,0 +1,351 @@
+\chapter{Resultados}
+\label{cap:resultados}
+
+% DRAFT: textos curtos, só para mostrar a organização do capítulo.
+% Figuras em Figuras/resultados/ (pasta latex/resultados/ do repositório).
+
+Este capítulo apresenta os resultados da comparação entre as abordagens exata e heurística nos quatro portes de instância, seguindo o protocolo da \autoref{tab:protocolo-experimental}. Primeiro é apresentada uma visão geral; em seguida, os resultados de cada porte; por fim, a viabilidade das soluções heurísticas e o esforço computacional. Em cada porte, é mostrado primeiro um conjunto representativo (conjunto 1) e, em seguida, o resultado agregado dos 10 conjuntos.
+
+% ---------------------------------------------------------------------
+\section{Visão geral}
+\label{sec:res-visao-geral}
+
+A \autoref{tab:res-visao-geral} resume o valor da função objetivo $Z$ (\autoref{eq:objetivo}) obtido por cada abordagem em cada porte.
+
+% TODO: comentar a inversão entre as abordagens a partir da instância média.
+
+\begin{table}[htbp]
+    \caption{Função objetivo $Z$ por porte (média entre os 10 conjuntos). Na heurística, $Z$ da melhor execução de cada conjunto, sem a penalidade de capacidade}
+    \label{tab:res-visao-geral}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lrrrrc}
+        \hline
+        \textbf{Porte} & \textbf{Gurobi (lim. sup.)} & \textbf{Gurobi (lim. inf.)} & \textbf{Gap} & \textbf{Heurística} & \textbf{Vitórias da heurística} \\ 
+        \hline
+        Pequena      & 10\,370,0     & 9\,845,0  & 5,4\%   & 10\,567,5 $\pm$ 3\,493,4   & 0/10  \\
+        Média        & 83\,992,5     & 23\,950,0 & 71,4\%  & 28\,807,5 $\pm$ 5\,560,8   & 10/10 \\
+        Grande       & 820\,270,0    & 7\,735,0  & 99,1\%  & 56\,260,0 $\pm$ 9\,935,3   & 10/10 \\
+        Muito grande & 3\,277\,170,0 & 0,0       & 100,0\% & 210\,675,0 $\pm$ 22\,841,7 & 10/10 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+\section{Instância pequena}
+\label{sec:res-pequena}
+
+% TODO: Gurobi melhor em todos os conjuntos (heurística 2,0% acima, em média),
+% mesmo sem provar o ótimo em 30 s (gap de 1% a 12%).
+Resultados da instância pequena (100 pacientes, 30 s por execução).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_01/gurobi_bounds.png}\\
+        \small (a) Limites do Gurobi
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_01/convergence_broken_axis.png}\\
+        \small (b) Convergência da heurística
+    \end{minipage}
+
+    \vspace{0.4cm}
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_01/gurobi_vs_iterations.png}\\
+        \small (c) Gurobi vs.\ execuções da heurística
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_01/boxplot.png}\\
+        \small (d) Dispersão de $Z$ entre execuções
+    \end{minipage}
+    \caption{Conjunto representativo (conjunto 1) --- instância pequena}
+    \label{fig:res-conjunto1-pequeno}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figuras/resultados/pequeno/boxplot_gurobi_vs_heuristica.png}
+    \caption{$Z$ do Gurobi e da melhor solução heurística nos 10 conjuntos --- instância pequena}
+    \label{fig:res-boxplot-pequeno}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/operational_metrics_across_sets.png}
+    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância pequena}
+    \label{fig:res-operacionais-pequeno}
+\end{figure}
+\clearpage
+
+\section{Instância média}
+\label{sec:res-media}
+
+% TODO: heurística vence nos 10 conjuntos, com Z 65,5% menor que o do Gurobi, em média.
+Resultados da instância média (400 pacientes, 90 s por execução).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_01/gurobi_bounds.png}\\
+        \small (a) Limites do Gurobi
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_01/convergence_broken_axis.png}\\
+        \small (b) Convergência da heurística
+    \end{minipage}
+
+    \vspace{0.4cm}
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_01/gurobi_vs_iterations.png}\\
+        \small (c) Gurobi vs.\ execuções da heurística
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_01/boxplot.png}\\
+        \small (d) Dispersão de $Z$ entre execuções
+    \end{minipage}
+    \caption{Conjunto representativo (conjunto 1) --- instância média}
+    \label{fig:res-conjunto1-medio}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figuras/resultados/medio/boxplot_gurobi_vs_heuristica.png}
+    \caption{$Z$ do Gurobi e da melhor solução heurística nos 10 conjuntos --- instância média}
+    \label{fig:res-boxplot-medio}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{Figuras/resultados/medio/operational_metrics_across_sets.png}
+    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância média}
+    \label{fig:res-operacionais-medio}
+\end{figure}
+\clearpage
+
+\section{Instância grande}
+\label{sec:res-grande}
+
+% TODO: Z da heurística 93,1% abaixo do Gurobi; limite inferior trivial em 8 dos 10 conjuntos;
+% melhor solução inviável em 7 conjuntos (ver seção de viabilidade).
+Resultados da instância grande (1600 pacientes, 360 s por execução).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_01/gurobi_bounds.png}\\
+        \small (a) Limites do Gurobi
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_01/convergence_broken_axis.png}\\
+        \small (b) Convergência da heurística
+    \end{minipage}
+
+    \vspace{0.4cm}
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_01/gurobi_vs_iterations.png}\\
+        \small (c) Gurobi vs.\ execuções da heurística
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_01/boxplot.png}\\
+        \small (d) Dispersão de $Z$ entre execuções
+    \end{minipage}
+    \caption{Conjunto representativo (conjunto 1) --- instância grande}
+    \label{fig:res-conjunto1-grande}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figuras/resultados/grande/boxplot_gurobi_vs_heuristica.png}
+    \caption{$Z$ do Gurobi e da melhor solução heurística nos 10 conjuntos --- instância grande}
+    \label{fig:res-boxplot-grande}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{Figuras/resultados/grande/operational_metrics_across_sets.png}
+    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância grande}
+    \label{fig:res-operacionais-grande}
+\end{figure}
+\clearpage
+
+\section{Instância muito grande}
+\label{sec:res-muito-grande}
+
+% TODO: limite inferior trivial em todos os conjuntos (limitação já discutida);
+% nenhuma execução viável, mas com taxa de violação de cerca de 0,1%.
+Resultados da instância muito grande (6400 pacientes, 900 s por execução).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_01/gurobi_bounds.png}\\
+        \small (a) Limites do Gurobi
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_01/convergence_broken_axis.png}\\
+        \small (b) Convergência da heurística
+    \end{minipage}
+
+    \vspace{0.4cm}
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_01/gurobi_vs_iterations.png}\\
+        \small (c) Gurobi vs.\ execuções da heurística
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_01/boxplot.png}\\
+        \small (d) Dispersão de $Z$ entre execuções
+    \end{minipage}
+    \caption{Conjunto representativo (conjunto 1) --- instância muito grande}
+    \label{fig:res-conjunto1-muito-grande}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Figuras/resultados/muito_grande/boxplot_gurobi_vs_heuristica.png}
+    \caption{$Z$ do Gurobi e da melhor solução heurística nos 10 conjuntos --- instância muito grande}
+    \label{fig:res-boxplot-muito-grande}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/operational_metrics_across_sets.png}
+    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância muito grande}
+    \label{fig:res-operacionais-muito-grande}
+\end{figure}
+\clearpage
+
+% ---------------------------------------------------------------------
+\section{Viabilidade das soluções heurísticas}
+\label{sec:res-viabilidade}
+
+A \autoref{tab:res-viabilidade} mostra a violação de capacidade das soluções heurísticas, medida pela taxa $\rho_{cap}$ (\autoref{eq:taxa-violacao}).
+
+% TODO: destacar que, mesmo inviáveis, as soluções deixam menos de 0,12% dos pacientes-dia sem leito.
+
+
+\begin{table}[htbp]
+    \caption{Viabilidade das soluções heurísticas por porte (melhor solução de cada conjunto, média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-viabilidade}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{3.3cm}}}
+        \hline
+        \textbf{Porte} & \textbf{Execuções que encontraram solução viável} & \textbf{Nº Violações de capacidade ($V_{cap}$)} & \textbf{Carga de internação ($N_{pd}$)} & \textbf{Taxa de violação de capacidade ($\rho_{cap} = V_{cap} / N_{pd}$)} \\
+        \hline
+        Pequena & 100/100 & 0,0 $\pm$ 0,0 & 397,8 $\pm$ 11,0 & 0,000\% $\pm$ 0,000\% \\
+        Média & 100/100 & 0,0 $\pm$ 0,0 & 1\,611,6 $\pm$ 21,1 & 0,000\% $\pm$ 0,000\% \\
+        Grande & 5/100 & 0,9 $\pm$ 0,7 & 6\,420,6 $\pm$ 41,7 & 0,014\% $\pm$ 0,011\% \\
+        Muito grande & 0/50 & 24,4 $\pm$ 2,5 & 25\,601,0 $\pm$ 107,7 & 0,095\% $\pm$ 0,010\% \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+
+% ---------------------------------------------------------------------
+\section{Esforço computacional}
+\label{sec:res-esforco}
+
+A \autoref{tab:res-esforco} compara o esforço de busca das duas abordagens dentro do mesmo teto de tempo.
+
+% TODO: Gurobi faz cada vez menos iterações com o porte (1\,334 na muito grande);
+% a heurística mantém entre 50 e 75 mil avaliações/s, mas cai para 8 gerações na muito grande.
+
+\begin{table}[htbp]
+    \caption{Esforço computacional por porte (média por execução)}
+    \label{tab:res-esforco}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lrrrr}
+        \hline
+        \textbf{Porte} & \textbf{Teto} & \textbf{Nº Iterações do Gurobi} & \textbf{Nº Avaliações da heurística} & \textbf{Nº Gerações} \\
+        \hline
+        Pequena      & 30 s  & 1\,112\,503 & 2\,202\,174  & 25,5 \\
+        Média        & 90 s  & 50\,741     & 5\,841\,757  & 15,5 \\
+        Grande       & 360 s & 220\,275    & 22\,175\,677 & 14,5 \\
+        Muito grande & 900 s & 1\,334      & 46\,617\,002 & 8,0  \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+% ---------------------------------------------------------------------
+\section{Síntese}
+\label{sec:res-sintese}
+
+% TODO: ponto de inversão entre as abordagens, qualidade da heurística nas instâncias
+% grandes e inviabilidade residual.
+Síntese dos resultados e ponte para a Conclusão.
+
+
+
+
+\begin{table}[htbp]
+    \caption{Resumo agregado entre os 10 conjuntos de cada porte (média $\pm$ desvio padrão)}
+    \label{tab:agregado}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lrrrr}
+        \hline
+        \textbf{Métrica} & \textbf{Pequena} & \textbf{Média} & \textbf{Grande} & \textbf{Muito grande} \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Instâncias}} \\
+        Horizonte (dias) & 15,1 $\pm$ 0,6 & 15,1 $\pm$ 0,3 & 15,0 $\pm$ 0,0 & 15,0 $\pm$ 0,0 \\
+        Ocupação Média (todo o horizonte) & 87,9\% $\pm$ 1,9\% & 89,0\% $\pm$ 1,4\% & 89,2\% $\pm$ 0,6\% & 88,9\% $\pm$ 0,4\% \\
+        Pico de Ocupação Diária & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% \\
+        Mínimo de Ocupação Diária & 11,3\% $\pm$ 6,9\% & 14,3\% $\pm$ 6,4\% & 12,3\% $\pm$ 2,6\% & 11,0\% $\pm$ 1,2\% \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Gurobi}} \\
+        $Z$ (Limite Superior) & 10\,370,0 $\pm$ 3\,461,4 & 83\,992,5 $\pm$ 7\,816,0 & 820\,270,0 $\pm$ 8\,025,5 & 3\,277\,170,0 $\pm$ 14\,301,5 \\
+        Limite Inferior & 9\,845,0 $\pm$ 3\,391,1 & 23\,950,0 $\pm$ 5\,336,1 & 7\,735,0 $\pm$ 16\,852,7 & 0,0 $\pm$ 0,0 \\
+        Gap de Otimalidade & 5,4\% $\pm$ 3,6\% & 71,4\% $\pm$ 6,1\% & 99,1\% $\pm$ 2,1\% & 100,0\% $\pm$ 0,0\% \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Heurística}} \\
+        $Z$ & 10\,567,5 $\pm$ 3\,493,4 & 28\,807,5 $\pm$ 5\,560,8 & 56\,260,0 $\pm$ 9\,935,3 & 210\,675,0 $\pm$ 22\,841,7 \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Métricas Operacionais}} \\
+        \multicolumn{5}{l}{Especialidade Incorreta (contagem)} \\
+        \quad Gurobi & 93,0 $\pm$ 35,7 & 369,9 $\pm$ 70,0 & 4\,618,8 $\pm$ 56,6 & 18\,470,5 $\pm$ 99,3 \\
+        \quad Heurística & 93,3 $\pm$ 35,2 & 240,1 $\pm$ 54,0 & 346,2 $\pm$ 102,6 & 1\,082,6 $\pm$ 200,2 \\
+        \multicolumn{5}{l}{Transferências (contagem)} \\
+        \quad Gurobi & 3,7 $\pm$ 1,8 & 575,4 $\pm$ 150,3 & 4\,789,4 $\pm$ 39,9 & 19\,170,7 $\pm$ 108,2 \\
+        \quad Heurística & 6,3 $\pm$ 1,9 & 52,0 $\pm$ 11,8 & 284,9 $\pm$ 30,4 & 1\,239,8 $\pm$ 88,2 \\
+        \multicolumn{5}{l}{Quarto-dias Mistos (contagem)} \\
+        \quad Gurobi & 11,8 $\pm$ 4,1 & 243,1 $\pm$ 38,8 & 1\,585,6 $\pm$ 19,1 & 6\,287,8 $\pm$ 29,7 \\
+        \quad Heurística & 12,3 $\pm$ 4,4 & 29,3 $\pm$ 5,5 & 98,6 $\pm$ 13,8 & 539,0 $\pm$ 25,3 \\
+        \multicolumn{5}{l}{Violação de Capacidade (pacientes-dia)} \\
+        \quad Gurobi & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 \\
+        \quad Heurística & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,9 $\pm$ 0,7 & 24,4 $\pm$ 2,5 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}

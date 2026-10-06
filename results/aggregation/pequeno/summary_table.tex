@@ -1,46 +1,40 @@
-\begin{longtable}{lrr}
-\caption{Resumo agregado entre conjuntos --- Pequeno (10 conjuntos)} \label{tab:agregado-pequeno} \\
-\toprule
-Métrica & Melhor & Melhor Viável \\
-\midrule
-\endfirsthead
-\multicolumn{3}{c}{\tablename\ \thetable{} -- continuação da página anterior} \\
-\toprule
-Métrica & Melhor & Melhor Viável \\
-\midrule
-\endhead
-\midrule
-\multicolumn{3}{r}{continua na próxima página} \\
-\endfoot
-\bottomrule
-\endlastfoot
-\multicolumn{3}{l}{\textbf{Gurobi}} \\
-\midrule
-Custo Total (Upper Bound) & 10\,370,0 $\pm$ 3\,461,4 & -- \\
-Lower Bound & 9\,845,0 $\pm$ 3\,391,1 & -- \\
-Gap de Otimalidade & 5,4\% $\pm$ 3,6\% & -- \\
-Rodadas com Ótimo Provado & 0/10 & -- \\
-\midrule
-\multicolumn{3}{l}{\textbf{Heurística}} \\
-\midrule
-Custo Total & 10\,567,5 $\pm$ 3\,493,4 & 10\,567,5 $\pm$ 3\,493,4 \\
-Vitórias sobre Gurobi & 0/10 & -- \\
-Conjuntos onde Melhor Viável = Melhor & 10/10 & -- \\
-\midrule
-\multicolumn{3}{l}{\textbf{Métricas Operacionais}} \\
-\midrule
-Horizonte (dias) & 15,1 $\pm$ 0,6 & \textit{= Melhor} \\
-Especialidade Incorreta (contagem) & 93,3 $\pm$ 35,2 & \textit{= Melhor} \\
-Transferências (contagem) & 6,3 $\pm$ 1,9 & \textit{= Melhor} \\
-Quarto-dias Mistos (contagem) & 12,3 $\pm$ 4,4 & \textit{= Melhor} \\
-Violação de Capacidade (instâncias) & 0,0 $\pm$ 0,0 & \textit{= Melhor} \\
-Ocupação Média & 87,9\% $\pm$ 1,9\% & \textit{= Melhor} \\
-Ocupação (DP intra-solução) & 29,7\% $\pm$ 2,3\% & \textit{= Melhor} \\
-Pico de Ocupação (pacientes) & 30,0 $\pm$ 0,0 & \textit{= Melhor} \\
-Pico de Ocupação (capacidade total) & 30,0 $\pm$ 0,0 & \textit{= Melhor} \\
-Pico de Ocupação (dia) & 1,0 $\pm$ 0,0 & \textit{= Melhor} \\
-Ocupação — Cardiology & 87,8\% $\pm$ 3,8\% & \textit{= Melhor} \\
-Ocupação — General & 88,3\% $\pm$ 3,4\% & \textit{= Melhor} \\
-Ocupação — Orthopedics & 88,9\% $\pm$ 4,2\% & \textit{= Melhor} \\
-Ocupação — Surgery & 90,6\% $\pm$ 5,0\% & \textit{= Melhor} \\
-\end{longtable}
+\begin{table}[htbp]
+    \caption{Resumo agregado entre os 10 conjuntos --- instância pequena (média $\pm$ desvio padrão)}
+    \label{tab:agregado-pequeno}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lr}
+        \hline
+        \textbf{Métrica} & \textbf{Pequena} \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Instâncias}} \\
+        Horizonte (dias) & 15,1 $\pm$ 0,6 \\
+        Ocupação Média (todo o horizonte) & 87,9\% $\pm$ 1,9\% \\
+        Pico de Ocupação Diária & 100,0\% $\pm$ 0,0\% \\
+        Mínimo de Ocupação Diária & 11,3\% $\pm$ 6,9\% \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Gurobi}} \\
+        $Z$ (Limite Superior) & 10\,370,0 $\pm$ 3\,461,4 \\
+        Limite Inferior & 9\,845,0 $\pm$ 3\,391,1 \\
+        Gap de Otimalidade & 5,4\% $\pm$ 3,6\% \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Heurística}} \\
+        $Z$ & 10\,567,5 $\pm$ 3\,493,4 \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Métricas Operacionais}} \\
+        \multicolumn{2}{l}{Especialidade Incorreta (contagem)} \\
+        \quad Gurobi & 93,0 $\pm$ 35,7 \\
+        \quad Heurística & 93,3 $\pm$ 35,2 \\
+        \multicolumn{2}{l}{Transferências (contagem)} \\
+        \quad Gurobi & 3,7 $\pm$ 1,8 \\
+        \quad Heurística & 6,3 $\pm$ 1,9 \\
+        \multicolumn{2}{l}{Quarto-dias Mistos (contagem)} \\
+        \quad Gurobi & 11,8 $\pm$ 4,1 \\
+        \quad Heurística & 12,3 $\pm$ 4,4 \\
+        \multicolumn{2}{l}{Violação de Capacidade (pacientes-dia)} \\
+        \quad Gurobi & 0,0 $\pm$ 0,0 \\
+        \quad Heurística & 0,0 $\pm$ 0,0 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}

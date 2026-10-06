@@ -1,6 +1,7 @@
 """W_cap sweep on medio/set_01: fitness vs. capacity violation for each penalty weight.
 
 Usage: python experiments/capacity/run_experiment.py [repetitions=3] [time_limit=60]
+       python experiments/capacity/run_experiment.py plot   # only redraws the chart from the saved summary
 """
 
 from __future__ import annotations
@@ -100,13 +101,10 @@ def plot_fitness_vs_capacity_penalty(summary: pd.DataFrame) -> None:
     ax_fitness.errorbar(
         x, summary["objective_value_mean"], yerr=summary["objective_value_std"],
         color="steelblue", marker="o", linewidth=2, capsize=4,
-        label="Fitness sem penalidade de capacidade (média ± DP)",
+        label=r"Função objetivo $Z$ (média ± DP)",
     )
-    ax_fitness.set_xlabel("Peso da penalidade de capacidade (W_cap)")
-    ax_fitness.set_ylabel(
-        "Fitness sem penalidade de capacidade (especialidade + transferência + gênero)",
-        color="steelblue",
-    )
+    ax_fitness.set_xlabel(r"Peso da penalidade de capacidade ($W_{cap}$)")
+    ax_fitness.set_ylabel(r"Função objetivo $Z$", color="steelblue")
     ax_fitness.tick_params(axis="y", labelcolor="steelblue")
     ax_fitness.set_xticks(list(x))
     ax_fitness.set_xticklabels(x_labels)
@@ -114,9 +112,9 @@ def plot_fitness_vs_capacity_penalty(summary: pd.DataFrame) -> None:
     ax_violation = ax_fitness.twinx()
     ax_violation.plot(
         x, summary["capacity_violation_mean"], color="firebrick", marker="D",
-        linestyle="--", linewidth=2, label="Violação de capacidade (média)",
+        linestyle="--", linewidth=2, label=r"Violação de capacidade $V_{cap}$ (média)",
     )
-    ax_violation.set_ylabel("Leitos-dia de capacidade excedida (média)", color="firebrick")
+    ax_violation.set_ylabel(r"Violação de capacidade $V_{cap}$ (pacientes-dia)", color="firebrick")
     ax_violation.tick_params(axis="y", labelcolor="firebrick")
     ax_violation.set_ylim(bottom=0)
 
@@ -125,23 +123,25 @@ def plot_fitness_vs_capacity_penalty(summary: pd.DataFrame) -> None:
         default_x = summary.index[summary["w_cap"] == current_default][0]
         ax_fitness.axvline(default_x, color="gray", linestyle=":", linewidth=1.2, zorder=0)
         ax_fitness.text(
-            default_x, ax_fitness.get_ylim()[1], f" W_cap atual ({current_default})",
+            default_x, ax_fitness.get_ylim()[1], f" valor adotado ({current_default})",
             rotation=90, va="top", ha="left", fontsize=8, color="gray",
         )
 
     lines_1, labels_1 = ax_fitness.get_legend_handles_labels()
     lines_2, labels_2 = ax_violation.get_legend_handles_labels()
-    ax_fitness.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right")
+    ax_fitness.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper left", bbox_to_anchor=(0.12, 1.0))
 
-    ax_fitness.set_title(
-        f"Fitness (sem penalidade de capacidade) vs. peso de penalidade — instância {INSTANCE_PATH}"
-    )
+    ax_fitness.set_title(f"Calibração do peso de capacidade — instância {INSTANCE_PATH}")
     fig.tight_layout()
     fig.savefig(os.path.join(RESULTS_DIR, "fitness_vs_capacity_penalty.png"), dpi=150)
     plt.close(fig)
 
 
 def main() -> None:
+    if len(sys.argv) > 1 and sys.argv[1] == "plot":
+        plot_fitness_vs_capacity_penalty(pd.read_csv(os.path.join(RESULTS_DIR, "capacity_sweep_summary.csv")))
+        return
+
     repetitions = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_REPETITIONS
     time_limit = float(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_TIME_LIMIT
 

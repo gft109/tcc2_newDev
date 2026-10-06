@@ -257,3 +257,7 @@ class SolverResult:
     @property
     def total_cost(self) -> float:
         return self.solution.fitness
+
+    @property
+    def objective_value(self) -> float:
+        return self.solution.objective_value

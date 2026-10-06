@@ -1,30 +1,30 @@
 ====================================================================================================
                        RESUMO AGREGADO ENTRE CONJUNTOS — MEDIO (10 conjuntos)                       
 ====================================================================================================
-Métrica                                   | Melhor                    | Melhor Viável
+Métrica                                   | Média ± DP
 ----------------------------------------------------------------------------------------------------
+-- Instâncias --------------------------------------------------------------------------------------
+Horizonte (dias)                          | 15.1 ± 0.3
+Ocupação Média (todo o horizonte)         | 89.0% ± 1.4%
+Pico de Ocupação Diária                   | 100.0% ± 0.0%
+Mínimo de Ocupação Diária                 | 14.3% ± 6.4%
 -- Gurobi ------------------------------------------------------------------------------------------
-Custo Total (Upper Bound)                 | 83992.5 ± 7816.0          | —
-Lower Bound                               | 23950.0 ± 5336.1          | —
-Gap de Otimalidade                        | 71.4% ± 6.1%              | —
-Rodadas com Ótimo Provado                 | 0/10                      | —
+Z (Limite Superior)                       | 83992.5 ± 7816.0
+Limite Inferior                           | 23950.0 ± 5336.1
+Gap de Otimalidade                        | 71.4% ± 6.1%
 -- Heurística --------------------------------------------------------------------------------------
-Custo Total                               | 28807.5 ± 5560.8          | 28807.5 ± 5560.8
-Vitórias sobre Gurobi                     | 10/10                     | —
-Conjuntos onde Melhor Viável = Melhor     | 10/10                     | —
+Z                                         | 28807.5 ± 5560.8
 -- Métricas Operacionais ---------------------------------------------------------------------------
-Horizonte (dias)                          | 15.1 ± 0.3                | = Melhor (ver acima)
-Especialidade Incorreta (contagem)        | 240.1 ± 54.0              | = Melhor (ver acima)
-Transferências (contagem)                 | 52.0 ± 11.8               | = Melhor (ver acima)
-Quarto-dias Mistos (contagem)             | 29.3 ± 5.5                | = Melhor (ver acima)
-Violação de Capacidade (instâncias)       | 0.0 ± 0.0                 | = Melhor (ver acima)
-Ocupação Média                            | 89.0% ± 1.4%              | = Melhor (ver acima)
-Ocupação (DP intra-solução)               | 28.4% ± 2.0%              | = Melhor (ver acima)
-Pico de Ocupação (pacientes)              | 120.0 ± 0.0               | = Melhor (ver acima)
-Pico de Ocupação (capacidade total)       | 120.0 ± 0.0               | = Melhor (ver acima)
-Pico de Ocupação (dia)                    | 1.0 ± 0.0                 | = Melhor (ver acima)
-Ocupação — Cardiology                     | 89.6% ± 3.6%              | = Melhor (ver acima)
-Ocupação — General                        | 89.8% ± 1.8%              | = Melhor (ver acima)
-Ocupação — Orthopedics                    | 88.9% ± 3.0%              | = Melhor (ver acima)
-Ocupação — Surgery                        | 90.3% ± 4.5%              | = Melhor (ver acima)
+Especialidade Incorreta (contagem)
+    Gurobi                                | 369.9 ± 70.0
+    Heurística                            | 240.1 ± 54.0
+Transferências (contagem)
+    Gurobi                                | 575.4 ± 150.3
+    Heurística                            | 52.0 ± 11.8
+Quarto-dias Mistos (contagem)
+    Gurobi                                | 243.1 ± 38.8
+    Heurística                            | 29.3 ± 5.5
+Violação de Capacidade (pacientes-dia)
+    Gurobi                                | 0.0 ± 0.0
+    Heurística                            | 0.0 ± 0.0
 ====================================================================================================

@@ -218,9 +218,9 @@ class ResultsReporter:
     def plot_boxplot(self) -> None:
         # no Gurobi line: its much higher cost on large instances would squash the boxplot
         fig, ax = plt.subplots(figsize=(6, 5))
-        ax.boxplot([r.total_cost for r in self.heuristic_results], tick_labels=["Heurística"])
-        ax.set_ylabel("Custo total (função objetivo)")
-        ax.set_title(f"Distribuição do custo final — instância {self.instance_name}")
+        ax.boxplot([r.objective_value for r in self.heuristic_results], tick_labels=["Heurística"])
+        ax.set_ylabel("Função objetivo Z")
+        ax.set_title(f"Distribuição de Z entre execuções — instância {self.instance_name}")
         fig.tight_layout()
         fig.savefig(os.path.join(self.output_dir, "boxplot.png"), dpi=150)
         plt.close(fig)
@@ -242,7 +242,7 @@ class ResultsReporter:
 
         fig, ax = plt.subplots(figsize=(6, 5))
 
-        labels = ["Lower Bound", "Upper Bound"]
+        labels = ["Limite inferior", "Limite superior"]
         values = [lower, upper]
         ax.bar(labels, values, color=["steelblue", "darkorange"], width=0.5, zorder=3)
 
@@ -272,7 +272,7 @@ class ResultsReporter:
             frameon=False, fontsize=10, handlelength=0, handletextpad=0, labelcolor=status_color,
         )
 
-        ax.set_ylabel("Custo total (função objetivo)")
+        ax.set_ylabel("Função objetivo Z")
         ax.set_title(f"Gurobi: intervalo de otimalidade — instância {self.instance_name}")
         fig.savefig(os.path.join(self.output_dir, "gurobi_bounds.png"), dpi=150, bbox_inches="tight")
         plt.close(fig)
@@ -307,7 +307,7 @@ class ResultsReporter:
             ax.plot(history, color="steelblue", alpha=0.3, linewidth=1)
 
         best_history = histories[self._best_result_index()]
-        ax.plot(best_history, color="steelblue", linewidth=2.5, label="Melhor repetição")
+        ax.plot(best_history, color="steelblue", linewidth=2.5, label="Melhor execução")
 
         initial_value = best_history[0]
         final_value = best_history[-1]
@@ -321,11 +321,11 @@ class ResultsReporter:
         if feasible_gen is not None:
             ax.scatter(
                 [feasible_gen], [feasible_value], color="crimson", marker="D", zorder=6,
-                label=f"Melhor viável: {feasible_value:.1f} (rodada {feasible_iteration}, ger. {feasible_gen})",
+                label=f"Melhor viável: {feasible_value:.1f} (execução {feasible_iteration}, ger. {feasible_gen})",
             )
 
         ax.set_xlabel("Geração")
-        ax.set_ylabel("Melhor custo encontrado até então")
+        ax.set_ylabel("Melhor fitness F encontrado até então")
         ax.set_title(f"Convergência do Algoritmo Memético — instância {self.instance_name}")
         ax.legend()
         fig.tight_layout()
@@ -363,7 +363,7 @@ class ResultsReporter:
         for ax in (ax_top, ax_bottom):
             for history in histories:
                 ax.plot(history, color="steelblue", alpha=0.3, linewidth=1)
-            ax.plot(best_history, color="steelblue", linewidth=2.5, label="Melhor repetição")
+            ax.plot(best_history, color="steelblue", linewidth=2.5, label="Melhor execução")
             ax.scatter([0], [initial_value], color="darkorange", zorder=5, label=f"Início: {initial_value:.1f}")
             ax.scatter(
                 [len(best_history) - 1], [final_value], color="seagreen", zorder=5,
@@ -372,7 +372,7 @@ class ResultsReporter:
             if feasible_gen is not None:
                 ax.scatter(
                     [feasible_gen], [feasible_value], color="crimson", marker="D", zorder=6,
-                    label=f"Melhor viável: {feasible_value:.1f} (rodada {feasible_iteration}, ger. {feasible_gen})",
+                    label=f"Melhor viável: {feasible_value:.1f} (execução {feasible_iteration}, ger. {feasible_gen})",
                 )
 
         ax_top.set_ylim(tail_max + tail_margin, top_max * 1.05)
@@ -391,7 +391,7 @@ class ResultsReporter:
         ax_bottom.plot([0, 1], [1, 1], transform=ax_bottom.transAxes, **break_marker)
 
         ax_bottom.set_xlabel("Geração")
-        ax_bottom.set_ylabel("Melhor custo encontrado até então")
+        ax_bottom.set_ylabel("Melhor fitness F encontrado até então")
         ax_top.set_title(f"Convergência do Algoritmo Memético — instância {self.instance_name} (eixo quebrado)")
         ax_top.legend(loc="upper right", fontsize=8)
 
@@ -399,12 +399,12 @@ class ResultsReporter:
         plt.close(fig)
 
     def plot_gurobi_vs_iterations(self) -> None:
-        """Gurobi's total cost vs. each heuristic repetition, sorted by cost."""
+        """Gurobi's Z vs. each heuristic execution's Z, sorted by value."""
         if self.gurobi_result is None:
             return
 
-        labels = ["Gurobi"] + [f"Iteração {i}" for i in range(1, len(self.heuristic_results) + 1)]
-        values = [self.gurobi_result.total_cost] + [r.total_cost for r in self.heuristic_results]
+        labels = ["Gurobi"] + [f"Execução {i}" for i in range(1, len(self.heuristic_results) + 1)]
+        values = [self.gurobi_result.objective_value] + [r.objective_value for r in self.heuristic_results]
         colors = ["darkorange"] + ["steelblue"] * len(self.heuristic_results)
 
         if self.best_feasible_result is not None:
@@ -416,8 +416,8 @@ class ResultsReporter:
 
         fig, ax = plt.subplots(figsize=(max(6.0, 1.0 + 0.6 * len(labels)), 5))
         ax.bar(labels, values, color=colors)
-        ax.set_ylabel("Custo total (função objetivo)")
-        ax.set_title(f"Gurobi vs. iterações da heurística — instância {self.instance_name}")
+        ax.set_ylabel("Função objetivo Z")
+        ax.set_title(f"Gurobi vs. execuções da heurística — instância {self.instance_name}")
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
         fig.tight_layout()
         fig.savefig(os.path.join(self.output_dir, "gurobi_vs_iterations.png"), dpi=150)
@@ -438,8 +438,12 @@ class _ReplayedSolution:
         return WEIGHTS["W_CAP"] * self.capacity_violation
 
     @property
+    def objective_value(self) -> float:
+        return self.specialty_cost + self.transfer_cost + self.gender_cost
+
+    @property
     def fitness(self) -> float:
-        return self.specialty_cost + self.transfer_cost + self.gender_cost + self.capacity_cost
+        return self.objective_value + self.capacity_cost
 
     def sort_key(self):
         # mirrors Solution.sort_key()
