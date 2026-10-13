@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    \caption{Função objetivo $Z$ por conjunto --- instância pequena. Na heurística, $Z$ sem a penalidade de capacidade; $\sigma$: desvio padrão de $Z$ entre as 10 execuções do conjunto}
+    \label{tab:res-z-pequeno}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{crrrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \multicolumn{2}{c}{\textbf{Heurística (10 execuções)}} \\
+        \cline{2-4} \cline{5-6}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & \textbf{Melhor execução} & \textbf{Média $\pm$ $\sigma$} \\
+        \hline
+        01 & 11\,800,0 & 11\,050,0 & 6,4\% & 11\,975,0 & 12\,482,5 $\pm$ 304,6 \\
+        02 & 11\,975,0 & 11\,850,0 & 1,0\% & 12\,125,0 & 12\,532,5 $\pm$ 232,8 \\
+        03 & 9\,050,0 & 8\,125,0 & 10,2\% & 9\,150,0 & 9\,622,5 $\pm$ 219,0 \\
+        04 & 5\,775,0 & 5\,600,0 & 3,0\% & 5\,900,0 & 6\,015,0 $\pm$ 102,9 \\
+        05 & 8\,525,0 & 8\,025,0 & 5,9\% & 8\,775,0 & 9\,137,5 $\pm$ 267,3 \\
+        06 & 16\,250,0 & 15\,350,0 & 5,5\% & 16\,375,0 & 16\,530,0 $\pm$ 107,9 \\
+        07 & 5\,475,0 & 4\,800,0 & 12,3\% & 5\,625,0 & 6\,105,0 $\pm$ 246,9 \\
+        08 & 11\,125,0 & 10\,600,0 & 4,7\% & 11\,675,0 & 11\,970,0 $\pm$ 220,1 \\
+        09 & 9\,275,0 & 9\,100,0 & 1,9\% & 9\,325,0 & 9\,565,0 $\pm$ 209,2 \\
+        10 & 14\,450,0 & 13\,950,0 & 3,5\% & 14\,750,0 & 15\,045,0 $\pm$ 143,3 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}

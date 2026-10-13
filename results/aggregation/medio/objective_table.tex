@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    \caption{Função objetivo $Z$ por conjunto --- instância média. Na heurística, $Z$ sem a penalidade de capacidade; $\sigma$: desvio padrão de $Z$ entre as 10 execuções do conjunto}
+    \label{tab:res-z-medio}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{crrrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \multicolumn{2}{c}{\textbf{Heurística (10 execuções)}} \\
+        \cline{2-4} \cline{5-6}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & \textbf{Melhor execução} & \textbf{Média $\pm$ $\sigma$} \\
+        \hline
+        01 & 79\,300,0 & 22\,350,0 & 71,8\% & 29\,350,0 & 30\,077,5 $\pm$ 585,8 \\
+        02 & 73\,625,0 & 18\,000,0 & 75,6\% & 22\,750,0 & 23\,655,0 $\pm$ 545,2 \\
+        03 & 91\,800,0 & 27\,400,0 & 70,2\% & 31\,675,0 & 32\,997,5 $\pm$ 711,4 \\
+        04 & 84\,525,0 & 23\,800,0 & 71,8\% & 28\,475,0 & 29\,135,0 $\pm$ 386,3 \\
+        05 & 89\,950,0 & 20\,450,0 & 77,3\% & 25\,150,0 & 26\,827,5 $\pm$ 875,6 \\
+        06 & 69\,075,0 & 24\,550,0 & 64,5\% & 29\,575,0 & 30\,532,5 $\pm$ 578,8 \\
+        07 & 83\,950,0 & 22\,750,0 & 72,9\% & 27\,850,0 & 28\,812,5 $\pm$ 765,0 \\
+        08 & 88\,275,0 & 16\,500,0 & 81,3\% & 20\,000,0 & 21\,027,5 $\pm$ 651,3 \\
+        09 & 92\,650,0 & 29\,400,0 & 68,3\% & 33\,600,0 & 34\,217,5 $\pm$ 598,2 \\
+        10 & 86\,775,0 & 34\,300,0 & 60,5\% & 39\,650,0 & 40\,195,0 $\pm$ 384,9 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}

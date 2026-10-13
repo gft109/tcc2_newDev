@@ -88,6 +88,9 @@ def collect_set_row(instance_name: str, set_dir: str) -> dict:
         melhor = heuristic_df.loc[heuristic_df["total_cost"].idxmin()]
         row["heur_melhor_z"] = melhor["total_cost"] - melhor["capacity_cost"]
         row["heur_melhor_v_cap"] = melhor["capacity_cost"] / WEIGHTS["W_CAP"]
+        executions_z = heuristic_df["total_cost"] - heuristic_df["capacity_cost"]
+        row["heur_media_z"] = executions_z.mean()
+        row["heur_dp_z"] = executions_z.std() if len(executions_z) > 1 else 0.0
         row["heur_execucoes"] = len(heuristic_df)
         row["heur_execucoes_viaveis"] = int(heuristic_df["best_feasible_fitness"].notna().sum())
         row["n_pd"] = patient_days(instance_name, set_dir)
@@ -122,37 +125,6 @@ def collect_set_row(instance_name: str, set_dir: str) -> dict:
 def build_aggregate_summary(instance_name: str, sets: list[str]) -> pd.DataFrame:
     rows = [collect_set_row(instance_name, set_dir) for set_dir in sets]
     return pd.DataFrame(rows).sort_values("set").reset_index(drop=True)
-
-
-def plot_boxplot_gurobi_vs_heuristica(df: pd.DataFrame, instance_name: str, out_dir: str) -> None:
-    data, labels = [], []
-    if "gurobi_total_cost" in df.columns:
-        values = df["gurobi_total_cost"].dropna().tolist()
-        if values:
-            data.append(values)
-            labels.append("Gurobi")
-    if "heur_melhor_z" in df.columns:
-        values = df["heur_melhor_z"].dropna().tolist()
-        if values:
-            data.append(values)
-            labels.append("Heurística (melhor)")
-    if not data:
-        return
-
-    fig, ax = plt.subplots(figsize=(6, 5))
-    ax.boxplot(data, tick_labels=labels)
-    ax.set_ylabel("Função objetivo Z")
-
-    title = f"Gurobi vs. Heurística entre conjuntos — {instance_name}"
-    if "heur_bate_gurobi" in df.columns:
-        comparable = df["heur_bate_gurobi"].dropna()
-        if len(comparable) > 0:
-            title += f"\nHeurística superou o Gurobi em {int(comparable.sum())}/{len(comparable)} conjuntos"
-    ax.set_title(title)
-
-    fig.tight_layout()
-    fig.savefig(os.path.join(out_dir, "boxplot_gurobi_vs_heuristica.png"), dpi=150)
-    plt.close(fig)
 
 
 OPERATIONAL_METRICS = [
@@ -378,12 +350,59 @@ def render_viability_latex_table(dfs: dict[str, pd.DataFrame]) -> str:
     return "\n".join(lines)
 
 
+def render_objective_latex_table(df: pd.DataFrame, instance_name: str) -> str:
+    """Z of Gurobi and of the heuristic for each set of one instance."""
+    display_name = INSTANCE_DISPLAY_NAMES.get(instance_name, instance_name)
+    n_executions = int(df["heur_execucoes"].max())
+    lines = [
+        r"\begin{table}[htbp]",
+        f"    \\caption{{Função objetivo $Z$ por conjunto --- instância {display_name}. Na heurística, $Z$ sem a "
+        f"penalidade de capacidade; $\\sigma$: desvio padrão de $Z$ entre as {n_executions} execuções do conjunto}}",
+        f"    \\label{{tab:res-z-{instance_name.replace('_', '-')}}}",
+        r"    \centering",
+        r"    \begin{adjustbox}{max width=\textwidth}",
+        r"    \begin{tabular}{crrrrr}",
+        r"        \hline",
+        f"        & \\multicolumn{{3}}{{c}}{{\\textbf{{Gurobi}}}} & "
+        f"\\multicolumn{{2}}{{c}}{{\\textbf{{Heurística ({n_executions} execuções)}}}} \\\\",
+        r"        \cline{2-4} \cline{5-6}",
+        r"        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & "
+        r"\textbf{Melhor execução} & \textbf{Média $\pm$ $\sigma$} \\",
+        r"        \hline",
+    ]
+    for _, row in df.iterrows():
+        lines.append(
+            f"        {int(row['set']):02d} & {_latex_number(row['gurobi_upper_bound'])} & "
+            f"{_latex_number(row['gurobi_lower_bound'])} & {_latex_number(row['gurobi_gap'] * 100)}\\% & "
+            f"{_latex_number(row['heur_melhor_z'])} & "
+            f"{_latex_number(row['heur_media_z'])} $\\pm$ {_latex_number(row['heur_dp_z'])} \\\\"
+        )
+    lines += [
+        r"        \hline",
+        r"    \end{tabular}",
+        r"    \end{adjustbox}",
+        r"\end{table}",
+    ]
+    return "\n".join(lines)
+
+
+def save_objective_latex_table(df: pd.DataFrame, instance_name: str) -> None:
+    out_dir = os.path.join(AGGREGATION_DIR, instance_name)
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "objective_table.tex")
+    with open(path, "w") as f:
+        f.write(render_objective_latex_table(df, instance_name) + "\n")
+    print(f"Tabela de Z por conjunto em {path}")
+
+
 def save_combined_latex_table() -> None:
     dfs = {}
     for instance in INSTANCE_DISPLAY_NAMES:
         sets = discover_sets(instance)
         if sets:
             dfs[instance] = build_aggregate_summary(instance, sets)
+    for instance, df in dfs.items():
+        save_objective_latex_table(df, instance)
     rows_by_instance = {instance: build_summary_rows(df) for instance, df in dfs.items()}
     latex = render_latex_table(
         rows_by_instance,
@@ -447,12 +466,12 @@ def main() -> None:
     df = build_aggregate_summary(instance_name, sets)
     df.to_csv(os.path.join(out_dir, "aggregate_summary.csv"), index=False)
 
-    plot_boxplot_gurobi_vs_heuristica(df, instance_name, out_dir)
     plot_operational_metrics(df, instance_name, out_dir)
 
     print()
     print_and_save_summary_table(df, instance_name, out_dir)
     print()
+    save_objective_latex_table(df, instance_name)
     print(f"Resultados em {out_dir}/ (aggregate_summary.csv tem a tabela crua, uma linha por conjunto)")
 
 

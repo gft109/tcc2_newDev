@@ -18,8 +18,9 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import pandas as pd
+from matplotlib.patches import Patch
+from matplotlib.ticker import FuncFormatter
 
 from utils.solution import WEIGHTS, COMPARISON_MODE, Solution, SolverResult
 
@@ -65,7 +66,6 @@ class ResultsReporter:
         self.plot_all()
 
     def plot_all(self) -> None:
-        self.plot_gurobi_bounds()
         if self.heuristic_results:
             self.plot_boxplot()
             self.plot_convergence()
@@ -225,58 +225,6 @@ class ResultsReporter:
         fig.savefig(os.path.join(self.output_dir, "boxplot.png"), dpi=150)
         plt.close(fig)
 
-    def plot_gurobi_bounds(self) -> None:
-        """Gurobi lower vs. upper bound, with the optimality gap between them."""
-        if self.gurobi_result is None:
-            return
-
-        lower = self.gurobi_result.lower_bound
-        upper = self.gurobi_result.upper_bound
-        gap = self.gurobi_result.gap
-        is_optimal = self.gurobi_result.is_optimal
-        if lower is None or upper is None:
-            return
-
-        status_color = "forestgreen" if is_optimal else "firebrick"
-        status_label = "✓ Ótimo provado" if is_optimal else "⚠ Ótimo NÃO provado (bateu o teto de tempo)"
-
-        fig, ax = plt.subplots(figsize=(6, 5))
-
-        labels = ["Limite inferior", "Limite superior"]
-        values = [lower, upper]
-        ax.bar(labels, values, color=["steelblue", "darkorange"], width=0.5, zorder=3)
-
-        top = max(lower, upper)
-        ax.set_ylim(0, top * 1.15 if top > 0 else 1.0)
-
-        for x, value in enumerate(values):
-            ax.text(x, value + top * 0.015, f"{value:.1f}", ha="center", va="bottom", fontsize=10, fontweight="bold")
-
-        x_min, x_max = ax.get_xlim()
-        ax.hlines(
-            [lower, upper], x_min, x_max, colors=["steelblue", "darkorange"],
-            linestyle="--", linewidth=1.2, alpha=0.5, zorder=4,
-        )
-        ax.set_xlim(x_min, x_max)
-
-        ax.plot([0.5, 0.5], [lower, upper], linestyle="--", color=status_color, linewidth=1.5, zorder=5)
-        mid_y = (lower + upper) / 2
-        ax.text(
-            0.55, mid_y, f"gap: {gap * 100:.1f}%", ha="left", va="center",
-            fontsize=11, fontweight="bold", color=status_color,
-        )
-
-        status_handle = Line2D([0], [0], color="none", label=status_label)
-        ax.legend(
-            handles=[status_handle], loc="upper center", bbox_to_anchor=(0.5, -0.14),
-            frameon=False, fontsize=10, handlelength=0, handletextpad=0, labelcolor=status_color,
-        )
-
-        ax.set_ylabel("Função objetivo Z")
-        ax.set_title(f"Gurobi: intervalo de otimalidade — instância {self.instance_name}")
-        fig.savefig(os.path.join(self.output_dir, "gurobi_bounds.png"), dpi=150, bbox_inches="tight")
-        plt.close(fig)
-
     def _convergence_histories(self) -> list[list[float]]:
         return [list(r.convergence_history) for r in self.heuristic_results]
 
@@ -395,7 +343,7 @@ class ResultsReporter:
         ax_top.set_title(f"Convergência do Algoritmo Memético — instância {self.instance_name} (eixo quebrado)")
         ax_top.legend(loc="upper right", fontsize=8)
 
-        fig.savefig(os.path.join(self.output_dir, "convergence_broken_axis.png"), dpi=150)
+        fig.savefig(os.path.join(self.output_dir, "convergence_broken_axis.png"), dpi=150, bbox_inches="tight")
         plt.close(fig)
 
     def plot_gurobi_vs_iterations(self) -> None:
@@ -403,25 +351,44 @@ class ResultsReporter:
         if self.gurobi_result is None:
             return
 
-        labels = ["Gurobi"] + [f"Execução {i}" for i in range(1, len(self.heuristic_results) + 1)]
-        values = [self.gurobi_result.objective_value] + [r.objective_value for r in self.heuristic_results]
-        colors = ["darkorange"] + ["steelblue"] * len(self.heuristic_results)
+        gurobi_label = "Gurobi"
+        execution_label = "Execução da heurística"
+        feasible_label = "Melhor solução viável da heurística"
+        colors = {gurobi_label: "darkorange", execution_label: "steelblue", feasible_label: "forestgreen"}
 
+        # (label, Z, tie-break rank): on equal Z, feasible solutions go further left
+        entries = [(gurobi_label, self.gurobi_result.objective_value, 1)]
+        entries += [
+            (execution_label, r.objective_value, 2 if r.solution.capacity_violation == 0 else 3)
+            for r in self.heuristic_results
+        ]
         if self.best_feasible_result is not None:
-            labels = labels + ["Melhor Viável"]
-            values = values + [self.best_feasible_result.best_feasible_fitness]
-            colors = colors + ["forestgreen"]
+            entries.append((feasible_label, self.best_feasible_result.best_feasible_fitness, 0))
+        entries.sort(key=lambda entry: (entry[1], entry[2]))
 
-        labels, values, colors = zip(*sorted(zip(labels, values, colors), key=lambda row: row[1]))
-
-        fig, ax = plt.subplots(figsize=(max(6.0, 1.0 + 0.6 * len(labels)), 5))
-        ax.bar(labels, values, color=colors)
+        values = [value for _, value, _ in entries]
+        fig, ax = plt.subplots(figsize=(max(6.0, 1.0 + 0.6 * len(entries)), 5))
+        bars = ax.bar(range(len(entries)), values, color=[colors[label] for label, _, _ in entries])
+        ax.bar_label(bars, labels=[_thousands(v) for v in values], padding=2, fontsize=8)
+        ax.margins(y=0.08)
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: _thousands(v)))
+        ax.set_xticks([])
+        ax.set_xlabel("Execuções")
         ax.set_ylabel("Função objetivo Z")
         ax.set_title(f"Gurobi vs. execuções da heurística — instância {self.instance_name}")
-        plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
-        fig.tight_layout()
-        fig.savefig(os.path.join(self.output_dir, "gurobi_vs_iterations.png"), dpi=150)
+
+        present = [label for label in colors if any(label == entry[0] for entry in entries)]
+        ax.legend(
+            handles=[Patch(color=colors[label], label=label) for label in present],
+            loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=len(present), frameon=False, fontsize=9,
+        )
+        fig.savefig(os.path.join(self.output_dir, "gurobi_vs_iterations.png"), dpi=150, bbox_inches="tight")
         plt.close(fig)
+
+
+def _thousands(value: float) -> str:
+    """Integer with a dot as thousands separator (pt-BR), e.g. 3.273.725."""
+    return f"{value:,.0f}".replace(",", ".")
 
 
 class _ReplayedSolution:
