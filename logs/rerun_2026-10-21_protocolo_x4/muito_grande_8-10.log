@@ -1,0 +1,46 @@
+[1/3] Rodando MUITO_GRANDE — conjunto 08 (10 repetições, 1920s por solver)...
+Set parameter Username
+Set parameter LicenseID to value 2806061
+Academic license - for non-commercial use only - expires 2027-04-12
+  > Repetição 01/10 concluída | Fitness: 197800.0  | Tempo: 1920.0532 s
+  > Repetição 02/10 concluída | Fitness: 188475.0  | Tempo: 1920.0509 s
+  > Repetição 03/10 concluída | Fitness: 202025.0  | Tempo: 1920.0265 s
+  > Repetição 04/10 concluída | Fitness: 191175.0  | Tempo: 1920.0618 s
+  > Repetição 05/10 concluída | Fitness: 207175.0  | Tempo: 1920.0486 s
+  > Repetição 06/10 concluída | Fitness: 201900.0  | Tempo: 1920.1984 s
+  > Repetição 07/10 concluída | Fitness: 203150.0  | Tempo: 1920.0533 s
+  > Repetição 08/10 concluída | Fitness: 191800.0  | Tempo: 1920.3676 s
+  > Repetição 09/10 concluída | Fitness: 200800.0  | Tempo: 1920.0509 s
+  > Repetição 10/10 concluída | Fitness: 191075.0  | Tempo: 1920.0493 s
+[1/3] Conjunto 08 concluído | Gurobi: 3261000.0 | Heur. (Melhor): 188475.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/muito_grande/set_08/
+
+[2/3] Rodando MUITO_GRANDE — conjunto 09 (10 repetições, 1920s por solver)...
+  > Repetição 01/10 concluída | Fitness: 282900.0  | Tempo: 1920.0542 s
+  > Repetição 02/10 concluída | Fitness: 284325.0  | Tempo: 1920.0479 s
+  > Repetição 03/10 concluída | Fitness: 278275.0  | Tempo: 1920.0492 s
+  > Repetição 04/10 concluída | Fitness: 277775.0  | Tempo: 1920.1821 s
+  > Repetição 05/10 concluída | Fitness: 275225.0  | Tempo: 1920.0507 s
+  > Repetição 06/10 concluída | Fitness: 280200.0  | Tempo: 1920.0527 s
+  > Repetição 07/10 concluída | Fitness: 286700.0  | Tempo: 1920.0527 s
+  > Repetição 08/10 concluída | Fitness: 277400.0  | Tempo: 1920.1053 s
+  > Repetição 09/10 concluída | Fitness: 276525.0  | Tempo: 1920.1973 s
+  > Repetição 10/10 concluída | Fitness: 270450.0  | Tempo: 1920.2026 s
+[2/3] Conjunto 09 concluído | Gurobi: 3297800.0 | Heur. (Melhor): 270450.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/muito_grande/set_09/
+
+[3/3] Rodando MUITO_GRANDE — conjunto 10 (10 repetições, 1920s por solver)...
+  > Repetição 01/10 concluída | Fitness: 217375.0  | Tempo: 1920.1845 s
+  > Repetição 02/10 concluída | Fitness: 227250.0  | Tempo: 1920.0473 s
+  > Repetição 03/10 concluída | Fitness: 228200.0  | Tempo: 1920.0486 s
+  > Repetição 04/10 concluída | Fitness: 213300.0  | Tempo: 1920.1844 s
+  > Repetição 05/10 concluída | Fitness: 225250.0  | Tempo: 1920.0516 s
+  > Repetição 06/10 concluída | Fitness: 228425.0  | Tempo: 1920.1853 s
+  > Repetição 07/10 concluída | Fitness: 225125.0  | Tempo: 1920.0479 s
+  > Repetição 08/10 concluída | Fitness: 240075.0  | Tempo: 1920.1743 s
+  > Repetição 09/10 concluída | Fitness: 225550.0  | Tempo: 1920.0508 s
+  > Repetição 10/10 concluída | Fitness: 231725.0  | Tempo: 1920.0484 s
+[3/3] Conjunto 10 concluído | Gurobi: 3263375.0 | Heur. (Melhor): 213300.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/muito_grande/set_10/
+
+DONE

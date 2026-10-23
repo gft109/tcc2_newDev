@@ -1,201 +1,638 @@
 \chapter{Resultados}
 \label{cap:resultados}
 
-% DRAFT: textos curtos, só para mostrar a organização do capítulo.
-% Figuras em Figuras/resultados/ (pasta latex/resultados/ do repositório).
+Este capítulo apresenta a avaliação experimental e comparativa das abordagens exata (Gurobi) e heurística (Algoritmo Memético) aplicadas ao Problema de Alocação de Leitos (PBA), considerando os quatro portes de instâncias definidos no protocolo experimental (\autoref{tab:protocolo-experimental}). 
 
-Este capítulo apresenta os resultados da comparação entre as abordagens exata e heurística nos quatro portes de instância, seguindo o protocolo da \autoref{tab:protocolo-experimental}. Primeiro é apresentada uma visão geral; em seguida, os resultados de cada porte; por fim, a viabilidade das soluções heurísticas e o esforço computacional. Em cada porte, é mostrado primeiro um conjunto representativo (conjunto 1) e, em seguida, o resultado agregado dos 10 conjuntos.
+A \autoref{sec:res-comparacao} analisa o desempenho relativo entre o \textit{solver} exato e a heurística em cada escala de problema, avaliando o valor da função objetivo $Z$, conforme a Equação~\eqref{eq:objetivo}, a viabilidade das soluções geradas pelo método estocástico e o esforço computacional despendido. A \autoref{sec:res-operacionais} examina o impacto operacional das alocações sob a perspectiva da gestão hospitalar, detalhando a adequação de especialidade médica, o volume de transferências internas e a incidência de quartos mistos, além de comparar os portes entre si. Os principais achados são retomados no \autoref{cap:conclusao}.
+
+% =====================================================================
+\section{Comparação entre o Gurobi e a heurística}
+\label{sec:res-comparacao}
+
+Para cada porte de instância, os resultados dos dez conjuntos são apresentados em duas tabelas, uma com os limites do valor ótimo de $Z$ e outra com os resultados da heurística, seguidas das figuras de convergência e de um \textit{boxplot} da dispersão de $Z$ entre as execuções de cada conjunto. As colunas de cada tabela são descritas em sua nota, e, no texto, a execução de menor \textit{fitness} $F$ de cada conjunto é chamada de melhor execução.
+
+Ressalta-se que as duas abordagens não otimizam exatamente o mesmo problema. No Gurobi, a capacidade dos quartos é uma restrição rígida, enquanto na heurística ela é penalizada no \textit{fitness}, conforme a Equação~\eqref{eq:fitness}, de modo que a melhor solução heurística pode violar a capacidade. Por isso, a tabela da heurística reporta a violação $V_{cap}$ dessa solução, e, quando $V_{cap} > 0$, a comparação de seu $Z$ com o do Gurobi deve ser lida com essa ressalva.
 
 % ---------------------------------------------------------------------
-\section{Visão geral}
-\label{sec:res-visao-geral}
+\subsection{Instância pequena}
+\label{sec:res-pequena}
 
-A \autoref{tab:res-visao-geral} resume o valor da função objetivo $Z$ (\autoref{eq:objetivo}) obtido por cada abordagem em cada porte.
+Na instância pequena ($100$~pacientes, $30$~segundos por execução), o Gurobi obteve a melhor solução em todos os dez conjuntos (\autoref{tab:res-limites-pequeno} e \autoref{tab:res-z-pequeno}). A melhor execução da heurística ficou, em média, $3,0\%$ acima da solução incumbente do Gurobi, com variação entre $0,5\%$ e $5,5\%$, enquanto a média das execuções ficou $5,9\%$ acima. Embora o Gurobi não tenha comprovado a otimalidade, finalizou com \textit{gaps} reduzidos, variando entre $1,0\%$ e $16,0\%$, com média de $5,9\%$, o que mostra que o modelo exato é aplicável para esse porte.
 
-% TODO: comentar a inversão entre as abordagens a partir da instância média.
+Como o Gurobi não comprovou a otimalidade em nenhum conjunto desse porte, a distância das soluções ao ótimo é avaliada por limites inferiores. Além do limite do \textit{solver}, utiliza-se o limite combinatório $LB_{comb}$, conforme a Equação~\eqref{eq:limite-combinatorio}, que corresponde ao custo mínimo de especialidade inadequada imposto pelos dados. Com o maior dos dois limites, $L$, o excesso máximo da heurística sobre o ótimo é $(Z_h - L)/L$, conforme a Equação~\eqref{eq:excesso-otimo}, em que $Z_h$ é o valor da melhor execução. Nesse porte, a melhor execução ficou, em média, no máximo $9,7\%$ acima do ótimo, variando de $2,5\%$ a $25,5\%$ conforme o conjunto. Além disso, o limite do Gurobi é sempre maior que $LB_{comb}$, em média $8,0\%$ acima dele, pois o \textit{solver} avança na árvore de busca e incorpora parte do custo de transferências e de quartos mistos. A heurística obteve soluções viáveis em todas as 100 execuções.
 
-\begin{table}[htbp]
-    \caption{Função objetivo $Z$ por porte (média entre os 10 conjuntos). Na heurística, $Z$ da melhor execução de cada conjunto, sem a penalidade de capacidade}
-    \label{tab:res-visao-geral}
+A análise da convergência, ilustrada na \autoref{fig:res-convergencia-pequeno} e na \autoref{fig:res-convergencia-pequeno-b}, mostra que cerca de $95\%$ da redução de \textit{fitness} ocorre na primeira geração, devido ao refinamento da busca local (VND) na população inicial. A última melhora relevante ocorre, em média, na 9ª ou 10ª geração, de um total de $22,3$ gerações. Nas gerações seguintes, o algoritmo estagna em ótimos locais. Na instância pequena, a limitação da heurística é a capacidade de sair de ótimos locais em espaços de busca menores.
+
+
+\begin{table}[H]
+    \caption{Limites do valor ótimo de $Z$ por conjunto --- instância pequena}
+    \label{tab:res-limites-pequeno}
+    \centering
+    \begin{tabular}{crrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\
+        \cline{2-4} \cline{5-5}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{\textit{Gap}} & \textbf{$LB_{comb}$} \\
+        \hline
+        01 & 11\,800,0 & 11\,050,0 & 6,4\% & 10\,900,0 \\
+        02 & 11\,975,0 & 11\,850,0 & 1,0\% & 11\,200,0 \\
+        03 & 9\,075,0 & 8\,100,0 & 10,7\% & 7\,400,0 \\
+        04 & 5\,775,0 & 5\,600,0 & 3,0\% & 4\,900,0 \\
+        05 & 8\,525,0 & 8\,025,0 & 5,9\% & 7\,100,0 \\
+        06 & 16\,250,0 & 15\,350,0 & 5,5\% & 15\,200,0 \\
+        07 & 5\,475,0 & 4\,600,0 & 16,0\% & 4\,000,0 \\
+        08 & 11\,125,0 & 10\,575,0 & 4,9\% & 10\,000,0 \\
+        09 & 9\,275,0 & 9\,100,0 & 1,9\% & 8\,200,0 \\
+        10 & 14\,450,0 & 13\,950,0 & 3,5\% & 13\,500,0 \\
+        \hline
+    \end{tabular}
+    \par\smallskip
+    {\footnotesize Nota - \textit{Gap} na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
+\end{table}
+
+\begin{table}[H]
+    \caption{Resultados da heurística por conjunto --- instância pequena (10 execuções por conjunto; $Z$ sem a penalidade de capacidade)}
+    \label{tab:res-z-pequeno}
     \centering
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{lrrrrc}
+    \begin{tabular}{crrrrrcr}
         \hline
-        \textbf{Porte} & \textbf{Gurobi (lim. sup.)} & \textbf{Gurobi (lim. inf.)} & \textbf{Gap} & \textbf{Heurística} & \textbf{Vitórias da heurística} \\ 
+        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
         \hline
-        Pequena      & 10\,370,0     & 9\,845,0  & 5,4\%   & 10\,567,5 $\pm$ 3\,493,4   & 0/10  \\
-        Média        & 83\,992,5     & 23\,950,0 & 71,4\%  & 28\,807,5 $\pm$ 5\,560,8   & 10/10 \\
-        Grande       & 820\,270,0    & 7\,735,0  & 99,1\%  & 56\,260,0 $\pm$ 9\,935,3   & 10/10 \\
-        Muito grande & 3\,277\,170,0 & 0,0       & 100,0\% & 210\,675,0 $\pm$ 22\,841,7 & 10/10 \\
+        01 & 12\,150,0 & 0 & 12\,500,0 & 1,5\% & 12\,150,0 & 10/10 & 10,0\% \\
+        02 & 12\,475,0 & 0 & 12\,677,5 & 1,6\% & 12\,475,0 & 10/10 & 5,3\% \\
+        03 & 9\,375,0 & 0 & 9\,622,5 & 1,7\% & 9\,375,0 & 10/10 & 15,7\% \\
+        04 & 5\,900,0 & 0 & 6\,080,0 & 2,4\% & 5\,900,0 & 10/10 & 5,4\% \\
+        05 & 8\,925,0 & 0 & 9\,227,5 & 2,3\% & 8\,925,0 & 10/10 & 11,2\% \\
+        06 & 16\,400,0 & 0 & 16\,515,0 & 0,7\% & 16\,400,0 & 10/10 & 6,8\% \\
+        07 & 5\,775,0 & 0 & 6\,122,5 & 3,5\% & 5\,775,0 & 10/10 & 25,5\% \\
+        08 & 11\,550,0 & 0 & 11\,952,5 & 1,5\% & 11\,550,0 & 10/10 & 9,2\% \\
+        09 & 9\,325,0 & 0 & 9\,550,0 & 1,9\% & 9\,325,0 & 10/10 & 2,5\% \\
+        10 & 14\,700,0 & 0 & 14\,945,0 & 1,3\% & 14\,700,0 & 10/10 & 5,4\% \\
         \hline
     \end{tabular}
     \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
 \end{table}
 
-\section{Instância pequena}
-\label{sec:res-pequena}
 
-% TODO: Gurobi melhor em todos os conjuntos (heurística 2,0% acima, em média),
-% mesmo sem provar o ótimo em 30 s (gap de 1% a 12%).
-Resultados da instância pequena (100 pacientes, 30 s por execução).
-
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \begin{minipage}[b]{0.48\textwidth}
+    \includegraphics[width=0.85\textwidth]{Figuras/resultados/pequeno/boxplot_sets.png}
+    \caption{Dispersão de $Z$ entre as execuções da heurística em cada conjunto --- instância pequena}
+    \label{fig:res-boxplot-conjuntos-pequeno}
+\end{figure}
+
+A \autoref{fig:res-boxplot-conjuntos-pequeno} separa as duas fontes de variação descritas na \autoref{sec:metricas}. A variação entre as execuções de um mesmo conjunto, devida à aleatoriedade da heurística, é pequena, com coeficiente de variação médio de 1,9\%. Já a variação entre os conjuntos, devida ao sorteio das instâncias, é muito maior, com médias de $Z$ entre 6\,080 e 16\,515 e coeficiente de variação de 31,6\% entre elas. A dispersão de $Z$ observada em cada porte se deve, portanto, principalmente às diferenças entre os conjuntos gerados, e não à heurística.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_01/convergence_broken_axis.png}\\
-        \small (a) Convergência da heurística
+        \small Conjunto 1
     \end{minipage}
     \hfill
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_01/gurobi_vs_iterations.png}\\
-        \small (b) Gurobi vs.\ execuções da heurística
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_02/convergence_broken_axis.png}\\
+        \small Conjunto 2
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_03/convergence_broken_axis.png}\\
+        \small Conjunto 3
     \end{minipage}
 
-    \vspace{0.4cm}
-    \begin{minipage}[b]{0.48\textwidth}
+    \vspace{0.2cm}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_01/boxplot.png}\\
-        \small (c) Dispersão de $Z$ entre execuções
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_04/convergence_broken_axis.png}\\
+        \small Conjunto 4
     \end{minipage}
-    \caption{Conjunto representativo (conjunto 1) --- instância pequena}
-    \label{fig:res-conjunto1-pequeno}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_05/convergence_broken_axis.png}\\
+        \small Conjunto 5
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_06/convergence_broken_axis.png}\\
+        \small Conjunto 6
+    \end{minipage}
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 1 a 6 --- instância pequena}
+    \label{fig:res-convergencia-pequeno}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/operational_metrics_across_sets.png}
-    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância pequena}
-    \label{fig:res-operacionais-pequeno}
-\end{figure}
-\clearpage
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_07/convergence_broken_axis.png}\\
+        \small Conjunto 7
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_08/convergence_broken_axis.png}\\
+        \small Conjunto 8
+    \end{minipage}
+    \hfill
 
-\section{Instância média}
+    \vspace{0.2cm}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_09/convergence_broken_axis.png}\\
+        \small Conjunto 9
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/pequeno/set_10/convergence_broken_axis.png}\\
+        \small Conjunto 10
+    \end{minipage}
+    \hfill
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 7 a 10 --- instância pequena}
+    \label{fig:res-convergencia-pequeno-b}
+\end{figure}
+% ---------------------------------------------------------------------
+\subsection{Instância média}
 \label{sec:res-media}
 
-% TODO: heurística vence nos 10 conjuntos, com Z 65,5% menor que o do Gurobi, em média.
-Resultados da instância média (400 pacientes, 90 s por execução).
+Na instância média (400 pacientes, 120 segundos por execução), ocorre a inversão entre as abordagens, e a heurística obteve o menor $Z$ em todos os 10 conjuntos (\autoref{tab:res-limites-medio} e \autoref{tab:res-z-medio}), com redução média de 65,7\% em relação à solução incumbente do Gurobi sob o mesmo teto de tempo (de 54,1\% a 77,3\%). A vantagem não depende de uma execução favorável, pois a média das execuções também apresentou redução de 64,8\%. Essa redução compara a heurística com a melhor solução que o Gurobi encontrou no tempo disponível, e não com o ótimo. A partir desse porte, portanto, ela mede sobretudo a dificuldade do método exato, e não a qualidade da heurística, que é avaliada a seguir pelo excesso sobre o limite inferior.
 
-\begin{figure}[htbp]
+Com quatro vezes mais pacientes que a instância pequena, o Gurobi finalizou com \textit{gaps} de 60,5\% a 81,3\%, ainda distante tanto de uma boa solução quanto de um $LB$ próximo do ótimo. Esses limites, contudo, ainda são úteis e confirmam a qualidade da heurística, já que a melhor execução está, em média, no máximo 20,5\% acima do ótimo (de 12,4\% a 28,7\%). Como o próprio $LB$ tende a estar abaixo do ótimo, a distância real é provavelmente menor. Nesse porte, o limite do Gurobi supera $LB_{comb}$ em apenas $1,9\%$, em média (de $0,3\%$ a $3,8\%$), ou seja, o limite obtido pelo \textit{solver} corresponde essencialmente ao mínimo de alocações em especialidade inadequada imposto pelos dados, e pouco acrescenta quanto às transferências e aos quartos mistos.
+
+Todas as 100 execuções encontraram ao menos uma solução viável e, na esmagadora maioria, a melhor solução da execução também era viável. Ao contrário da instância pequena, as curvas de convergência (\autoref{fig:res-convergencia-medio} e \autoref{fig:res-convergencia-medio-b}) ainda apresentam potencial de melhoria, sendo que a última melhora ocorre, em média, na geração 17,4 de 18,4. Nesse porte, a heurística é limitada pelo tempo disponível, e não pela estagnação.
+
+\begin{table}[H]
+    \caption{Limites do valor ótimo de $Z$ por conjunto --- instância média}
+    \label{tab:res-limites-medio}
     \centering
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{tabular}{crrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\
+        \cline{2-4} \cline{5-5}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{\textit{Gap}} & \textbf{$LB_{comb}$} \\
+        \hline
+        01 & 79\,300,0 & 22\,350,0 & 71,8\% & 21\,800,0 \\
+        02 & 73\,625,0 & 18\,000,0 & 75,6\% & 17\,500,0 \\
+        03 & 91\,800,0 & 27\,400,0 & 70,2\% & 27\,200,0 \\
+        04 & 84\,525,0 & 23\,800,0 & 71,8\% & 23\,500,0 \\
+        05 & 89\,950,0 & 20\,450,0 & 77,3\% & 19\,900,0 \\
+        06 & 70\,050,0 & 24\,550,0 & 65,0\% & 24\,400,0 \\
+        07 & 83\,950,0 & 22\,750,0 & 72,9\% & 22\,400,0 \\
+        08 & 88\,275,0 & 16\,500,0 & 81,3\% & 15\,900,0 \\
+        09 & 92\,650,0 & 29\,400,0 & 68,3\% & 28\,700,0 \\
+        10 & 86\,775,0 & 34\,300,0 & 60,5\% & 34\,200,0 \\
+        \hline
+    \end{tabular}
+    \par\smallskip
+    {\footnotesize Nota - \textit{Gap} na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
+\end{table}
+
+\begin{table}[H]
+    \caption{Resultados da heurística por conjunto --- instância média (10 execuções por conjunto; $Z$ sem a penalidade de capacidade)}
+    \label{tab:res-z-medio}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{crrrrrcr}
+        \hline
+        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
+        \hline
+        01 & 28\,775,0 & 0 & 29\,777,5 & 2,5\% & 28\,775,0 & 10/10 & 28,7\% \\
+        02 & 22\,750,0 & 0 & 23\,307,5 & 1,5\% & 22\,750,0 & 10/10 & 26,4\% \\
+        03 & 32\,200,0 & 0 & 32\,865,0 & 1,7\% & 32\,200,0 & 10/10 & 17,5\% \\
+        04 & 27\,825,0 & 0 & 28\,560,0 & 1,9\% & 27\,825,0 & 10/10 & 16,9\% \\
+        05 & 25\,525,0 & 0 & 26\,387,5 & 2,5\% & 25\,525,0 & 10/10 & 24,8\% \\
+        06 & 29\,550,0 & 0 & 30\,192,5 & 2,2\% & 29\,550,0 & 10/10 & 20,4\% \\
+        07 & 27\,375,0 & 0 & 28\,425,0 & 2,4\% & 27\,375,0 & 10/10 & 20,3\% \\
+        08 & 20\,050,0 & 0 & 21\,042,5 & 3,2\% & 20\,050,0 & 10/10 & 21,5\% \\
+        09 & 33\,050,0 & 0 & 34\,067,5 & 1,4\% & 33\,050,0 & 10/10 & 12,4\% \\
+        10 & 39\,825,0 & 0 & 40\,485,0 & 1,3\% & 39\,825,0 & 10/10 & 16,1\% \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
+\end{table}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figuras/resultados/medio/boxplot_sets.png}
+    \caption{Dispersão de $Z$ entre as execuções da heurística em cada conjunto --- instância média}
+    \label{fig:res-boxplot-conjuntos-medio}
+\end{figure}
+
+Assim como na instância pequena, a \autoref{fig:res-boxplot-conjuntos-medio} mostra que a variação entre as execuções de um mesmo conjunto, com coeficiente de variação médio de 2,1\%, é bem menor que a variação entre os conjuntos, cujas médias de $Z$ vão de 21\,042 a 40\,485, com coeficiente de variação de 18,7\%.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_01/convergence_broken_axis.png}\\
-        \small (a) Convergência da heurística
+        \small Conjunto 1
     \end{minipage}
     \hfill
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_01/gurobi_vs_iterations.png}\\
-        \small (b) Gurobi vs.\ execuções da heurística
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_02/convergence_broken_axis.png}\\
+        \small Conjunto 2
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_03/convergence_broken_axis.png}\\
+        \small Conjunto 3
     \end{minipage}
 
-    \vspace{0.4cm}
-    \begin{minipage}[b]{0.48\textwidth}
+    \vspace{0.2cm}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_01/boxplot.png}\\
-        \small (c) Dispersão de $Z$ entre execuções
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_04/convergence_broken_axis.png}\\
+        \small Conjunto 4
     \end{minipage}
-    \caption{Conjunto representativo (conjunto 1) --- instância média}
-    \label{fig:res-conjunto1-medio}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_05/convergence_broken_axis.png}\\
+        \small Conjunto 5
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_06/convergence_broken_axis.png}\\
+        \small Conjunto 6
+    \end{minipage}
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 1 a 6 --- instância média}
+    \label{fig:res-convergencia-medio}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Figuras/resultados/medio/operational_metrics_across_sets.png}
-    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância média}
-    \label{fig:res-operacionais-medio}
-\end{figure}
-\clearpage
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_07/convergence_broken_axis.png}\\
+        \small Conjunto 7
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_08/convergence_broken_axis.png}\\
+        \small Conjunto 8
+    \end{minipage}
+    \hfill
 
-\section{Instância grande}
+    \vspace{0.2cm}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_09/convergence_broken_axis.png}\\
+        \small Conjunto 9
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/medio/set_10/convergence_broken_axis.png}\\
+        \small Conjunto 10
+    \end{minipage}
+    \hfill
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 7 a 10 --- instância média}
+    \label{fig:res-convergencia-medio-b}
+\end{figure}
+% ---------------------------------------------------------------------
+\subsection{Instância grande}
 \label{sec:res-grande}
 
-% TODO: Z da heurística 93,1% abaixo do Gurobi; limite inferior trivial em 8 dos 10 conjuntos;
-% melhor solução inviável em 7 conjuntos (ver seção de viabilidade).
-Resultados da instância grande (1600 pacientes, 360 s por execução).
+Na instância grande (1600 pacientes, 480 segundos por execução), a diferença entre as abordagens aumenta. A melhor execução da heurística reduziu $Z$, em média, em 93,5\% em relação à solução incumbente do Gurobi (de 91,7\% a 95,4\%), com vantagem em todos os conjuntos (\autoref{tab:res-limites-grande} e \autoref{tab:res-z-grande}). Em 8 dos 10 conjuntos, o Gurobi não concluiu a relaxação inicial e terminou com $LB = 0$, o limite trivial. Nesses conjuntos, $LB_{comb}$ é o único limite não trivial disponível, e, nos conjuntos 3 e 6, os dois limites são próximos, com o do Gurobi ligeiramente maior. Com o maior deles, a melhor execução da heurística está, em média, no máximo 91,4\% acima do ótimo (de 43,4\% a 186,6\%). Esses valores são altos porque $LB_{comb}$ considera apenas a parcela de especialidade, enquanto, nesse porte, as transferências e os quartos mistos respondem por cerca de 40\% do $Z$ da heurística. O limite, portanto, é fraco demais para atestar a qualidade da solução heurística, e mostra sobretudo que o Gurobi está longe de resolver o problema, já que o seu limite superior é, em média, cerca de 32 vezes $LB_{comb}$. Esse comportamento é coerente com a literatura, pois Demeester et al. \cite{demeester2010hybrid} não obtiveram sequer uma solução viável em uma hora de execução de um \textit{solver} comercial em instâncias de tamanho real, e Ceschia e Schaerf \cite{ceschia2012modeling} precisaram fracionar as instâncias maiores para tornar o modelo tratável.
 
-\begin{figure}[htbp]
+Nesse porte aparece a principal ressalva da heurística. A melhor solução de 7 dos 10 conjuntos viola a capacidade, em 1 ou 2 pacientes-dia (coluna $V_{cap}$ da \autoref{tab:res-z-grande}), de modo que, nesses conjuntos, a comparação com o Gurobi envolve soluções que não são viáveis para o modelo exato (\autoref{sec:res-viabilidade}). A vantagem, no entanto, não depende dessa relaxação, pois, nos três conjuntos em que a melhor solução é viável (1, 2 e 10), a redução de $Z$ em relação ao Gurobi é, em média, de 93,0\%, praticamente a mesma observada no porte como um todo. Nos conjuntos 8 e 9, embora a melhor execução viole a capacidade, outras execuções encontraram soluções viáveis, com $Z$ de 69\,250 e 41\,650, cerca de 8\% e 11\% acima, respectivamente (coluna Melhor $Z$ viável da \autoref{tab:res-z-grande}).
+
+As curvas de convergência (\autoref{fig:res-convergencia-grande} e \autoref{fig:res-convergencia-grande-b}) repetem o comportamento da instância média, com melhora até as últimas gerações.
+
+\begin{table}[H]
+    \caption{Limites do valor ótimo de $Z$ por conjunto --- instância grande}
+    \label{tab:res-limites-grande}
     \centering
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{tabular}{crrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\
+        \cline{2-4} \cline{5-5}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{\textit{Gap}} & \textbf{$LB_{comb}$} \\
+        \hline
+        01 & 811\,250,0 & 0,0 & --- & 30\,200,0 \\
+        02 & 819\,575,0 & 0,0 & --- & 40\,800,0 \\
+        03 & 820\,500,0 & 47\,700,0 & 94,2\% & 47\,300,0 \\
+        04 & 830\,875,0 & 0,0 & --- & 15\,500,0 \\
+        05 & 816\,925,0 & 0,0 & --- & 32\,700,0 \\
+        06 & 815\,200,0 & 29\,650,0 & 96,4\% & 28\,600,0 \\
+        07 & 821\,300,0 & 0,0 & --- & 13\,900,0 \\
+        08 & 835\,450,0 & 0,0 & --- & 42\,100,0 \\
+        09 & 809\,600,0 & 0,0 & --- & 20\,000,0 \\
+        10 & 822\,025,0 & 0,0 & --- & 30\,300,0 \\
+        \hline
+    \end{tabular}
+    \par\smallskip
+    {\footnotesize Nota - --- indica que o \textit{solver} não obteve limite inferior não trivial dentro do teto de tempo. \textit{Gap} na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
+\end{table}
+
+\begin{table}[H]
+    \caption{Resultados da heurística por conjunto --- instância grande (10 execuções por conjunto; $Z$ sem a penalidade de capacidade)}
+    \label{tab:res-z-grande}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{crrrrrcr}
+        \hline
+        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
+        \hline
+        01 & 54\,375,0 & 0 & 54\,400,0 & 2,6\% & 54\,375,0 & 1/10 & 80,0\% \\
+        02 & 65\,125,0 & 0 & 67\,052,5 & 2,7\% & 65\,125,0 & 1/10 & 59,6\% \\
+        03 & 68\,425,0 & 1 & 70\,137,5 & 1,9\% & --- & 0/10 & 43,4\% \\
+        04 & 44\,425,0 & 1 & 44\,695,0 & 3,4\% & --- & 0/10 & 186,6\% \\
+        05 & 55\,650,0 & 1 & 56\,372,5 & 2,6\% & --- & 0/10 & 70,2\% \\
+        06 & 51\,175,0 & 2 & 51\,677,5 & 2,9\% & --- & 0/10 & 72,6\% \\
+        07 & 39\,800,0 & 2 & 42\,022,5 & 3,3\% & --- & 0/10 & 186,3\% \\
+        08 & 64\,050,0 & 1 & 66\,032,5 & 2,2\% & 69\,250,0 & 1/10 & 52,1\% \\
+        09 & 37\,575,0 & 1 & 39\,795,0 & 3,9\% & 41\,650,0 & 1/10 & 87,9\% \\
+        10 & 53\,125,0 & 0 & 55\,742,5 & 3,2\% & 53\,125,0 & 1/10 & 75,3\% \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
+\end{table}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figuras/resultados/grande/boxplot_sets.png}
+    \caption{Dispersão de $Z$ entre as execuções da heurística em cada conjunto --- instância grande}
+    \label{fig:res-boxplot-conjuntos-grande}
+\end{figure}
+
+Assim como nas instâncias anteriores, a \autoref{fig:res-boxplot-conjuntos-grande} mostra que a variação entre as execuções de um mesmo conjunto (coeficiente de variação médio de 2,9\%) é bem menor que a variação entre os conjuntos (médias de $Z$ de 39\,795 a 70\,138, coeficiente de variação de 19,4\%).
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_01/convergence_broken_axis.png}\\
-        \small (a) Convergência da heurística
+        \small Conjunto 1
     \end{minipage}
     \hfill
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_01/gurobi_vs_iterations.png}\\
-        \small (b) Gurobi vs.\ execuções da heurística
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_02/convergence_broken_axis.png}\\
+        \small Conjunto 2
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_03/convergence_broken_axis.png}\\
+        \small Conjunto 3
     \end{minipage}
 
-    \vspace{0.4cm}
-    \begin{minipage}[b]{0.48\textwidth}
+    \vspace{0.2cm}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_01/boxplot.png}\\
-        \small (c) Dispersão de $Z$ entre execuções
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_04/convergence_broken_axis.png}\\
+        \small Conjunto 4
     \end{minipage}
-    \caption{Conjunto representativo (conjunto 1) --- instância grande}
-    \label{fig:res-conjunto1-grande}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_05/convergence_broken_axis.png}\\
+        \small Conjunto 5
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_06/convergence_broken_axis.png}\\
+        \small Conjunto 6
+    \end{minipage}
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 1 a 6 --- instância grande}
+    \label{fig:res-convergencia-grande}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Figuras/resultados/grande/operational_metrics_across_sets.png}
-    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância grande}
-    \label{fig:res-operacionais-grande}
-\end{figure}
-\clearpage
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_07/convergence_broken_axis.png}\\
+        \small Conjunto 7
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_08/convergence_broken_axis.png}\\
+        \small Conjunto 8
+    \end{minipage}
+    \hfill
 
-\section{Instância muito grande}
+    \vspace{0.2cm}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_09/convergence_broken_axis.png}\\
+        \small Conjunto 9
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/grande/set_10/convergence_broken_axis.png}\\
+        \small Conjunto 10
+    \end{minipage}
+    \hfill
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 7 a 10 --- instância grande}
+    \label{fig:res-convergencia-grande-b}
+\end{figure}
+% ---------------------------------------------------------------------
+\subsection{Instância muito grande}
 \label{sec:res-muito-grande}
 
-% TODO: limite inferior trivial em todos os conjuntos (limitação já discutida);
-% nenhuma execução viável, mas com taxa de violação de cerca de 0,1%.
-Resultados da instância muito grande (6400 pacientes, 900 s por execução).
+Na instância muito grande (6400 pacientes, 1920 segundos por execução), a heurística novamente obteve o menor $Z$ em todos os conjuntos, com redução média de 94,4\% em relação à solução incumbente do Gurobi (de 92,7\% a 95,3\%), como mostram a \autoref{tab:res-limites-muito-grande} e a \autoref{tab:res-z-muito-grande}. O Gurobi terminou todos os conjuntos com $LB$ nulo, sem concluir a relaxação inicial, como antecipado na \autoref{sec:complexidade}, de modo que $LB_{comb}$ é o único limite inferior disponível. Com ele, a melhor execução da heurística está, em média, no máximo 157,3\% acima do ótimo (de 83,2\% a 247,4\%). Como na instância grande, o limite é fraco, pois ignora as transferências e os quartos mistos, que nesse porte somam cerca de metade do $Z$ da heurística. Além disso, todas as melhores soluções desse porte violam a capacidade, de modo que o excesso, conforme a Equação~\eqref{eq:excesso-otimo}, compara o valor de soluções inviáveis com o ótimo das viáveis e deve ser lido com essa ressalva.
 
-\begin{figure}[htbp]
+Nenhuma das 100 execuções encontrou solução viável, e a melhor solução de cada conjunto viola a capacidade em 14 a 22 pacientes-dia (coluna $V_{cap}$ da \autoref{tab:res-z-muito-grande}), embora a violação permaneça abaixo de 0,1\% da carga de internação (\autoref{sec:res-viabilidade}). Nesse porte, portanto, a vantagem da heurística sobre o Gurobi é obtida com soluções que não são viáveis para o modelo exato, mas se mantém após o reparo descrito na \autoref{sec:res-viabilidade}. Como a melhor execução é escolhida pelo \textit{fitness} $F$, que inclui a penalidade $W_{cap} \cdot V_{cap}$, nos conjuntos 4 e 9 o seu $Z$ fica acima da média das execuções, já que outra execução alcançou um $Z$ menor violando mais a capacidade. As curvas de convergência (\autoref{fig:res-convergencia-muito-grande} e \autoref{fig:res-convergencia-muito-grande-b}) ainda melhoram na última geração em todas as execuções. Com 14,4 gerações por execução, contra 17 a 18 nas instâncias média e grande, este é o porte em que a heurística dispõe de menos gerações, embora o teto de tempo acompanhe o número de pacientes.
+
+\begin{table}[H]
+    \caption{Limites do valor ótimo de $Z$ por conjunto --- instância muito grande}
+    \label{tab:res-limites-muito-grande}
     \centering
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{tabular}{crrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\
+        \cline{2-4} \cline{5-5}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{\textit{Gap}} & \textbf{$LB_{comb}$} \\
+        \hline
+        01 & 3\,273\,725,0 & 0,0 & --- & 65\,900,0 \\
+        02 & 3\,276\,950,0 & 0,0 & --- & 67\,900,0 \\
+        03 & 3\,295\,100,0 & 0,0 & --- & 74\,300,0 \\
+        04 & 3\,289\,725,0 & 0,0 & --- & 100\,400,0 \\
+        05 & 3\,272\,475,0 & 0,0 & --- & 76\,900,0 \\
+        06 & 3\,257\,200,0 & 0,0 & --- & 43\,900,0 \\
+        07 & 3\,284\,350,0 & 0,0 & --- & 65\,000,0 \\
+        08 & 3\,261\,000,0 & 0,0 & --- & 45\,400,0 \\
+        09 & 3\,297\,800,0 & 0,0 & --- & 131\,000,0 \\
+        10 & 3\,263\,375,0 & 0,0 & --- & 85\,300,0 \\
+        \hline
+    \end{tabular}
+    \par\smallskip
+    {\footnotesize Nota - --- indica que o \textit{solver} não obteve limite inferior não trivial dentro do teto de tempo. \textit{Gap} na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
+\end{table}
+
+\begin{table}[H]
+    \caption{Resultados da heurística por conjunto --- instância muito grande (10 execuções por conjunto; $Z$ sem a penalidade de capacidade)}
+    \label{tab:res-z-muito-grande}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{crrrrrcr}
+        \hline
+        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
+        \hline
+        01 & 159\,025,0 & 18 & 164\,787,5 & 2,3\% & --- & 0/10 & 141,3\% \\
+        02 & 184\,150,0 & 16 & 187\,187,5 & 1,6\% & --- & 0/10 & 171,2\% \\
+        03 & 183\,200,0 & 22 & 189\,565,0 & 2,6\% & --- & 0/10 & 146,6\% \\
+        04 & 214\,625,0 & 18 & 214\,165,0 & 1,9\% & --- & 0/10 & 113,8\% \\
+        05 & 191\,350,0 & 18 & 193\,560,0 & 2,1\% & --- & 0/10 & 148,8\% \\
+        06 & 152\,500,0 & 16 & 156\,070,0 & 3,4\% & --- & 0/10 & 247,4\% \\
+        07 & 172\,725,0 & 17 & 174\,922,5 & 1,1\% & --- & 0/10 & 165,7\% \\
+        08 & 152\,375,0 & 19 & 158\,397,5 & 1,9\% & --- & 0/10 & 235,6\% \\
+        09 & 240\,050,0 & 16 & 239\,077,5 & 1,0\% & --- & 0/10 & 83,2\% \\
+        10 & 186\,700,0 & 14 & 187\,087,5 & 1,8\% & --- & 0/10 & 118,9\% \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
+\end{table}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figuras/resultados/muito_grande/boxplot_sets.png}
+    \caption{Dispersão de $Z$ entre as execuções da heurística em cada conjunto --- instância muito grande}
+    \label{fig:res-boxplot-conjuntos-muito-grande}
+\end{figure}
+
+Também nesse porte, a \autoref{fig:res-boxplot-conjuntos-muito-grande} mostra que a variação entre as execuções (coeficiente de variação médio de 2,0\%) é bem menor que a variação entre os conjuntos (médias de $Z$ de 156\,070 a 239\,078, coeficiente de variação de 13,7\%).
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_01/convergence_broken_axis.png}\\
-        \small (a) Convergência da heurística
+        \small Conjunto 1
     \end{minipage}
     \hfill
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_01/gurobi_vs_iterations.png}\\
-        \small (b) Gurobi vs.\ execuções da heurística
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_02/convergence_broken_axis.png}\\
+        \small Conjunto 2
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_03/convergence_broken_axis.png}\\
+        \small Conjunto 3
     \end{minipage}
 
-    \vspace{0.4cm}
-    \begin{minipage}[b]{0.48\textwidth}
+    \vspace{0.2cm}
+    \begin{minipage}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_01/boxplot.png}\\
-        \small (c) Dispersão de $Z$ entre execuções
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_04/convergence_broken_axis.png}\\
+        \small Conjunto 4
     \end{minipage}
-    \caption{Conjunto representativo (conjunto 1) --- instância muito grande}
-    \label{fig:res-conjunto1-muito-grande}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_05/convergence_broken_axis.png}\\
+        \small Conjunto 5
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_06/convergence_broken_axis.png}\\
+        \small Conjunto 6
+    \end{minipage}
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 1 a 6 --- instância muito grande}
+    \label{fig:res-convergencia-muito-grande}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/operational_metrics_across_sets.png}
-    \caption{Métricas operacionais da melhor solução heurística (média $\pm$ desvio padrão entre conjuntos) --- instância muito grande}
-    \label{fig:res-operacionais-muito-grande}
-\end{figure}
-\clearpage
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_07/convergence_broken_axis.png}\\
+        \small Conjunto 7
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_08/convergence_broken_axis.png}\\
+        \small Conjunto 8
+    \end{minipage}
+    \hfill
 
+    \vspace{0.2cm}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_09/convergence_broken_axis.png}\\
+        \small Conjunto 9
+    \end{minipage}
+    \hspace{0.04\textwidth}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figuras/resultados/muito_grande/set_10/convergence_broken_axis.png}\\
+        \small Conjunto 10
+    \end{minipage}
+    \hfill
+    \caption{Convergência da heurística, com eixo vertical quebrado, nos conjuntos 7 a 10 --- instância muito grande}
+    \label{fig:res-convergencia-muito-grande-b}
+\end{figure}
 % ---------------------------------------------------------------------
-\section{Viabilidade das soluções heurísticas}
+\subsection{Viabilidade das soluções heurísticas}
 \label{sec:res-viabilidade}
 
-A \autoref{tab:res-viabilidade} mostra a violação de capacidade das soluções heurísticas, medida pela taxa $\rho_{cap}$ (\autoref{eq:taxa-violacao}).
+Como a heurística trata a capacidade como restrição flexível, a viabilidade de suas soluções precisa ser analisada à parte. A \autoref{tab:res-viabilidade} resume, por porte, quantas execuções encontraram ao menos uma solução viável e a violação de capacidade da melhor solução de cada conjunto, medida em pacientes-dia pelo $V_{cap}$, conforme a Equação~\eqref{eq:violacao-capacidade}, e em relação à carga de internação pela taxa $\rho_{cap}$, conforme a Equação~\eqref{eq:taxa-violacao}.
 
-% TODO: destacar que, mesmo inviáveis, as soluções deixam menos de 0,12% dos pacientes-dia sem leito.
+Nas instâncias pequena e média, todas as execuções encontraram soluções viáveis, e a melhor solução de todos os conjuntos respeita a capacidade. A partir da instância grande, a viabilidade torna-se exceção. Apenas 5 das 100 execuções encontraram uma solução viável, e a melhor solução violou a capacidade em 7 dos 10 conjuntos. Na instância muito grande, nenhuma execução foi viável, e a melhor solução violou a capacidade nos 10 conjuntos.
 
-\begin{table}[htbp]
+Contudo, essas violações podem ser consideradas pequenas. Na instância grande, a melhor solução excede a capacidade em menos de um paciente-dia, em média (0,9), o que corresponde a 0,014\% da carga de internação. Na muito grande, são 17,4 pacientes-dia, ou 0,068\% da carga. Em termos práticos, trata-se de poucos pacientes que, em algum dia, seriam alocados a um quarto já lotado, enquanto mais de 99,9\% da demanda de internação é atendida dentro da capacidade.
+
+As soluções do Gurobi, por outro lado, são sempre viáveis, mas a sua qualidade se deteriora rapidamente com o porte. Na instância média, o $Z$ do Gurobi já é, em média, cerca de 3 vezes o da melhor execução da heurística. Essa diferença cresce para cerca de 16 vezes na instância grande, com médias de 820\,270 contra 53\,372, e para cerca de 18 vezes na muito grande, com 3\,277\,170 contra 183\,670, variando, conforme o conjunto, de 12,0 a 21,5 vezes e de 13,7 a 21,4 vezes, respectivamente. A diferença cresce pouco da instância grande para a muito grande porque, já na grande, a solução do Gurobi equivale a uma alocação feita ao acaso (\autoref{sec:res-operacionais}), cujo custo por paciente-dia não aumenta com o porte.
+
+A inviabilidade das soluções heurísticas, contudo, não reflete uma dificuldade intrínseca das instâncias maiores. Ela decorre de a heurística otimizar o \textit{fitness} $F$, no qual a capacidade é apenas penalizada, sem uma etapa de reparo ao final da busca. Uma solução viável sempre existe e pode ser obtida a partir da própria solução heurística por um pós-processamento simples, não incluído no método proposto, de modo que a inviabilidade residual não compromete a comparação com o Gurobi. Como o gerador garante que, em todos os dias, o número de pacientes internados não excede o total de leitos do hospital (\autoref{sec:gerador-instancias}), sempre que um quarto está acima da capacidade existe outro quarto com leito livre no mesmo dia. Cada paciente-dia excedente pode, então, ser realocado para um quarto com vaga apenas naquele dia, o que elimina uma unidade de $V_{cap}$ sem criar violação em outro quarto. No pior caso, essa realocação acrescenta a $Z$ um paciente-dia em especialidade inadequada ($W_{spec}$), um quarto-dia misto ($W_{gen}$) e duas transferências, uma para o novo quarto e outra de volta ao original ($2W_{transf}$). Assim, toda solução heurística pode ser convertida em uma solução viável de valor
+\begin{equation}
+    Z_{rep} \leq Z_h + (W_{spec} + W_{gen} + 2W_{transf}) \cdot V_{cap} = Z_h + 275 \cdot V_{cap}
+    \label{eq:custo-reparo}
+\end{equation}
+Trata-se, portanto, de um reparo plausível e de custo limitado, aplicável externamente à heurística. Ele não foi executado neste trabalho, e a Equação~\eqref{eq:custo-reparo} apenas limita o seu custo, considerando o pior caso, em que cada realocação gera as três penalidades. Nas instâncias pequena e média, em que as melhores soluções já são viáveis, o reparo não altera $Z$. Na instância grande, com $V_{cap}$ de no máximo 2 pacientes-dia, o acréscimo é de no máximo 550, ou 1,4\% do $Z$ da melhor execução (0,5\% em média). Na muito grande, com $V_{cap}$ entre 14 e 22, o acréscimo fica entre 3\,850 e 6\,050, no máximo 3,4\% do $Z$ (2,7\% em média). Na prática, o acréscimo tende a ser menor, pois nem toda realocação muda o paciente de especialidade ou torna o quarto de destino misto. Mesmo após o reparo, a redução de $Z$ em relação ao Gurobi permaneceria, em média, de 93,5\% e 94,3\% nessas instâncias, de modo que a vantagem observada se mantém quando se exige viabilidade estrita. Como $Z_{rep}$ corresponde a uma solução viável, o excesso máximo sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, também pode ser calculado com ele, sem a ressalva de inviabilidade, e passa a ser de 92,5\% na instância grande e de 164,3\% na muito grande, em média, valores próximos aos obtidos com $Z_h$.
+
+A violação residual também não decorre de um peso insuficiente. Como $W_{cap} = 1900$ é cerca de sete vezes o custo máximo do reparo, conforme a Equação~\eqref{eq:custo-reparo}, toda solução inviável tem uma solução viável de \textit{fitness} menor, de modo que a função de avaliação já favorece a viabilidade (\autoref{sec:calibracao}). As violações que restam indicam, portanto, que a busca não elimina os últimos excessos dentro do teto de tempo.
+
+A \autoref{fig:res-vcap-geracoes} mostra como a violação do melhor indivíduo evolui ao longo das gerações, na melhor execução de cada conjunto das instâncias grande e muito grande. Em ambos os portes, quase toda a violação da população inicial é eliminada na primeira geração. Na instância grande, ela cai de cerca de 200 para cerca de 15 pacientes-dia e, depois, diminui lentamente, até se estabilizar em 1 ou 2 pacientes-dia na maioria dos conjuntos, muitas vezes por várias gerações seguidas. Apenas nos conjuntos 1, 2 e 10 a violação chega a zero, e somente nas gerações finais, entre a 11ª e a 17ª. Na instância muito grande, a violação cai de cerca de 850 para cerca de 70 pacientes-dia na primeira geração e continua diminuindo até a última, terminando entre 14 e 22 pacientes-dia, sem se estabilizar. Esse comportamento reforça o diagnóstico anterior. Na instância grande, a busca encontra dificuldade para eliminar os últimos excessos, que permanecem por muitas gerações, enquanto, na muito grande, o teto de tempo termina com a violação ainda em queda.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figuras/resultados/capacity_violation_sets.png}
+    \caption{Violação de capacidade $V_{cap}$ do melhor indivíduo ao longo das gerações, na melhor execução de cada conjunto, nas instâncias grande e muito grande, com eixo vertical quebrado}
+    \label{fig:res-vcap-geracoes}
+\end{figure}
+
+A \autoref{tab:res-viabilidade-sigma} mostra uma coincidência que ajuda a entender esse comportamento. A viabilidade diminui justamente nos portes em que a variação de $Z$ entre execuções se aproxima de $W_{cap}$ ou o supera. Nas instâncias pequena e média, o desvio padrão de $Z$ entre execuções fica abaixo de 760, e todas as execuções encontram solução viável. Na grande, ele fica entre 1\,323 e 1\,805, já próximo de $W_{cap}$, e apenas 5 das 100 execuções encontram solução viável. Na muito grande, ultrapassa $W_{cap}$ em 9 dos 10 conjuntos, e nenhuma execução é viável. Uma hipótese é que, quando as diferenças de $Z$ entre os indivíduos são maiores que $W_{cap}$, a penalidade de um paciente-dia excedente pouco influencia a seleção por torneio, que passa a ser decidida principalmente por $Z$. Essa relação, contudo, deve ser lida como indício, e não como causa comprovada. O desvio padrão reportado é medido entre execuções independentes, e não entre os indivíduos de uma mesma população, que são os comparados no torneio. Além disso, ele cresce com o porte, assim como outros fatores que também podem afetar a viabilidade, como a redução do número de gerações.
+
+\begin{table}[H]
     \caption{Viabilidade das soluções heurísticas por porte (melhor solução de cada conjunto, média $\pm$ desvio padrão entre os 10 conjuntos)}
     \label{tab:res-viabilidade}
     \centering
@@ -207,22 +644,43 @@ A \autoref{tab:res-viabilidade} mostra a violação de capacidade das soluções
         Pequena & 100/100 & 0,0 $\pm$ 0,0 & 397,8 $\pm$ 11,0 & 0,000\% $\pm$ 0,000\% \\
         Média & 100/100 & 0,0 $\pm$ 0,0 & 1\,611,6 $\pm$ 21,1 & 0,000\% $\pm$ 0,000\% \\
         Grande & 5/100 & 0,9 $\pm$ 0,7 & 6\,420,6 $\pm$ 41,7 & 0,014\% $\pm$ 0,011\% \\
-        Muito grande & 0/50 & 24,4 $\pm$ 2,5 & 25\,601,0 $\pm$ 107,7 & 0,095\% $\pm$ 0,010\% \\
+        Muito grande & 0/100 & 17,4 $\pm$ 2,2 & 25\,601,0 $\pm$ 107,7 & 0,068\% $\pm$ 0,008\% \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+\begin{table}[H]
+    \caption{Desvio padrão de $Z$ entre execuções e viabilidade das soluções heurísticas por porte ($W_{cap} = 1900$)}
+    \label{tab:res-viabilidade-sigma}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{3}{>{\centering\arraybackslash}p{3.8cm}}}
+        \hline
+        \textbf{Porte} & \textbf{$\sigma$ de $Z$ entre execuções (mínimo--máximo)} & \textbf{Conjuntos com $\sigma > W_{cap}$} & \textbf{Execuções que encontraram solução viável} \\
+        \hline
+        Pequena & 119 -- 216 & 0/10 & 100/100 \\
+        Média & 360 -- 753 & 0/10 & 100/100 \\
+        Grande & 1\,323 -- 1\,805 & 0/10 & 5/100 \\
+        Muito grande & 1\,839 -- 5\,290 & 9/10 & 0/100 \\
         \hline
     \end{tabular}
     \end{adjustbox}
 \end{table}
 
 % ---------------------------------------------------------------------
-\section{Esforço computacional}
+\subsection{Esforço computacional}
 \label{sec:res-esforco}
 
-A \autoref{tab:res-esforco} compara o esforço de busca das duas abordagens dentro do mesmo teto de tempo.
+Todos os experimentos foram executados em um computador Apple MacBook Air com processador Apple M4, de 10 núcleos (4 de desempenho e 6 de eficiência), 16 GB de memória unificada e sistema operacional macOS 26.6.2, utilizando Python 3.13.7 e Gurobi 13.0.1. A heurística é executada em um único núcleo, enquanto o Gurobi utiliza, por padrão, todos os núcleos disponíveis. Para reduzir o tempo total de execução, os portes foram executados em dois processos simultâneos na mesma máquina, de modo que parte da capacidade de processamento foi compartilhada entre eles.
 
-% TODO: Gurobi faz cada vez menos iterações com o porte (1\,334 na muito grande);
-% a heurística mantém entre 50 e 75 mil avaliações/s, mas cai para 8 gerações na muito grande.
+A \autoref{tab:res-esforco} compara o esforço de busca das duas abordagens dentro do mesmo teto de tempo, medido pelo número de iterações do simplex no Gurobi e pelo número de avaliações da função objetivo na heurística. As duas medidas não têm a mesma unidade, mas a forma como variam com o porte é comparável.
 
-\begin{table}[htbp]
+O esforço do Gurobi não acompanha o crescimento das instâncias. Com o modelo cada vez maior, cada iteração se torna mais custosa e, na instância muito grande, o \textit{solver} realizou apenas 1\,334 iterações em 1920 segundos, sem concluir a relaxação inicial. A heurística, por sua vez, manteve uma taxa de 46 a 64 mil avaliações por segundo, chegando a 88,8 milhões de avaliações por execução na instância muito grande. Essa diferença decorre da avaliação procedural e incremental descrita na \autoref{sec:implementacao}, em que o custo de cada movimento depende apenas da internação do paciente movido, e não do tamanho do modelo.
+
+O número de gerações, por outro lado, cai com o porte, de 22,3 na instância pequena para 14,4 na muito grande, pois, embora o teto de tempo cresça na mesma proporção que o número de pacientes, cada geração exige refinar indivíduos com cada vez mais pacientes e se torna proporcionalmente mais custosa. Combinado com a convergência discutida nas subseções anteriores, isso explica os dois regimes observados. Na instância pequena, sobram gerações e a heurística estagna, enquanto nas demais as gerações se esgotam enquanto a busca ainda melhora.
+
+\begin{table}[H]
     \caption{Esforço computacional por porte (média por execução)}
     \label{tab:res-esforco}
     \centering
@@ -231,60 +689,139 @@ A \autoref{tab:res-esforco} compara o esforço de busca das duas abordagens dent
         \hline
         \textbf{Porte} & \textbf{Teto} & \textbf{Nº Iterações do Gurobi} & \textbf{Nº Avaliações da heurística} & \textbf{Nº Gerações} \\
         \hline
-        Pequena      & 30 s  & 1\,112\,503 & 2\,202\,174  & 25,5 \\
-        Média        & 90 s  & 50\,741     & 5\,841\,757  & 15,5 \\
-        Grande       & 360 s & 220\,275    & 22\,175\,677 & 14,5 \\
-        Muito grande & 900 s & 1\,334      & 46\,617\,002 & 8,0  \\
+        Pequena      & 30 s   & 771\,234   & 1\,908\,678  & 22,3 \\
+        Média        & 120 s  & 51\,233    & 6\,976\,815  & 18,4 \\
+        Grande       & 480 s  & 258\,168   & 26\,573\,810 & 17,3 \\
+        Muito grande & 1920 s & 1\,334     & 88\,757\,291 & 14,4 \\
         \hline
     \end{tabular}
     \end{adjustbox}
 \end{table}
 
-% ---------------------------------------------------------------------
-\section{Síntese}
-\label{sec:res-sintese}
 
-% TODO: ponto de inversão entre as abordagens, qualidade da heurística nas instâncias
-% grandes e inviabilidade residual.
-Síntese dos resultados e ponte para a Conclusão.
+% =====================================================================
+\section{Discussão das métricas operacionais}
+\label{sec:res-operacionais}
 
-\begin{table}[htbp]
-    \caption{Resumo agregado entre os 10 conjuntos de cada porte (média $\pm$ desvio padrão)}
-    \label{tab:agregado}
+Enquanto a \autoref{sec:res-comparacao} compara as abordagens pelo valor agregado de $Z$, esta seção analisa, critério a critério, o que as soluções representam para o hospital. Para cada critério, apresentam-se o melhor resultado possível dado o cenário, quando há um limite conhecido, o que a heurística entregou e o que isso significa para a gestão dos leitos. Todas as métricas são normalizadas dentro de cada conjunto, como taxas, e só então resumidas por porte, por média e desvio padrão entre os 10 conjuntos. Dessa forma, o desvio padrão indica se a heurística se comporta de forma consistente entre os conjuntos ou se acerta em alguns e erra em outros. As características das instâncias, como o horizonte e a ocupação, foram descritas na \autoref{sec:gerador-instancias}.
+
+As tabelas desta seção reportam as métricas do Gurobi apenas na instância pequena, em que o \textit{solver} termina com \textit{gap} de 1\% a 16\% e sua solução está próxima do ótimo, sendo, portanto, um termo de comparação legítimo. A partir da instância média, a solução do Gurobi é uma incumbente ainda distante do ótimo, com \textit{gap} de 60,5\% a 81,3\% na instância média e sem limite inferior não trivial do \textit{solver} na maioria dos conjuntos das instâncias grande e muito grande, e suas métricas são muito piores que as da heurística. Nas instâncias grande e muito grande, por exemplo, cerca de 72\% dos pacientes-dia estão em especialidade inadequada, há quase três transferências por paciente e cerca de 66\% dos quartos-dia são mistos. Esses valores coincidem com os de uma alocação feita ao acaso, independentemente a cada dia. Com a mesma distribuição de especialidades para pacientes e quartos, um quarto sorteado tem especialidade inadequada com probabilidade de $1 - (0{,}4^2 + 3 \cdot 0{,}2^2) = 72\%$, exatamente a taxa observada. Da mesma forma, quase três transferências por paciente equivalem a uma mudança de quarto a quase todo dia, já que o tempo médio de permanência é de quatro dias, e a proporção de quartos mistos é a esperada quando os gêneros são distribuídos ao acaso em quartos de dois ou três pacientes. Isso indica que, nesses portes, o Gurobi encontrou apenas uma solução que respeita a atribuição única e a capacidade, mas praticamente não chegou a otimizar a função objetivo dentro do teto de tempo. Na instância média, os valores são intermediários, pois o \textit{solver} chegou a melhorar parcialmente essa solução. Como essas métricas refletem o fato de o \textit{solver} não ter convergido, e não a qualidade do modelo exato, elas são omitidas das tabelas a partir da instância média, e a heurística é comparada, nesses portes, com os limites mínimos de cada critério.
+
+\subsection{Especialidade}
+\label{sec:res-op-especialidade}
+
+No critério de especialidade, o melhor resultado possível é conhecido. Denomina-se mínimo estrutural o número mínimo de pacientes-dia em especialidade inadequada, $M$, conforme a Equação~\eqref{eq:minimo-especialidade}, que qualquer solução viável necessariamente apresenta, por depender apenas da distribuição dos quartos e da demanda de cada especialidade, e não da alocação. A \autoref{tab:res-op-especialidade} compara esse mínimo, como porcentagem da carga de internação, com o resultado da heurística.
+
+\begin{table}[H]
+    \caption{Especialidade inadequada por porte (\% dos pacientes-dia, média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-op-especialidade}
     \centering
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{lrrrr}
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{3.0cm}}}
         \hline
-        \textbf{Métrica} & \textbf{Pequena} & \textbf{Média} & \textbf{Grande} & \textbf{Muito grande} \\
+        \textbf{Porte} & \textbf{Mínimo estrutural ($M/N_{pd}$)} & \textbf{Heurística} & \textbf{Folga da heurística (p.p.)} & \textbf{Gurobi} \\
         \hline
-        \multicolumn{5}{l}{\textbf{Instâncias}} \\
-        Horizonte (dias) & 15,1 $\pm$ 0,6 & 15,1 $\pm$ 0,3 & 15,0 $\pm$ 0,0 & 15,0 $\pm$ 0,0 \\
-        Ocupação Média (todo o horizonte) & 87,9\% $\pm$ 1,9\% & 89,0\% $\pm$ 1,4\% & 89,2\% $\pm$ 0,6\% & 88,9\% $\pm$ 0,4\% \\
-        Pico de Ocupação Diária & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% \\
-        Mínimo de Ocupação Diária & 11,3\% $\pm$ 6,9\% & 14,3\% $\pm$ 6,4\% & 12,3\% $\pm$ 2,6\% & 11,0\% $\pm$ 1,2\% \\
-        \hline
-        \multicolumn{5}{l}{\textbf{Gurobi}} \\
-        $Z$ (Limite Superior) & 10\,370,0 $\pm$ 3\,461,4 & 83\,992,5 $\pm$ 7\,816,0 & 820\,270,0 $\pm$ 8\,025,5 & 3\,277\,170,0 $\pm$ 14\,301,5 \\
-        Limite Inferior & 9\,845,0 $\pm$ 3\,391,1 & 23\,950,0 $\pm$ 5\,336,1 & 7\,735,0 $\pm$ 16\,852,7 & 0,0 $\pm$ 0,0 \\
-        Gap de Otimalidade & 5,4\% $\pm$ 3,6\% & 71,4\% $\pm$ 6,1\% & 99,1\% $\pm$ 2,1\% & 100,0\% $\pm$ 0,0\% \\
-        \hline
-        \multicolumn{5}{l}{\textbf{Heurística}} \\
-        $Z$ & 10\,567,5 $\pm$ 3\,493,4 & 28\,807,5 $\pm$ 5\,560,8 & 56\,260,0 $\pm$ 9\,935,3 & 210\,675,0 $\pm$ 22\,841,7 \\
-        \hline
-        \multicolumn{5}{l}{\textbf{Métricas Operacionais}} \\
-        \multicolumn{5}{l}{Especialidade Incorreta (contagem)} \\
-        \quad Gurobi & 93,0 $\pm$ 35,7 & 369,9 $\pm$ 70,0 & 4\,618,8 $\pm$ 56,6 & 18\,470,5 $\pm$ 99,3 \\
-        \quad Heurística & 93,3 $\pm$ 35,2 & 240,1 $\pm$ 54,0 & 346,2 $\pm$ 102,6 & 1\,082,6 $\pm$ 200,2 \\
-        \multicolumn{5}{l}{Transferências (contagem)} \\
-        \quad Gurobi & 3,7 $\pm$ 1,8 & 575,4 $\pm$ 150,3 & 4\,789,4 $\pm$ 39,9 & 19\,170,7 $\pm$ 108,2 \\
-        \quad Heurística & 6,3 $\pm$ 1,9 & 52,0 $\pm$ 11,8 & 284,9 $\pm$ 30,4 & 1\,239,8 $\pm$ 88,2 \\
-        \multicolumn{5}{l}{Quarto-dias Mistos (contagem)} \\
-        \quad Gurobi & 11,8 $\pm$ 4,1 & 243,1 $\pm$ 38,8 & 1\,585,6 $\pm$ 19,1 & 6\,287,8 $\pm$ 29,7 \\
-        \quad Heurística & 12,3 $\pm$ 4,4 & 29,3 $\pm$ 5,5 & 98,6 $\pm$ 13,8 & 539,0 $\pm$ 25,3 \\
-        \multicolumn{5}{l}{Violação de Capacidade (pacientes-dia)} \\
-        \quad Gurobi & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 \\
-        \quad Heurística & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,9 $\pm$ 0,7 & 24,4 $\pm$ 2,5 \\
+        Pequena & 23,2 $\pm$ 9,1 & 23,4 $\pm$ 9,0 & 0,2 $\pm$ 0,4 & 23,4 $\pm$ 9,0 \\
+        Média & 14,6 $\pm$ 3,5 & 14,8 $\pm$ 3,4 & 0,2 $\pm$ 0,3 & --- \\
+        Grande & 4,7 $\pm$ 1,7 & 5,2 $\pm$ 1,6 & 0,5 $\pm$ 0,2 & --- \\
+        Muito grande & 3,0 $\pm$ 1,0 & 3,7 $\pm$ 0,9 & 0,8 $\pm$ 0,1 & --- \\
         \hline
     \end{tabular}
     \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - Folga calculada em cada conjunto, como a taxa da heurística menos o mínimo estrutural do próprio conjunto, e só então agregada. Gurobi reportado apenas na instância pequena. Nas demais, sua solução incumbente está distante do ótimo e não é um termo de comparação legítimo (\autoref{sec:res-operacionais}).}
 \end{table}
+
+A heurística deixou 23,4\%, 14,8\%, 5,2\% e 3,7\% dos pacientes-dia em especialidade inadequada nas instâncias pequena, média, grande e muito grande, valores que superam o mínimo estrutural em apenas 0,2, 0,2, 0,5 e 0,8 ponto percentual, respectivamente. O desvio padrão dessa folga, entre 0,1 e 0,4 ponto percentual, mostra que a heurística fica próxima do mínimo em todos os conjuntos, e não apenas em média. Na instância pequena, o Gurobi obteve os mesmos 23,4\%. A folga cresce com o porte, coerente com a redução do número de gerações disponíveis nas instâncias maiores (\autoref{sec:res-esforco}).
+
+Para o hospital, isso significa que quase toda a alocação em especialidade inadequada é imposta pela distribuição dos quartos, e não pela alocação. Na instância pequena, metade dos conjuntos não tem nenhum quarto de alguma especialidade, e o mínimo estrutural varia de 10\% a 39\% dos pacientes-dia conforme o conjunto. Reduzir esse valor exigiria alterar a distribuição de especialidades dos quartos, uma decisão de nível estratégico, e não uma alocação melhor.
+
+\subsection{Transferências}
+\label{sec:res-op-transferencias}
+
+Para as transferências, não há limite inferior não trivial, já que o valor zero é o único mínimo garantido. A \autoref{tab:res-op-transferencias} apresenta o número de transferências por 100 pacientes.
+
+\begin{table}[H]
+    \caption{Transferências por porte (por 100 pacientes, média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-op-transferencias}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{2}{>{\centering\arraybackslash}p{3.0cm}}}
+        \hline
+        \textbf{Porte} & \textbf{Heurística} & \textbf{Gurobi} \\
+        \hline
+        Pequena & 8,2 $\pm$ 4,5 & 3,6 $\pm$ 1,7 \\
+        Média & 13,6 $\pm$ 2,7 & --- \\
+        Grande & 17,0 $\pm$ 2,4 & --- \\
+        Muito grande & 19,4 $\pm$ 1,6 & --- \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - Não há limite inferior não trivial para o número de transferências. Gurobi reportado apenas na instância pequena. Nas demais, sua solução incumbente está distante do ótimo e não é um termo de comparação legítimo (\autoref{sec:res-operacionais}).}
+\end{table}
+
+A heurística realizou, em média, 8,2 transferências por 100 pacientes na instância pequena, taxa que sobe para 13,6 na média, 17,0 na grande e 19,4 na muito grande, com desvio padrão entre 1,6 e 4,5. Na instância pequena, o Gurobi realizou 3,6 transferências por 100 pacientes. A diferença, de 4,6 transferências por 100 pacientes, equivale a 230 unidades de $Z$ e corresponde à diferença residual de qualidade entre as soluções.
+
+O crescimento com o porte é consequência direta dos pesos da função objetivo. A penalidade de especialidade é cobrada a cada dia de internação ($W_{spec} = 100$ por paciente-dia), enquanto a de transferência é cobrada uma única vez ($W_{transf} = 50$). Com a razão $W_{transf}/W_{spec} = 0{,}5$, transferir um paciente de um quarto de especialidade inadequada para um quarto adequado, quando lhe restam $k$ dias de internação, reduz $Z$ em $k \cdot W_{spec} - W_{transf} = 100k - 50$, valor positivo para qualquer $k \geq 1$. A função objetivo, portanto, pede explicitamente essas transferências, pois, sempre que um leito da especialidade adequada é liberado durante a internação de um paciente mal alocado, transferi-lo melhora a solução.
+
+Para o hospital, isso corresponde a cerca de 17 a 19 transferências a cada 100 pacientes nas instâncias maiores. Esse número não indica uma falha do algoritmo, mas o equilíbrio definido pela calibração dos pesos. Se as transferências forem mais indesejáveis do que esse equilíbrio sugere, por causarem desconforto ao paciente e trabalho adicional à equipe \cite{demeester2010hybrid, schafer2023combining}, o ajuste deve ser feito na relação entre $W_{transf}$ e $W_{spec}$. Para que transferir deixe de compensar quando restam $k$ dias de internação, seria necessário $W_{transf} \geq k \cdot W_{spec}$.
+
+\subsection{Quartos mistos}
+\label{sec:res-op-mistos}
+
+Para os quartos mistos, o melhor resultado possível é limitado pelo mínimo por paridade $G$, conforme a Equação~\eqref{eq:minimo-misto}, que conta os dias de lotação total em que o número de pacientes do sexo feminino não é múltiplo de três. A \autoref{tab:res-op-mistos} compara esse mínimo, como porcentagem dos quartos-dia, com o resultado da heurística.
+
+\begin{table}[H]
+    \caption{Quartos-dia mistos por porte (\% dos quartos-dia, média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-op-mistos}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{3.0cm}}}
+        \hline
+        \textbf{Porte} & \textbf{Mínimo por paridade ($G$)} & \textbf{Heurística} & \textbf{Folga da heurística (p.p.)} & \textbf{Gurobi} \\
+        \hline
+        Pequena & 5,2 $\pm$ 1,7 & 8,3 $\pm$ 2,8 & 3,1 $\pm$ 2,4 & 7,9 $\pm$ 2,8 \\
+        Média & 1,4 $\pm$ 0,4 & 4,6 $\pm$ 1,1 & 3,3 $\pm$ 1,3 & --- \\
+        Grande & 0,3 $\pm$ 0,1 & 3,7 $\pm$ 0,5 & 3,4 $\pm$ 0,5 & --- \\
+        Muito grande & 0,1 $\pm$ 0,0 & 3,7 $\pm$ 0,3 & 3,6 $\pm$ 0,3 & --- \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - Mínimo por paridade conforme a Equação~\eqref{eq:minimo-misto}. Folga calculada em cada conjunto e só então agregada. Gurobi reportado apenas na instância pequena. Nas demais, sua solução incumbente está distante do ótimo e não é um termo de comparação legítimo (\autoref{sec:res-operacionais}).}
+\end{table}
+
+
+A heurística manteve 8,3\%, 4,6\%, 3,7\% e 3,7\% dos quartos-dia com pacientes de gêneros distintos nas instâncias pequena, média, grande e muito grande, enquanto o mínimo por paridade é de 5,2\%, 1,4\%, 0,3\% e 0,1\%. Na instância pequena, o Gurobi obteve 7,9\%, valor próximo ao da heurística. A folga, de 3,1 a 3,6 pontos percentuais, é maior que na especialidade, mas o mínimo por paridade é fraco, pois ignora a interação com a especialidade dos quartos. Separar os gêneros pode exigir alocar pacientes fora de sua especialidade e, como um paciente-dia em especialidade inadequada custa mais que um quarto-dia misto ($W_{spec} = 100$ contra $W_{gen} = 75$), a função objetivo prefere, nesses casos, o quarto misto. Parte da folga corresponde, portanto, a essa troca entre critérios, e não a uma deficiência da busca.
+
+Para o hospital, entre 4\% e 8\% dos quartos-dia teriam pacientes de gêneros distintos, valor que diminui com o porte do hospital. Se a separação de gêneros for uma exigência mais rígida da instituição, ela pode ser tratada como restrição ou com um peso $W_{gen}$ maior que $W_{spec}$, ao custo de mais alocações em especialidade inadequada.
+
+\subsection{Comparação entre portes}
+\label{sec:res-entre-portes}
+
+Como $Z$ é uma soma sobre pacientes-dia, quartos-dia e transferências, o seu valor cresce com o porte da instância e não é comparável entre portes (\autoref{sec:pesos}). Para comparar os portes, a \autoref{tab:res-z-paciente-dia} divide $Z$ pela carga de internação $N_{pd}$, conforme a Equação~\eqref{eq:carga-internacao}. O mínimo estrutural, definido na \autoref{sec:res-op-especialidade}, é expresso aqui em unidades de $Z$ por paciente-dia ($W_{spec} \cdot M/N_{pd}$), o que permite separar, no valor de $Z$, a parcela imposta pelos dados da parcela que depende do método de solução.
+
+\begin{table}[H]
+    \caption{Função objetivo por paciente-dia e mínimo estrutural por porte (média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-z-paciente-dia}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{3.3cm}}}
+        \hline
+        \textbf{Porte} & \textbf{$Z/N_{pd}$ do Gurobi} & \textbf{$Z/N_{pd}$ da heurística} & \textbf{Mínimo estrutural ($W_{spec} \cdot M/N_{pd}$)} & \textbf{Excedente da heurística sobre o mínimo estrutural} \\
+        \hline
+        Pequena & 26,1 $\pm$ 8,8 & 26,8 $\pm$ 8,8 & 23,2 $\pm$ 9,1 & 3,6 $\pm$ 0,9 \\
+        Média & 52,2 $\pm$ 4,9 & 17,8 $\pm$ 3,5 & 14,6 $\pm$ 3,5 & 3,2 $\pm$ 0,5 \\
+        Grande & 127,8 $\pm$ 0,6 & 8,3 $\pm$ 1,6 & 4,7 $\pm$ 1,7 & 3,6 $\pm$ 0,5 \\
+        Muito grande & 128,0 $\pm$ 0,4 & 7,2 $\pm$ 1,1 & 3,0 $\pm$ 1,0 & 4,2 $\pm$ 0,3 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - valores por paciente-dia. O excedente é calculado em cada conjunto, como $Z/N_{pd}$ da heurística menos o mínimo estrutural do próprio conjunto, e só então resumido por porte.}
+\end{table}
+
+Por paciente-dia, o $Z$ da heurística cai de 26,8 na instância pequena para 7,2 na muito grande. Essa queda, porém, acompanha quase integralmente a do mínimo estrutural, que passa de 23,2 para 3,0, pois, com mais quartos, a distribuição sorteada das especialidades se aproxima da distribuição da demanda. A grande variação desses dois valores entre os conjuntos de um mesmo porte, com desvio padrão de até 9,1 na instância pequena, tem a mesma origem, já que o mínimo estrutural depende do sorteio das especialidades dos quartos de cada conjunto.
+
+O excedente da heurística sobre o mínimo estrutural, calculado em cada conjunto e só depois resumido por porte, é estável entre os conjuntos, com desvio padrão entre 0,3 e 0,9, e varia pouco com o porte, de 3,2 a 3,6 nas instâncias pequena, média e grande, chegando a 4,2 na muito grande, em que a heurística dispõe de menos gerações (\autoref{sec:res-esforco}). No Gurobi, ao contrário, o $Z$ por paciente-dia cresce de 26,1 para 128,0, refletindo a dificuldade do \textit{solver} nessas instâncias. Dessa forma, a melhora aparente da heurística com o porte se deve principalmente aos dados, e não ao método.

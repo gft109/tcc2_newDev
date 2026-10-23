@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+    \caption{Resumo agregado entre os 10 conjuntos --- instância muito grande (média $\pm$ desvio padrão)}
+    \label{tab:agregado-muito-grande}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lr}
+        \hline
+        \textbf{Métrica} & \textbf{Muito grande} \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Instâncias}} \\
+        Horizonte (dias) & 15,0 $\pm$ 0,0 \\
+        Ocupação Média (todo o horizonte) & 88,9\% $\pm$ 0,4\% \\
+        Pico de Ocupação Diária & 100,0\% $\pm$ 0,0\% \\
+        Mínimo de Ocupação Diária & 11,0\% $\pm$ 1,2\% \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Gurobi}} \\
+        $Z$ (Limite Superior) & 3\,277\,170,0 $\pm$ 14\,301,5 \\
+        Limite Inferior & 0,0 $\pm$ 0,0 \\
+        Gap de Otimalidade & 100,0\% $\pm$ 0,0\% \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Heurística}} \\
+        $Z$ & 210\,675,0 $\pm$ 22\,841,7 \\
+        \hline
+        \multicolumn{2}{l}{\textbf{Métricas Operacionais}} \\
+        \multicolumn{2}{l}{Especialidade Incorreta (contagem)} \\
+        \quad Gurobi & 18\,470,5 $\pm$ 99,3 \\
+        \quad Heurística & 1\,082,6 $\pm$ 200,2 \\
+        \multicolumn{2}{l}{Transferências (contagem)} \\
+        \quad Gurobi & 19\,170,7 $\pm$ 108,2 \\
+        \quad Heurística & 1\,239,8 $\pm$ 88,2 \\
+        \multicolumn{2}{l}{Quarto-dias Mistos (contagem)} \\
+        \quad Gurobi & 6\,287,8 $\pm$ 29,7 \\
+        \quad Heurística & 539,0 $\pm$ 25,3 \\
+        \multicolumn{2}{l}{Violação de Capacidade (pacientes-dia)} \\
+        \quad Gurobi & 0,0 $\pm$ 0,0 \\
+        \quad Heurística & 24,4 $\pm$ 2,5 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}

@@ -21,6 +21,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import pandas as pd
 
 from utils.solution import WEIGHTS
@@ -61,6 +62,46 @@ def min_daily_occupancy_rate(instance_name: str, set_dir: str) -> float | None:
     last_days = patients["admission_day"] + patients["los"] - 1
     census = [((patients["admission_day"] <= day) & (last_days >= day)).sum() for day in range(1, last_days.max() + 1)]
     return min(census) / rooms["capacity"].sum()
+
+
+def minimum_specialty_mismatch(instance_name: str, set_dir: str) -> int | None:
+    """M: patient-days that must sit in a room of another specialty in any feasible solution,
+    i.e. per day and specialty, the inpatients exceeding the beds of that specialty."""
+    base = os.path.join(DATA_BASE_DIR, instance_name, set_dir)
+    patients = _read_csv_or_none(os.path.join(base, "patient.csv"))
+    rooms = _read_csv_or_none(os.path.join(base, "room.csv"))
+    if patients is None or rooms is None:
+        return None
+    beds = rooms.groupby("specialty")["capacity"].sum()
+    last_days = patients["admission_day"] + patients["los"] - 1
+    excess = 0
+    for day in range(1, last_days.max() + 1):
+        demand = patients.loc[(patients["admission_day"] <= day) & (last_days >= day), "required_specialty"].value_counts()
+        excess += sum(max(0, n - beds.get(specialty, 0)) for specialty, n in demand.items())
+    return int(excess)
+
+
+def occupancy_structure(instance_name: str, set_dir: str) -> dict | None:
+    """Room count, days with every bed taken and the parity minimum of mixed room-days: on such a day
+    all rooms are full, so if the number of women is not a multiple of the (common) room capacity,
+    at least one room must hold both genders."""
+    base = os.path.join(DATA_BASE_DIR, instance_name, set_dir)
+    patients = _read_csv_or_none(os.path.join(base, "patient.csv"))
+    rooms = _read_csv_or_none(os.path.join(base, "room.csv"))
+    if patients is None or rooms is None:
+        return None
+    total_beds = rooms["capacity"].sum()
+    common_capacity = rooms["capacity"].iloc[0] if rooms["capacity"].nunique() == 1 else None
+    last_days = patients["admission_day"] + patients["los"] - 1
+    full_days = mixed_minimum = 0
+    for day in range(1, last_days.max() + 1):
+        inpatients = patients[(patients["admission_day"] <= day) & (last_days >= day)]
+        if len(inpatients) == total_beds:
+            full_days += 1
+            women = int((inpatients["gender"] == "F").sum())
+            if common_capacity is not None and women % common_capacity != 0:
+                mixed_minimum += 1
+    return {"n_quartos": len(rooms), "dias_lotacao_total": full_days, "min_quartos_mistos": mixed_minimum}
 
 
 def collect_set_row(instance_name: str, set_dir: str) -> dict:
@@ -105,6 +146,19 @@ def collect_set_row(instance_name: str, set_dir: str) -> dict:
     if "gurobi_total_cost" in row and "heur_melhor_z" in row:
         row["heur_bate_gurobi"] = row["heur_melhor_z"] < row["gurobi_total_cost"]
 
+    structure = occupancy_structure(instance_name, set_dir)
+    if structure is not None:
+        row.update(structure)
+
+    minimum = minimum_specialty_mismatch(instance_name, set_dir)
+    if minimum is not None:
+        row["min_especialidade_inadequada"] = minimum
+        row["lb_comb"] = WEIGHTS["W_SPEC"] * minimum
+        # best lower bound available: the solver's or the combinatorial one (eq:limite-combinatorio)
+        row["lb_efetivo"] = max(row["lb_comb"], row.get("gurobi_lower_bound") or 0.0)
+        if "heur_melhor_z" in row and row["lb_efetivo"] > 0:
+            row["heur_melhor_excesso"] = (row["heur_melhor_z"] - row["lb_efetivo"]) / row["lb_efetivo"]
+
     metrics_df = _read_csv_or_none(os.path.join(base, "solution_metrics.csv"))
     if metrics_df is not None:
         for _, metric_row in metrics_df.iterrows():
@@ -125,6 +179,85 @@ def collect_set_row(instance_name: str, set_dir: str) -> dict:
 def build_aggregate_summary(instance_name: str, sets: list[str]) -> pd.DataFrame:
     rows = [collect_set_row(instance_name, set_dir) for set_dir in sets]
     return pd.DataFrame(rows).sort_values("set").reset_index(drop=True)
+
+
+def _executions_z(instance_name: str, set_dir: str) -> list[float]:
+    runs = _read_csv_or_none(os.path.join(RESULTS_DIR, instance_name, set_dir, "heuristic_runs.csv"))
+    if runs is None:
+        return []
+    return (runs["specialty_cost"] + runs["transfer_cost"] + runs["gender_cost"]).tolist()
+
+
+def plot_sets_boxplot(instance_name: str, sets: list[str], out_dir: str) -> None:
+    """Z of every execution, one box per set: within-set vs. between-set variation side by side."""
+    data = [_executions_z(instance_name, set_dir) for set_dir in sets]
+    labels = [SET_DIR_PATTERN.fullmatch(set_dir).group(1) for set_dir in sets]
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.boxplot(data, tick_labels=labels)
+    ax.set_xlabel("Conjunto")
+    ax.set_ylabel("Função objetivo Z")
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}".replace(",", ".")))
+    ax.set_title(f"Z das execuções da heurística por conjunto — instância {INSTANCE_DISPLAY_NAMES.get(instance_name, instance_name)}")
+    fig.tight_layout()
+    fig.savefig(os.path.join(out_dir, "boxplot_sets.png"), dpi=150)
+    plt.close(fig)
+
+
+def plot_convergence_log(instances: list[str], set_dir: str = "set_01") -> None:
+    """Best fitness per generation of every execution of one set per instance, log y-axis, 2x2 panels."""
+    fig, axes = plt.subplots(2, 2, figsize=(11, 8))
+    for ax, instance in zip(axes.flat, instances):
+        curves = _read_csv_or_none(os.path.join(RESULTS_DIR, instance, set_dir, "convergence.csv"))
+        if curves is None:
+            ax.set_visible(False)
+            continue
+        histories = [group.sort_values("generation")["best_fitness"].tolist() for _, group in curves.groupby("iteration")]
+        best = min(histories, key=lambda history: history[-1])
+        for history in histories:
+            ax.plot(history, color="steelblue", alpha=0.3, linewidth=1)
+        ax.plot(best, color="steelblue", linewidth=2.5, label="Execução de menor F")
+        ax.set_yscale("log")
+        ax.set_title(f"Instância {INSTANCE_DISPLAY_NAMES.get(instance, instance)} (conjunto {int(set_dir[-2:])})")
+        ax.set_xlabel("Geração")
+        ax.set_ylabel("Melhor fitness F (escala log)")
+        ax.legend(loc="upper right", fontsize=11)
+    fig.tight_layout()
+    fig.savefig(os.path.join(AGGREGATION_DIR, "convergence_log.png"), dpi=150)
+    plt.close(fig)
+
+
+def plot_capacity_violation_sets(instances: list[str]) -> None:
+    """V_cap of the best individual per generation, one curve per set (its lowest-F execution), one
+    broken-axis panel per instance."""
+    from utils.results_representation import plot_broken_axis
+    fig, axes = plt.subplots(
+        2, len(instances), figsize=(6 * len(instances), 6), sharex="col", squeeze=False,
+        gridspec_kw={"height_ratios": [1, 3]},
+    )
+    for col, instance in enumerate(instances):
+        best_curves = []
+        for set_dir in discover_sets(instance):
+            curves = _read_csv_or_none(os.path.join(RESULTS_DIR, instance, set_dir, "convergence.csv"))
+            if curves is None or "best_capacity_violation" not in curves:
+                continue
+            finals = curves.sort_values("generation").groupby("iteration").tail(1)
+            best_iteration = finals.loc[finals["best_fitness"].idxmin(), "iteration"]
+            best = curves[curves["iteration"] == best_iteration].sort_values("generation")
+            best_curves.append((int(set_dir[-2:]), best["best_capacity_violation"].tolist()))
+
+        def draw(ax, curves=best_curves):
+            for set_number, values in curves:
+                ax.plot(range(len(values)), values, linewidth=1.5, alpha=0.8, label=f"Conjunto {set_number}")
+
+        ax_top, ax_bottom = axes[0][col], axes[1][col]
+        plot_broken_axis([values for _, values in best_curves], draw, axes=(ax_top, ax_bottom))
+        ax_top.set_title(f"Instância {INSTANCE_DISPLAY_NAMES.get(instance, instance)}")
+        ax_top.legend(fontsize=10, ncol=2, loc="upper right")
+        ax_bottom.set_xlabel("Geração")
+        ax_bottom.set_ylabel("$V_{cap}$ do melhor indivíduo (pacientes-dia)")
+    fig.tight_layout()
+    fig.savefig(os.path.join(AGGREGATION_DIR, "capacity_violation_sets.png"), dpi=150)
+    plt.close(fig)
 
 
 OPERATIONAL_METRICS = [
@@ -351,39 +484,78 @@ def render_viability_latex_table(dfs: dict[str, pd.DataFrame]) -> str:
 
 
 def render_objective_latex_table(df: pd.DataFrame, instance_name: str) -> str:
-    """Z of Gurobi and of the heuristic for each set of one instance."""
+    """Two tables per instance: (A) bounds on the optimum, (B) the heuristic's results per set."""
     display_name = INSTANCE_DISPLAY_NAMES.get(instance_name, instance_name)
+    label_suffix = instance_name.replace("_", "-")
     n_executions = int(df["heur_execucoes"].max())
-    lines = [
+
+    bounds = [
         r"\begin{table}[htbp]",
-        f"    \\caption{{Função objetivo $Z$ por conjunto --- instância {display_name}. Na heurística, $Z$ sem a "
-        f"penalidade de capacidade; $\\sigma$: desvio padrão de $Z$ entre as {n_executions} execuções do conjunto}}",
-        f"    \\label{{tab:res-z-{instance_name.replace('_', '-')}}}",
+        f"    \\caption{{Limites do valor ótimo de $Z$ por conjunto --- instância {display_name}}}",
+        f"    \\label{{tab:res-limites-{label_suffix}}}",
         r"    \centering",
-        r"    \begin{adjustbox}{max width=\textwidth}",
-        r"    \begin{tabular}{crrrrr}",
+        r"    \begin{tabular}{crrrr}",
         r"        \hline",
-        f"        & \\multicolumn{{3}}{{c}}{{\\textbf{{Gurobi}}}} & "
-        f"\\multicolumn{{2}}{{c}}{{\\textbf{{Heurística ({n_executions} execuções)}}}} \\\\",
-        r"        \cline{2-4} \cline{5-6}",
-        r"        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & "
-        r"\textbf{Melhor execução} & \textbf{Média $\pm$ $\sigma$} \\",
+        r"        & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\",
+        r"        \cline{2-4} \cline{5-5}",
+        r"        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{\textit{Gap}} & "
+        r"\textbf{$LB_{comb}$} \\",
         r"        \hline",
     ]
     for _, row in df.iterrows():
-        lines.append(
+        bounds.append(
             f"        {int(row['set']):02d} & {_latex_number(row['gurobi_upper_bound'])} & "
-            f"{_latex_number(row['gurobi_lower_bound'])} & {_latex_number(row['gurobi_gap'] * 100)}\\% & "
-            f"{_latex_number(row['heur_melhor_z'])} & "
-            f"{_latex_number(row['heur_media_z'])} $\\pm$ {_latex_number(row['heur_dp_z'])} \\\\"
+            f"{_latex_number(row['gurobi_lower_bound'])} & {_gap_latex(row)} & {_latex_number(row['lb_comb'])} \\\\"
         )
-    lines += [
+    bounds += [r"        \hline", r"    \end{tabular}", r"    \par\smallskip"]
+    notes = []
+    if (df["gurobi_lower_bound"] <= 0).any():
+        notes.append(r"--- indica que o \textit{solver} não obteve limite inferior não trivial dentro do teto de tempo.")
+    notes.append(r"\textit{Gap} na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.")
+    bounds += ["    {\\footnotesize Nota - " + " ".join(notes) + "}", r"\end{table}"]
+
+    heuristic = [
+        r"\begin{table}[htbp]",
+        f"    \\caption{{Resultados da heurística por conjunto --- instância {display_name} "
+        f"({n_executions} execuções por conjunto; $Z$ sem a penalidade de capacidade)}}",
+        f"    \\label{{tab:res-z-{label_suffix}}}",
+        r"    \centering",
+        r"    \begin{adjustbox}{max width=\textwidth}",
+        r"    \begin{tabular}{crrrrrcr}",
         r"        \hline",
-        r"    \end{tabular}",
-        r"    \end{adjustbox}",
+        r"        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & "
+        r"\textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & "
+        r"\textbf{Excesso máx.} \\",
+        r"        \hline",
+    ]
+    for _, row in df.iterrows():
+        feasible = row.get("heur_melhor_viavel_fitness")
+        feasible_tex = "---" if pd.isna(feasible) else _latex_number(feasible)
+        heuristic.append(
+            f"        {int(row['set']):02d} & {_latex_number(row['heur_melhor_z'])} & {int(row['heur_melhor_v_cap'])} & "
+            f"{_latex_number(row['heur_media_z'])} & {_latex_number(row['heur_dp_z'] / row['heur_media_z'] * 100)}\\% & "
+            f"{feasible_tex} & {int(row['heur_execucoes_viaveis'])}/{int(row['heur_execucoes'])} & "
+            f"{_latex_number(row['heur_melhor_excesso'] * 100)}\\% \\\\"
+        )
+    heuristic += [
+        r"        \hline", r"    \end{tabular}", r"    \end{adjustbox}", r"    \par\smallskip",
+        r"    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}"
+        r", conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia"
+        r", conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. "
+        r"CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de "
+        r"dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se "
+        r"nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, "
+        r"calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}",
         r"\end{table}",
     ]
-    return "\n".join(lines)
+    return "\n".join(bounds) + "\n\n" + "\n".join(heuristic)
+
+
+def _gap_latex(row: pd.Series) -> str:
+    """Gurobi gap, or --- when the lower bound is the trivial 0 (gap would be 100% by construction)."""
+    if row["gurobi_lower_bound"] <= 0:
+        return "---"
+    return f"{_latex_number(row['gurobi_gap'] * 100)}\\%"
 
 
 def save_objective_latex_table(df: pd.DataFrame, instance_name: str) -> None:
@@ -393,6 +565,177 @@ def save_objective_latex_table(df: pd.DataFrame, instance_name: str) -> None:
     with open(path, "w") as f:
         f.write(render_objective_latex_table(df, instance_name) + "\n")
     print(f"Tabela de Z por conjunto em {path}")
+
+
+def render_sigma_viability_latex_table(dfs: dict[str, pd.DataFrame]) -> str:
+    """Spread of Z between executions vs. W_cap, next to how many executions found a feasible solution."""
+    w_cap = WEIGHTS["W_CAP"]
+    lines = [
+        r"\begin{table}[htbp]",
+        f"    \\caption{{Desvio padrão de $Z$ entre execuções e viabilidade das soluções heurísticas por porte "
+        f"($W_{{cap}} = {int(w_cap)}$)}}",
+        r"    \label{tab:res-viabilidade-sigma}",
+        r"    \centering",
+        r"    \begin{adjustbox}{max width=\textwidth}",
+        r"    \begin{tabular}{l*{3}{>{\centering\arraybackslash}p{3.8cm}}}",
+        r"        \hline",
+        r"        \textbf{Porte} & \textbf{$\sigma$ de $Z$ entre execuções (mínimo--máximo)} & "
+        r"\textbf{Conjuntos com $\sigma > W_{cap}$} & \textbf{Execuções que encontraram solução viável} \\",
+        r"        \hline",
+    ]
+    for instance, df in dfs.items():
+        name = INSTANCE_DISPLAY_NAMES.get(instance, instance).capitalize()
+        sigma = df["heur_dp_z"]
+        lines.append(
+            f"        {name} & {_latex_number(sigma.min(), 0)} -- {_latex_number(sigma.max(), 0)} & "
+            f"{int((sigma > w_cap).sum())}/{len(df)} & "
+            f"{int(df['heur_execucoes_viaveis'].sum())}/{int(df['heur_execucoes'].sum())} \\\\"
+        )
+    lines += [r"        \hline", r"    \end{tabular}", r"    \end{adjustbox}", r"\end{table}"]
+    return "\n".join(lines)
+
+
+def render_per_patient_day_latex_table(dfs: dict[str, pd.DataFrame]) -> str:
+    """Z per patient-day of both methods next to the structural minimum W_spec*M/N_pd. The heuristic's
+    excess over that minimum is computed per set and only then summarized, so the data effect cancels."""
+    def mean_std(values: pd.Series) -> str:
+        return f"{_latex_number(values.mean())} $\\pm$ {_latex_number(values.std())}"
+
+    lines = [
+        r"\begin{table}[htbp]",
+        r"    \caption{Função objetivo por paciente-dia e mínimo estrutural por porte (média $\pm$ desvio padrão "
+        r"entre os 10 conjuntos)}",
+        r"    \label{tab:res-z-paciente-dia}",
+        r"    \centering",
+        r"    \begin{adjustbox}{max width=\textwidth}",
+        r"    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{3.3cm}}}",
+        r"        \hline",
+        r"        \textbf{Porte} & \textbf{$Z/N_{pd}$ do Gurobi} & \textbf{$Z/N_{pd}$ da heurística} & "
+        r"\textbf{Mínimo estrutural ($W_{spec} \cdot M/N_{pd}$)} & "
+        r"\textbf{Excedente da heurística sobre o mínimo estrutural} \\",
+        r"        \hline",
+    ]
+    for instance, df in dfs.items():
+        name = INSTANCE_DISPLAY_NAMES.get(instance, instance).capitalize()
+        gurobi = df["gurobi_upper_bound"] / df["n_pd"]
+        heuristic = df["heur_melhor_z"] / df["n_pd"]
+        minimum = df["lb_comb"] / df["n_pd"]
+        lines.append(
+            f"        {name} & {mean_std(gurobi)} & {mean_std(heuristic)} & {mean_std(minimum)} & "
+            f"{mean_std(heuristic - minimum)} \\\\"
+        )
+    lines += [
+        r"        \hline", r"    \end{tabular}", r"    \end{adjustbox}", r"    \par\smallskip",
+        r"    {\footnotesize Nota - valores por paciente-dia. O excedente é calculado em cada conjunto, como $Z/N_{pd}$ "
+        r"da heurística menos o mínimo estrutural do próprio conjunto, e só então resumido por porte.}",
+        r"\end{table}",
+    ]
+    return "\n".join(lines)
+
+
+def _mean_std_latex(values: pd.Series, pct: bool = False) -> str:
+    suffix = "\\%" if pct else ""
+    return f"{_latex_number(values.mean())}{suffix} $\\pm$ {_latex_number(values.std())}{suffix}"
+
+
+GUROBI_ONLY_SMALL_NOTE = (
+    r"Gurobi reportado apenas na instância pequena. Nas demais, sua solução incumbente está distante do ótimo "
+    r"e não é um termo de comparação legítimo (\autoref{sec:res-operacionais})."
+)
+
+
+def _criterion_table(dfs, caption, label, columns, row_values, note) -> str:
+    lines = [
+        r"\begin{table}[htbp]",
+        f"    \\caption{{{caption}}}",
+        f"    \\label{{{label}}}",
+        r"    \centering",
+        r"    \begin{adjustbox}{max width=\textwidth}",
+        f"    \\begin{{tabular}}{{l*{{{len(columns)}}}{{>{{\\centering\\arraybackslash}}p{{3.0cm}}}}}}",
+        r"        \hline",
+        "        \\textbf{Porte} & " + " & ".join(f"\\textbf{{{c}}}" for c in columns) + " \\\\",
+        r"        \hline",
+    ]
+    for instance, df in dfs.items():
+        name = INSTANCE_DISPLAY_NAMES.get(instance, instance).capitalize()
+        lines.append(f"        {name} & " + " & ".join(row_values(instance, df)) + " \\\\")
+    lines += [r"        \hline", r"    \end{tabular}", r"    \end{adjustbox}", r"    \par\smallskip",
+              f"    {{\\footnotesize Nota - {note}}}", r"\end{table}"]
+    return "\n".join(lines)
+
+
+def render_operational_latex_tables(dfs: dict[str, pd.DataFrame]) -> str:
+    """One table per criterion; every rate is computed within each set and only then aggregated."""
+    def gurobi(instance, values):
+        return _mean_std_latex(values) if instance == "pequeno" else "---"
+
+    def specialty(instance, df):
+        heuristic = df["melhor_specialty_mismatch_count"] / df["n_pd"] * 100
+        minimum = df["min_especialidade_inadequada"] / df["n_pd"] * 100
+        exact = df["gurobi_specialty_mismatch_count"] / df["n_pd"] * 100
+        return [_mean_std_latex(minimum), _mean_std_latex(heuristic), _mean_std_latex(heuristic - minimum),
+                gurobi(instance, exact)]
+
+    def transfers(instance, df):
+        patients = df["n_quartos"] * 10
+        heuristic = df["melhor_transfer_count"] / patients * 100
+        exact = df["gurobi_transfer_count"] / patients * 100
+        return [_mean_std_latex(heuristic), gurobi(instance, exact)]
+
+    def mixed(instance, df):
+        room_days = df["n_quartos"] * df["melhor_horizon_days"]
+        heuristic = df["melhor_mixed_room_day_count"] / room_days * 100
+        minimum = df["min_quartos_mistos"] / room_days * 100
+        exact = df["gurobi_mixed_room_day_count"] / room_days * 100
+        return [_mean_std_latex(minimum), _mean_std_latex(heuristic), _mean_std_latex(heuristic - minimum),
+                gurobi(instance, exact)]
+
+    tables = [
+        _criterion_table(
+            dfs, r"Especialidade inadequada por porte (\% dos pacientes-dia, média $\pm$ desvio padrão entre os 10 conjuntos)",
+            "tab:res-op-especialidade",
+            [r"Mínimo estrutural ($M/N_{pd}$)", "Heurística", "Folga da heurística (p.p.)", "Gurobi"], specialty,
+            r"Folga calculada em cada conjunto, como a taxa da heurística menos o mínimo estrutural do próprio "
+            r"conjunto, e só então agregada. " + GUROBI_ONLY_SMALL_NOTE),
+        _criterion_table(
+            dfs, r"Transferências por porte (por 100 pacientes, média $\pm$ desvio padrão entre os 10 conjuntos)",
+            "tab:res-op-transferencias", ["Heurística", "Gurobi"], transfers,
+            r"Não há limite inferior não trivial para o número de transferências. " + GUROBI_ONLY_SMALL_NOTE),
+        _criterion_table(
+            dfs, r"Quartos-dia mistos por porte (\% dos quartos-dia, média $\pm$ desvio padrão entre os 10 conjuntos)",
+            "tab:res-op-mistos",
+            [r"Mínimo por paridade ($G$)", "Heurística", "Folga da heurística (p.p.)", "Gurobi"], mixed,
+            r"Mínimo por paridade conforme a Equação~\eqref{eq:minimo-misto}. Folga calculada em cada conjunto e só então "
+            r"agregada. " + GUROBI_ONLY_SMALL_NOTE),
+    ]
+    return "\n\n".join(tables)
+
+
+def render_instance_characteristics_latex_table(dfs: dict[str, pd.DataFrame]) -> str:
+    """Properties of the generated data only (identical for any solution of a set)."""
+    rows = [
+        ("Horizonte (dias)", lambda df: _mean_std_latex(df["melhor_horizon_days"])),
+        ("Dias com lotação total", lambda df: _mean_std_latex(df["dias_lotacao_total"])),
+        ("Ocupação média (todo o horizonte)", lambda df: _mean_std_latex(df["melhor_occupancy_rate_mean"] * 100, pct=True)),
+        ("Pico de ocupação diária", lambda df: _mean_std_latex(df["melhor_peak_occupancy_rate"] * 100, pct=True)),
+        ("Mínimo de ocupação diária", lambda df: _mean_std_latex(df["melhor_min_occupancy_rate"] * 100, pct=True)),
+    ]
+    header = " & ".join(f"\\textbf{{{INSTANCE_DISPLAY_NAMES.get(i, i).capitalize()}}}" for i in dfs)
+    lines = [
+        r"\begin{table}[htbp]",
+        r"    \caption{Características das instâncias geradas (média $\pm$ desvio padrão entre os 10 conjuntos)}",
+        r"    \label{tab:caracteristicas-instancias}",
+        r"    \centering",
+        r"    \begin{adjustbox}{max width=\textwidth}",
+        f"    \\begin{{tabular}}{{l{'r' * len(dfs)}}}",
+        r"        \hline",
+        f"        \\textbf{{Característica}} & {header} \\\\",
+        r"        \hline",
+    ]
+    for label, value in rows:
+        lines.append(f"        {label} & " + " & ".join(value(df) for df in dfs.values()) + " \\\\")
+    lines += [r"        \hline", r"    \end{tabular}", r"    \end{adjustbox}", r"\end{table}"]
+    return "\n".join(lines)
 
 
 def save_combined_latex_table() -> None:
@@ -413,6 +756,30 @@ def save_combined_latex_table() -> None:
     with open(path, "w") as f:
         f.write(latex + "\n")
     print(f"Tabela combinada em {path}")
+
+    plot_convergence_log(list(dfs))
+    plot_capacity_violation_sets([i for i in ("grande", "muito_grande") if i in dfs])
+    print(f"Figura de convergência em escala log em {os.path.join(AGGREGATION_DIR, 'convergence_log.png')}")
+
+    path = os.path.join(AGGREGATION_DIR, "operational_tables.tex")
+    with open(path, "w") as f:
+        f.write(render_operational_latex_tables(dfs) + "\n")
+    print(f"Tabelas operacionais por critério em {path}")
+
+    path = os.path.join(AGGREGATION_DIR, "instance_characteristics_table.tex")
+    with open(path, "w") as f:
+        f.write(render_instance_characteristics_latex_table(dfs) + "\n")
+    print(f"Tabela de características das instâncias em {path}")
+
+    path = os.path.join(AGGREGATION_DIR, "per_patient_day_table.tex")
+    with open(path, "w") as f:
+        f.write(render_per_patient_day_latex_table(dfs) + "\n")
+    print(f"Tabela de Z por paciente-dia em {path}")
+
+    path = os.path.join(AGGREGATION_DIR, "sigma_viability_table.tex")
+    with open(path, "w") as f:
+        f.write(render_sigma_viability_latex_table(dfs) + "\n")
+    print(f"Tabela de desvio padrão vs. viabilidade em {path}")
 
     path = os.path.join(AGGREGATION_DIR, "viability_table.tex")
     with open(path, "w") as f:
@@ -467,6 +834,7 @@ def main() -> None:
     df.to_csv(os.path.join(out_dir, "aggregate_summary.csv"), index=False)
 
     plot_operational_metrics(df, instance_name, out_dir)
+    plot_sets_boxplot(instance_name, sets, out_dir)
 
     print()
     print_and_save_summary_table(df, instance_name, out_dir)

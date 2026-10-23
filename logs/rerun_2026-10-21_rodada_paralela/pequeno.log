@@ -1,0 +1,144 @@
+[1/10] Rodando PEQUENO — conjunto 01 (10 repetições, 30s por solver)...
+Set parameter Username
+Set parameter LicenseID to value 2806061
+Academic license - for non-commercial use only - expires 2027-04-12
+  > Repetição 01/10 concluída | Fitness: 12550.0   | Tempo: 30.0013 s
+  > Repetição 02/10 concluída | Fitness: 12500.0   | Tempo: 30.0006 s
+  > Repetição 03/10 concluída | Fitness: 12475.0   | Tempo: 30.0006 s
+  > Repetição 04/10 concluída | Fitness: 12350.0   | Tempo: 30.0006 s
+  > Repetição 05/10 concluída | Fitness: 12225.0   | Tempo: 30.0004 s
+  > Repetição 06/10 concluída | Fitness: 12450.0   | Tempo: 30.0010 s
+  > Repetição 07/10 concluída | Fitness: 12550.0   | Tempo: 30.0012 s
+  > Repetição 08/10 concluída | Fitness: 12400.0   | Tempo: 30.0005 s
+  > Repetição 09/10 concluída | Fitness: 12925.0   | Tempo: 30.0005 s
+  > Repetição 10/10 concluída | Fitness: 12325.0   | Tempo: 30.0005 s
+[1/10] Conjunto 01 concluído | Gurobi: 12175.0 | Heur. (Melhor): 12225.0 | Heur. (Melhor Viável): 12225.0
+          -> CSVs e gráficos em results/pequeno/set_01/
+
+[2/10] Rodando PEQUENO — conjunto 02 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 12700.0   | Tempo: 30.0150 s
+  > Repetição 02/10 concluída | Fitness: 12375.0   | Tempo: 30.0006 s
+  > Repetição 03/10 concluída | Fitness: 12650.0   | Tempo: 30.0007 s
+  > Repetição 04/10 concluída | Fitness: 12175.0   | Tempo: 30.0008 s
+  > Repetição 05/10 concluída | Fitness: 12625.0   | Tempo: 30.0006 s
+  > Repetição 06/10 concluída | Fitness: 12850.0   | Tempo: 30.0008 s
+  > Repetição 07/10 concluída | Fitness: 12575.0   | Tempo: 30.0010 s
+  > Repetição 08/10 concluída | Fitness: 12300.0   | Tempo: 30.0012 s
+  > Repetição 09/10 concluída | Fitness: 12725.0   | Tempo: 30.0011 s
+  > Repetição 10/10 concluída | Fitness: 12625.0   | Tempo: 30.0006 s
+[2/10] Conjunto 02 concluído | Gurobi: 11975.0 | Heur. (Melhor): 12175.0 | Heur. (Melhor Viável): 12175.0
+          -> CSVs e gráficos em results/pequeno/set_02/
+
+[3/10] Rodando PEQUENO — conjunto 03 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 9750.0    | Tempo: 30.0008 s
+  > Repetição 02/10 concluída | Fitness: 10250.0   | Tempo: 30.0013 s
+  > Repetição 03/10 concluída | Fitness: 9575.0    | Tempo: 30.0005 s
+  > Repetição 04/10 concluída | Fitness: 9775.0    | Tempo: 30.0011 s
+  > Repetição 05/10 concluída | Fitness: 9675.0    | Tempo: 30.0008 s
+  > Repetição 06/10 concluída | Fitness: 9550.0    | Tempo: 30.0005 s
+  > Repetição 07/10 concluída | Fitness: 9600.0    | Tempo: 30.0017 s
+  > Repetição 08/10 concluída | Fitness: 9800.0    | Tempo: 30.0005 s
+  > Repetição 09/10 concluída | Fitness: 9400.0    | Tempo: 30.0011 s
+  > Repetição 10/10 concluída | Fitness: 9450.0    | Tempo: 30.0009 s
+[3/10] Conjunto 03 concluído | Gurobi: 9050.0 | Heur. (Melhor): 9400.0 | Heur. (Melhor Viável): 9400.0
+          -> CSVs e gráficos em results/pequeno/set_03/
+
+[4/10] Rodando PEQUENO — conjunto 04 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 6025.0    | Tempo: 30.0013 s
+  > Repetição 02/10 concluída | Fitness: 5900.0    | Tempo: 30.0012 s
+  > Repetição 03/10 concluída | Fitness: 6150.0    | Tempo: 30.0010 s
+  > Repetição 04/10 concluída | Fitness: 6025.0    | Tempo: 30.0014 s
+  > Repetição 05/10 concluída | Fitness: 5975.0    | Tempo: 30.0010 s
+  > Repetição 06/10 concluída | Fitness: 5950.0    | Tempo: 30.0006 s
+  > Repetição 07/10 concluída | Fitness: 6300.0    | Tempo: 30.0010 s
+  > Repetição 08/10 concluída | Fitness: 5875.0    | Tempo: 30.0007 s
+  > Repetição 09/10 concluída | Fitness: 5950.0    | Tempo: 30.0010 s
+  > Repetição 10/10 concluída | Fitness: 5950.0    | Tempo: 30.0012 s
+[4/10] Conjunto 04 concluído | Gurobi: 5775.0 | Heur. (Melhor): 5875.0 | Heur. (Melhor Viável): 5875.0
+          -> CSVs e gráficos em results/pequeno/set_04/
+
+[5/10] Rodando PEQUENO — conjunto 05 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 9325.0    | Tempo: 30.0009 s
+  > Repetição 02/10 concluída | Fitness: 8975.0    | Tempo: 30.0007 s
+  > Repetição 03/10 concluída | Fitness: 9375.0    | Tempo: 30.0006 s
+  > Repetição 04/10 concluída | Fitness: 8950.0    | Tempo: 30.0190 s
+  > Repetição 05/10 concluída | Fitness: 9350.0    | Tempo: 30.0014 s
+  > Repetição 06/10 concluída | Fitness: 9500.0    | Tempo: 30.0008 s
+  > Repetição 07/10 concluída | Fitness: 8875.0    | Tempo: 30.0011 s
+  > Repetição 08/10 concluída | Fitness: 9125.0    | Tempo: 30.0008 s
+  > Repetição 09/10 concluída | Fitness: 9075.0    | Tempo: 30.0008 s
+  > Repetição 10/10 concluída | Fitness: 8975.0    | Tempo: 30.0007 s
+[5/10] Conjunto 05 concluído | Gurobi: 8525.0 | Heur. (Melhor): 8875.0 | Heur. (Melhor Viável): 8875.0
+          -> CSVs e gráficos em results/pequeno/set_05/
+
+[6/10] Rodando PEQUENO — conjunto 06 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 16725.0   | Tempo: 30.0009 s
+  > Repetição 02/10 concluída | Fitness: 16600.0   | Tempo: 30.0008 s
+  > Repetição 03/10 concluída | Fitness: 16450.0   | Tempo: 30.0006 s
+  > Repetição 04/10 concluída | Fitness: 16400.0   | Tempo: 30.0006 s
+  > Repetição 05/10 concluída | Fitness: 16450.0   | Tempo: 30.0008 s
+  > Repetição 06/10 concluída | Fitness: 16500.0   | Tempo: 30.0127 s
+  > Repetição 07/10 concluída | Fitness: 16650.0   | Tempo: 30.0005 s
+  > Repetição 08/10 concluída | Fitness: 16600.0   | Tempo: 30.0005 s
+  > Repetição 09/10 concluída | Fitness: 16425.0   | Tempo: 30.0004 s
+  > Repetição 10/10 concluída | Fitness: 16600.0   | Tempo: 30.0005 s
+[6/10] Conjunto 06 concluído | Gurobi: 16250.0 | Heur. (Melhor): 16400.0 | Heur. (Melhor Viável): 16400.0
+          -> CSVs e gráficos em results/pequeno/set_06/
+
+[7/10] Rodando PEQUENO — conjunto 07 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 6225.0    | Tempo: 30.0009 s
+  > Repetição 02/10 concluída | Fitness: 6075.0    | Tempo: 30.0005 s
+  > Repetição 03/10 concluída | Fitness: 6225.0    | Tempo: 30.0008 s
+  > Repetição 04/10 concluída | Fitness: 6600.0    | Tempo: 30.0010 s
+  > Repetição 05/10 concluída | Fitness: 5850.0    | Tempo: 30.0005 s
+  > Repetição 06/10 concluída | Fitness: 6175.0    | Tempo: 30.0009 s
+  > Repetição 07/10 concluída | Fitness: 6275.0    | Tempo: 30.0008 s
+  > Repetição 08/10 concluída | Fitness: 5925.0    | Tempo: 30.0005 s
+  > Repetição 09/10 concluída | Fitness: 5800.0    | Tempo: 30.0008 s
+  > Repetição 10/10 concluída | Fitness: 6500.0    | Tempo: 30.0009 s
+[7/10] Conjunto 07 concluído | Gurobi: 5475.0 | Heur. (Melhor): 5800.0 | Heur. (Melhor Viável): 5800.0
+          -> CSVs e gráficos em results/pequeno/set_07/
+
+[8/10] Rodando PEQUENO — conjunto 08 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 11850.0   | Tempo: 30.0013 s
+  > Repetição 02/10 concluída | Fitness: 11825.0   | Tempo: 30.0044 s
+  > Repetição 03/10 concluída | Fitness: 12075.0   | Tempo: 30.0010 s
+  > Repetição 04/10 concluída | Fitness: 12050.0   | Tempo: 30.0008 s
+  > Repetição 05/10 concluída | Fitness: 12075.0   | Tempo: 30.0011 s
+  > Repetição 06/10 concluída | Fitness: 11875.0   | Tempo: 30.0014 s
+  > Repetição 07/10 concluída | Fitness: 11375.0   | Tempo: 30.0006 s
+  > Repetição 08/10 concluída | Fitness: 12125.0   | Tempo: 30.0011 s
+  > Repetição 09/10 concluída | Fitness: 11925.0   | Tempo: 30.0015 s
+  > Repetição 10/10 concluída | Fitness: 12100.0   | Tempo: 30.0008 s
+[8/10] Conjunto 08 concluído | Gurobi: 11125.0 | Heur. (Melhor): 11375.0 | Heur. (Melhor Viável): 11375.0
+          -> CSVs e gráficos em results/pequeno/set_08/
+
+[9/10] Rodando PEQUENO — conjunto 09 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 9525.0    | Tempo: 30.0007 s
+  > Repetição 02/10 concluída | Fitness: 9475.0    | Tempo: 30.0012 s
+  > Repetição 03/10 concluída | Fitness: 9575.0    | Tempo: 30.0007 s
+  > Repetição 04/10 concluída | Fitness: 9950.0    | Tempo: 30.0007 s
+  > Repetição 05/10 concluída | Fitness: 9475.0    | Tempo: 30.0009 s
+  > Repetição 06/10 concluída | Fitness: 9650.0    | Tempo: 30.0009 s
+  > Repetição 07/10 concluída | Fitness: 9675.0    | Tempo: 30.0011 s
+  > Repetição 08/10 concluída | Fitness: 9625.0    | Tempo: 30.0010 s
+  > Repetição 09/10 concluída | Fitness: 10025.0   | Tempo: 30.0008 s
+  > Repetição 10/10 concluída | Fitness: 9600.0    | Tempo: 30.0064 s
+[9/10] Conjunto 09 concluído | Gurobi: 9275.0 | Heur. (Melhor): 9475.0 | Heur. (Melhor Viável): 9475.0
+          -> CSVs e gráficos em results/pequeno/set_09/
+
+[10/10] Rodando PEQUENO — conjunto 10 (10 repetições, 30s por solver)...
+  > Repetição 01/10 concluída | Fitness: 14650.0   | Tempo: 30.0197 s
+  > Repetição 02/10 concluída | Fitness: 14850.0   | Tempo: 30.0051 s
+  > Repetição 03/10 concluída | Fitness: 14500.0   | Tempo: 30.0099 s
+  > Repetição 04/10 concluída | Fitness: 15350.0   | Tempo: 30.0007 s
+  > Repetição 05/10 concluída | Fitness: 15000.0   | Tempo: 30.0008 s
+  > Repetição 06/10 concluída | Fitness: 15225.0   | Tempo: 30.0021 s
+  > Repetição 07/10 concluída | Fitness: 15200.0   | Tempo: 30.0013 s
+  > Repetição 08/10 concluída | Fitness: 15075.0   | Tempo: 30.0009 s
+  > Repetição 09/10 concluída | Fitness: 15200.0   | Tempo: 30.0018 s
+  > Repetição 10/10 concluída | Fitness: 14800.0   | Tempo: 30.0196 s
+[10/10] Conjunto 10 concluído | Gurobi: 14450.0 | Heur. (Melhor): 14500.0 | Heur. (Melhor Viável): 14500.0
+          -> CSVs e gráficos em results/pequeno/set_10/
+
+DONE

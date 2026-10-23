@@ -1,25 +1,51 @@
 \begin{table}[htbp]
-    \caption{Função objetivo $Z$ por conjunto --- instância média. Na heurística, $Z$ sem a penalidade de capacidade; $\sigma$: desvio padrão de $Z$ entre as 10 execuções do conjunto}
+    \caption{Limites do valor ótimo de $Z$ por conjunto --- instância média}
+    \label{tab:res-limites-medio}
+    \centering
+    \begin{tabular}{crrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\
+        \cline{2-4} \cline{5-5}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & \textbf{$LB_{comb}$} \\
+        \hline
+        01 & 79\,300,0 & 22\,350,0 & 71,8\% & 21\,800,0 \\
+        02 & 73\,625,0 & 18\,000,0 & 75,6\% & 17\,500,0 \\
+        03 & 91\,800,0 & 27\,400,0 & 70,2\% & 27\,200,0 \\
+        04 & 84\,525,0 & 23\,800,0 & 71,8\% & 23\,500,0 \\
+        05 & 89\,950,0 & 20\,450,0 & 77,3\% & 19\,900,0 \\
+        06 & 70\,050,0 & 24\,550,0 & 65,0\% & 24\,400,0 \\
+        07 & 83\,950,0 & 22\,750,0 & 72,9\% & 22\,400,0 \\
+        08 & 88\,275,0 & 16\,500,0 & 81,3\% & 15\,900,0 \\
+        09 & 92\,650,0 & 29\,400,0 & 68,3\% & 28\,700,0 \\
+        10 & 86\,775,0 & 34\,300,0 & 60,5\% & 34\,200,0 \\
+        \hline
+    \end{tabular}
+    \par\smallskip
+    {\footnotesize Nota - Gap na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
+\end{table}
+
+\begin{table}[htbp]
+    \caption{Resultados da heurística por conjunto --- instância média (10 execuções por conjunto; $Z$ sem a penalidade de capacidade)}
     \label{tab:res-z-medio}
     \centering
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{crrrrr}
+    \begin{tabular}{crrrrrcr}
         \hline
-        & \multicolumn{3}{c}{\textbf{Gurobi}} & \multicolumn{2}{c}{\textbf{Heurística (10 execuções)}} \\
-        \cline{2-4} \cline{5-6}
-        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & \textbf{Melhor execução} & \textbf{Média $\pm$ $\sigma$} \\
+        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
         \hline
-        01 & 79\,300,0 & 22\,350,0 & 71,8\% & 29\,350,0 & 30\,077,5 $\pm$ 585,8 \\
-        02 & 73\,625,0 & 18\,000,0 & 75,6\% & 22\,750,0 & 23\,655,0 $\pm$ 545,2 \\
-        03 & 91\,800,0 & 27\,400,0 & 70,2\% & 31\,675,0 & 32\,997,5 $\pm$ 711,4 \\
-        04 & 84\,525,0 & 23\,800,0 & 71,8\% & 28\,475,0 & 29\,135,0 $\pm$ 386,3 \\
-        05 & 89\,950,0 & 20\,450,0 & 77,3\% & 25\,150,0 & 26\,827,5 $\pm$ 875,6 \\
-        06 & 69\,075,0 & 24\,550,0 & 64,5\% & 29\,575,0 & 30\,532,5 $\pm$ 578,8 \\
-        07 & 83\,950,0 & 22\,750,0 & 72,9\% & 27\,850,0 & 28\,812,5 $\pm$ 765,0 \\
-        08 & 88\,275,0 & 16\,500,0 & 81,3\% & 20\,000,0 & 21\,027,5 $\pm$ 651,3 \\
-        09 & 92\,650,0 & 29\,400,0 & 68,3\% & 33\,600,0 & 34\,217,5 $\pm$ 598,2 \\
-        10 & 86\,775,0 & 34\,300,0 & 60,5\% & 39\,650,0 & 40\,195,0 $\pm$ 384,9 \\
+        01 & 28\,775,0 & 0 & 29\,777,5 & 2,5\% & 28\,775,0 & 10/10 & 28,7\% \\
+        02 & 22\,750,0 & 0 & 23\,307,5 & 1,5\% & 22\,750,0 & 10/10 & 26,4\% \\
+        03 & 32\,200,0 & 0 & 32\,865,0 & 1,7\% & 32\,200,0 & 10/10 & 17,5\% \\
+        04 & 27\,825,0 & 0 & 28\,560,0 & 1,9\% & 27\,825,0 & 10/10 & 16,9\% \\
+        05 & 25\,525,0 & 0 & 26\,387,5 & 2,5\% & 25\,525,0 & 10/10 & 24,8\% \\
+        06 & 29\,550,0 & 0 & 30\,192,5 & 2,2\% & 29\,550,0 & 10/10 & 20,4\% \\
+        07 & 27\,375,0 & 0 & 28\,425,0 & 2,4\% & 27\,375,0 & 10/10 & 20,3\% \\
+        08 & 20\,050,0 & 0 & 21\,042,5 & 3,2\% & 20\,050,0 & 10/10 & 21,5\% \\
+        09 & 33\,050,0 & 0 & 34\,067,5 & 1,4\% & 33\,050,0 & 10/10 & 12,4\% \\
+        10 & 39\,825,0 & 0 & 40\,485,0 & 1,3\% & 39\,825,0 & 10/10 & 16,1\% \\
         \hline
     \end{tabular}
     \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
 \end{table}

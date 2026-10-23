@@ -18,12 +18,16 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import pandas as pd
 from matplotlib.patches import Patch
 from matplotlib.ticker import FuncFormatter
 
 from utils.solution import WEIGHTS, COMPARISON_MODE, Solution, SolverResult
 
+LEGEND_FONTSIZE = 11
+BROKEN_AXIS_FONTSIZE = 15
+BROKEN_AXIS_LEGEND_FONTSIZE = 14
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
 
@@ -38,6 +42,36 @@ def _mean_std(values: list[float]) -> tuple[float, float]:
     mean = statistics.mean(values)
     std = statistics.stdev(values) if len(values) > 1 else 0.0
     return mean, std
+
+
+def plot_broken_axis(series, draw, figsize=(7, 6), axes=None):
+    """Integer series (e.g. V_cap per generation) on a linear y-axis broken between the generation-0
+    values and the rest. `draw(ax)` plots the curves on each panel. Returns (fig, bottom axis)."""
+    tail_values = [value for values in series for value in list(values)[1:]] or [0]
+    head_values = [list(values)[0] for values in series if len(values)]
+    tail_max = max(max(tail_values), 1)
+    head_max = max(head_values) if head_values else tail_max
+    if axes is None:
+        fig, (ax_top, ax_bottom) = plt.subplots(
+            2, 1, sharex=True, figsize=figsize, gridspec_kw={"height_ratios": [1, 3]}
+        )
+    else:
+        ax_top, ax_bottom = axes
+        fig = ax_top.figure
+    for ax in (ax_top, ax_bottom):
+        draw(ax)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax_top.yaxis.set_major_locator(MaxNLocator(nbins=3, integer=True))
+    ax_bottom.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax_bottom.set_ylim(0, tail_max * 1.1)
+    ax_top.set_ylim(tail_max * 1.1, max(head_max * 1.08, tail_max * 1.2))
+    ax_top.spines["bottom"].set_visible(False)
+    ax_bottom.spines["top"].set_visible(False)
+    ax_top.tick_params(labeltop=False, bottom=False)
+    marker = dict(marker=[(-1, -0.5), (1, 0.5)], markersize=12, linestyle="none", color="k", mec="k", mew=1, clip_on=False)
+    ax_top.plot([0, 1], [0, 0], transform=ax_top.transAxes, **marker)
+    ax_bottom.plot([0, 1], [1, 1], transform=ax_bottom.transAxes, **marker)
+    return fig, ax_bottom
 
 
 class ResultsReporter:
@@ -70,6 +104,8 @@ class ResultsReporter:
             self.plot_boxplot()
             self.plot_convergence()
             self.plot_convergence_broken_axis()
+            self.plot_convergence_log()
+            self.plot_capacity_violation()
             self.plot_gurobi_vs_iterations()
 
     def _row(self, label: str, gurobi_value: str, best_value: str, mean_std_value: str) -> str:
@@ -169,8 +205,14 @@ class ResultsReporter:
 
         convergence_rows = []
         for i, result in enumerate(self.heuristic_results, start=1):
+            violations = result.capacity_violation_history
             for generation, fitness in enumerate(result.convergence_history):
-                convergence_rows.append({"iteration": i, "generation": generation, "best_fitness": fitness})
+                convergence_rows.append({
+                    "iteration": i,
+                    "generation": generation,
+                    "best_fitness": fitness,
+                    "best_capacity_violation": violations[generation] if generation < len(violations) else None,
+                })
         pd.DataFrame(convergence_rows).to_csv(os.path.join(self.output_dir, "convergence.csv"), index=False)
 
         self.export_solution_metrics_csv()
@@ -247,7 +289,11 @@ class ResultsReporter:
     def plot_convergence(self) -> None:
         self._save_plain_convergence_plot("convergence.png")
 
-    def _save_plain_convergence_plot(self, filename: str) -> None:
+    def plot_convergence_log(self) -> None:
+        """Same curves on a log y-axis, an alternative to the broken axis."""
+        self._save_plain_convergence_plot("convergence_log.png", log_scale=True)
+
+    def _save_plain_convergence_plot(self, filename: str, log_scale: bool = False, show_title: bool = True) -> None:
         fig, ax = plt.subplots(figsize=(7, 5))
 
         histories = self._convergence_histories()
@@ -273,15 +319,43 @@ class ResultsReporter:
             )
 
         ax.set_xlabel("Geração")
-        ax.set_ylabel("Melhor fitness F encontrado até então")
-        ax.set_title(f"Convergência do Algoritmo Memético — instância {self.instance_name}")
-        ax.legend()
+        ax.set_ylabel("Melhor fitness F encontrado até então" + (" (escala log)" if log_scale else ""))
+        if show_title:
+            ax.set_title(f"Convergência do Algoritmo Memético — instância {self.instance_name}")
+        if log_scale:
+            ax.set_yscale("log")
+        ax.legend(fontsize=LEGEND_FONTSIZE)
         fig.tight_layout()
         fig.savefig(os.path.join(self.output_dir, filename), dpi=150)
         plt.close(fig)
 
+    def plot_capacity_violation(self) -> None:
+        """V_cap of the best individual per generation, one curve per execution, broken y-axis
+        so the generation-0 value doesn't flatten the rest."""
+        histories = [list(r.capacity_violation_history) for r in self.heuristic_results]
+        if not any(histories):
+            return  # CSVs from before this column existed
+        best_history = histories[self._best_result_index()]
+
+        def draw(ax):
+            for history in histories:
+                ax.plot(history, color="firebrick", alpha=0.3, linewidth=1)
+            ax.plot(best_history, color="firebrick", linewidth=2.5, label="Execução de menor F")
+
+        fig, ax_bottom = plot_broken_axis(histories, draw, figsize=(7, 6))
+        ax_bottom.set_xlabel("Geração")
+        ax_bottom.set_ylabel("$V_{cap}$ do melhor indivíduo (pacientes-dia)")
+        fig.axes[0].legend(fontsize=LEGEND_FONTSIZE, loc="upper right")
+        fig.savefig(os.path.join(self.output_dir, "capacity_violation.png"), dpi=150, bbox_inches="tight")
+        plt.close(fig)
+
     def plot_convergence_broken_axis(self) -> None:
-        """Convergence with a broken y-axis, so the generation-0 outlier doesn't flatten the rest."""
+        """Convergence with a broken y-axis, so the generation-0 outlier doesn't flatten the rest.
+        Larger fonts: in the TCC these plots are shown three per row."""
+        with plt.rc_context({"font.size": BROKEN_AXIS_FONTSIZE}):
+            self._plot_convergence_broken_axis()
+
+    def _plot_convergence_broken_axis(self) -> None:
         histories = self._convergence_histories()
         best_history = histories[self._best_result_index()]
         initial_value = best_history[0]
@@ -289,7 +363,7 @@ class ResultsReporter:
 
         if len(best_history) < 2:
             # nothing to "zoom into" beyond the single point — fall back to the plain plot
-            self._save_plain_convergence_plot("convergence_broken_axis.png")
+            self._save_plain_convergence_plot("convergence_broken_axis.png", show_title=False)
             return
 
         # no Gurobi line here, for the same scale reason as the boxplot
@@ -339,9 +413,8 @@ class ResultsReporter:
         ax_bottom.plot([0, 1], [1, 1], transform=ax_bottom.transAxes, **break_marker)
 
         ax_bottom.set_xlabel("Geração")
-        ax_bottom.set_ylabel("Melhor fitness F encontrado até então")
-        ax_top.set_title(f"Convergência do Algoritmo Memético — instância {self.instance_name} (eixo quebrado)")
-        ax_top.legend(loc="upper right", fontsize=8)
+        ax_bottom.set_ylabel("Melhor fitness F")
+        ax_top.legend(loc="upper right", fontsize=BROKEN_AXIS_LEGEND_FONTSIZE)
 
         fig.savefig(os.path.join(self.output_dir, "convergence_broken_axis.png"), dpi=150, bbox_inches="tight")
         plt.close(fig)
@@ -380,7 +453,7 @@ class ResultsReporter:
         present = [label for label in colors if any(label == entry[0] for entry in entries)]
         ax.legend(
             handles=[Patch(color=colors[label], label=label) for label in present],
-            loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=len(present), frameon=False, fontsize=9,
+            loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=len(present), frameon=False, fontsize=LEGEND_FONTSIZE,
         )
         fig.savefig(os.path.join(self.output_dir, "gurobi_vs_iterations.png"), dpi=150, bbox_inches="tight")
         plt.close(fig)
@@ -460,11 +533,15 @@ def _load_heuristic_results(output_dir: str) -> list[SolverResult]:
     heuristic_df = pd.read_csv(heuristic_path)
 
     convergence_by_iteration: dict[int, list[float]] = {}
+    violation_by_iteration: dict[int, list[int]] = {}
     convergence_path = os.path.join(output_dir, "convergence.csv")
     if os.path.exists(convergence_path):
         convergence_df = pd.read_csv(convergence_path)
         for iteration, group in convergence_df.groupby("iteration"):
-            convergence_by_iteration[iteration] = group.sort_values("generation")["best_fitness"].tolist()
+            group = group.sort_values("generation")
+            convergence_by_iteration[iteration] = group["best_fitness"].tolist()
+            if "best_capacity_violation" in group and group["best_capacity_violation"].notna().all():
+                violation_by_iteration[iteration] = group["best_capacity_violation"].astype(int).tolist()
 
     results = []
     for _, row in heuristic_df.iterrows():
@@ -474,6 +551,7 @@ def _load_heuristic_results(output_dir: str) -> list[SolverResult]:
             initial_fitness=_none_or_float(row.get("initial_fitness")),
             evaluation_count=_none_or_int(row.get("evaluation_count")),
             convergence_history=convergence_by_iteration.get(row["iteration"], []),
+            capacity_violation_history=violation_by_iteration.get(row["iteration"], []),
             best_feasible_fitness=_none_or_float(row.get("best_feasible_fitness")),
             best_feasible_generation=_none_or_int(row.get("best_feasible_generation")),
         ))

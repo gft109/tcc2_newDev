@@ -1,0 +1,112 @@
+\chapter{Revisão Bibliográfica}
+
+\section{Gestão de leitos: Problemas similares na literatura}
+
+O gerenciamento da capacidade hospitalar e, em particular, a alocação de leitos, pode ser mapeado para diversas famílias clássicas de problemas de otimização documentadas na literatura de Pesquisa Operacional. De acordo com a taxonomia de modelos de otimização detalhada por Talbi \cite{talbi2009metaheuristics}, o problema de alocação de leitos enquadra-se fortemente na categoria de Otimização Combinatória, compartilhando características fundamentais com os seguintes problemas clássicos:
+
+\begin{itemize}
+    \item \textbf{Problemas de Atribuição (\textit{Assignment Problems}):} Em sua essência, alocar pacientes a leitos é uma extensão do Problema de Atribuição Generalizada (GAP) ou do Problema de Atribuição Quadrática (QAP). No QAP, busca-se atribuir um conjunto de objetos a um conjunto de localizações minimizando custos de fluxo e distância \cite{talbi2009metaheuristics}. No contexto hospitalar, os ``objetos'' são os pacientes e as ``localizações'' são os leitos/quartos, com o custo sendo definido por penalidades de alocação inadequada (ex.: falta de equipamentos) e a ``distância'' podendo representar o tempo de deslocamento da equipe médica \cite{schafer2023combining}.
+    \item \textbf{Problemas de Escalonamento (\textit{Scheduling Problems}):} O tempo de permanência do paciente (\textit{Length of Stay} - LOS) insere a dimensão temporal no problema. Brandeau, Sainfort e Pierskalla \cite{brandeau2004operations} ressaltam que o planejamento de saúde frequentemente lida com o escalonamento de recursos escassos sob incerteza. Assim, a gestão de leitos assemelha-se ao \textit{Job-Shop Scheduling} \cite{talbi2009metaheuristics}, em que os pacientes são as ``tarefas'' (com durações estocásticas) que precisam ser processadas em ``máquinas'' (leitos), respeitando datas de admissão e alta \cite{demeester2010hybrid}.
+    \item \textbf{Problemas de Empacotamento (\textit{Bin Packing}):} A alocação também pode ser vista sob a ótica do \textit{Bin Packing}, em que o objetivo é empacotar itens de diferentes tamanhos no menor número de compartimentos. No hospital, os leitos ou alas hospitalares atuam como compartimentos de capacidade finita e a duração da internação ou a carga de trabalho de enfermagem exigida pelo paciente representa o tamanho do item \cite{belien2007building, talbi2009metaheuristics}.
+\end{itemize}
+
+Essas similaridades teóricas são essenciais, pois permitem que a vasta gama de algoritmos já desenvolvidos para esses problemas clássicos na ciência da computação seja adaptada ao ambiente da saúde.
+
+\section{Classificação do problema}
+
+Na literatura internacional, o desafio de acomodar pacientes em unidades de internação é frequentemente referido pela sigla PBA (\textit{Patient-Bed Allocation} - Alocação de Pacientes a Leitos) ou PAS (\textit{Patient Admission Scheduling}). 
+
+O PBA não é simplesmente atribuir um leito vago a um paciente. A literatura descreve uma série de critérios, restrições e objetivos conflitantes, que afetam diretamente múltiplos \textit{stakeholders} (pacientes, profissionais da saúde e administração). Entre eles, estão a adequação clínica do quarto e de seus equipamentos \cite{demeester2010hybrid, schafer2023combining} e as restrições de gênero, idade, capacidade e isolamento \cite{ceschia2012modeling, schafer2023combining}. A literatura trata ainda do conforto do paciente, como perfis semelhantes no mesmo quarto, preferência por quarto individual e ausência de transferências \cite{demeester2010hybrid}, da eficiência dos profissionais, como a proximidade dos pacientes de um mesmo médico e o equilíbrio da carga de trabalho da enfermagem \cite{schafer2023combining}, e da eficiência do sistema, como a taxa de ocupação, a espera por leito e a acomodação de pacientes eletivos e de emergência \cite{brandeau2004operations, belien2007building}.
+
+Este trabalho considera apenas um subconjunto desses critérios:
+
+\begin{itemize}
+    \item \textbf{Considerados:} a adequação da especialidade clínica do quarto ao paciente \cite{demeester2010hybrid, schafer2023combining}, a separação de pacientes de gêneros distintos e o limite de capacidade de cada quarto \cite{ceschia2012modeling, schafer2023combining}, e a minimização de transferências durante a internação, que causam desconforto ao paciente \cite{demeester2010hybrid}.
+    \item \textbf{Não considerados:} faixas etárias, requisitos de isolamento, preferência por quarto individual ou enfermaria, equipamentos específicos de cada leito, proximidade dos pacientes de um mesmo médico, carga de trabalho da enfermagem e o tratamento de chegadas de emergência e da incerteza no tempo de permanência, próprios da admissão em tempo real \cite{ceschia2012modeling, schafer2023combining}.
+\end{itemize}
+
+\subsection{Complexidade Computacional: O Desafio NP-difícil}
+\label{sec:complexidade}
+
+Devido à multiplicidade de variáveis, restrições e à natureza combinatória das alocações possíveis ao longo de um horizonte de tempo, o PBA é classificado na teoria da complexidade computacional como um problema NP-difícil (\textit{NP-Hard}) \cite{ceschia2012modeling, demeester2010hybrid, schafer2023combining}. 
+
+O que isso implica, na prática, é que o número de combinações possíveis para alocar $|P|$ pacientes em $|R|$ quartos ao longo de $|D|$ dias cresce de forma exponencial. Segundo a teoria da complexidade detalhada por Talbi \cite{talbi2009metaheuristics}, para problemas da classe NP-difícil, não existe nenhum algoritmo exato conhecido capaz de encontrar a solução ótima garantida em tempo polinomial. No contexto de um hospital de grande porte, isso significa que métodos exatos levariam horas, dias ou até semanas de processamento para definir o melhor arranjo de leitos \cite{demeester2010hybrid}. Ainda que, no planejamento do censo, as datas de admissão e de alta sejam conhecidas de antemão, a solução precisa ser obtida em tempo compatível com a rotina de planejamento do hospital, o que torna esses métodos impraticáveis nas instâncias maiores.
+
+\subsection{Modelagens na literatura}
+
+Diversos trabalhos na literatura tentaram enfrentar o PBA utilizando \textit{frameworks} matemáticos formais, embora frequentemente esbarrem na barreira da complexidade computacional descrita acima.
+
+As abordagens de Programação Linear Inteira (PLI) e Programação Inteira Mista (MIP) são as mais comuns na tentativa de modelar o problema de forma exata. Demeester et al. \cite{demeester2010hybrid} desenvolveram um modelo matemático rigoroso para o PBA com o objetivo de minimizar as violações de restrições (como transferências e alocações em departamentos errados). Ao tentarem resolver o modelo através de um \textit{solver} comercial padrão (ILOG CPLEX), não conseguiram encontrar sequer uma solução viável dentro de uma hora de cálculo e, mesmo após uma semana de processamento contínuo, a solução ótima não foi alcançada para instâncias de tamanho real.
+
+Ceschia e Schaerf \cite{ceschia2012modeling} também modelaram o PBA dinâmico sob incerteza através de Programação Inteira para estabelecer limites inferiores (\textit{lower bounds}). Eles observaram que o modelo completo, mesmo com relaxamentos, exigia tempos proibitivos no CPLEX para instâncias médias e grandes, obrigando-os a fracionar as instâncias. 
+
+Para lidar com múltiplos objetivos conflitantes (custo, serviço, satisfação), abordagens de Programação por Metas (\textit{Goal Programming}) e funções objetivo ponderadas têm sido amplamente adotadas. Beliën e Demeulemeester \cite{belien2007building} formularam o problema de nivelamento da ocupação de leitos gerado pelo centro cirúrgico utilizando Programação Inteira Mista (MIP) e programação quadrática. Da mesma forma, Schäfer et al. \cite{schafer2023combining} formularam uma função de utilidade total, combinando penalidades de médicos, enfermeiros e pacientes. Os autores ressaltam que modelagens analíticas precisas devem ser integradas com lógicas de decisão rápidas para terem valor prático.
+
+
+\section{Abordagem proposta}
+
+Diante da complexidade combinatória intrínseca ao PBA (característica de problemas NP-difíceis) e da ineficiência dos métodos exatos (como a Programação Inteira) para fornecer soluções em tempo viável, este trabalho adota a otimização heurística como abordagem central. 
+
+Conforme sugerido por Talbi \cite{talbi2009metaheuristics}, quando o tempo disponível para a tomada de decisão é limitado, como no planejamento periódico do censo hospitalar, o uso de algoritmos aproximados (heurísticas e meta-heurísticas) é a via mais adequada. Embora essas técnicas não forneçam garantias matemáticas de que a solução encontrada é o ótimo global, elas exploram o espaço de busca de maneira inteligente e estruturada. 
+
+A abordagem heurística destaca-se por possuir um excelente potencial para encontrar soluções de alta qualidade (muito próximas do ótimo) em pouco tempo \cite{ceschia2012modeling, demeester2010hybrid}. Assim, a abordagem proposta visa atuar como um sistema de apoio à decisão tática, voltado ao planejamento do censo, oferecendo um equilíbrio entre a qualidade das alocações e um tempo de resposta compatível com esse planejamento.
+
+
+\section{Meta-heurísticas}
+
+Para lidar com a intratabilidade de problemas NP-difíceis, como a alocação de leitos (PBA), as meta-heurísticas surgem como a principal alternativa aos métodos exatos. O termo ``meta-heurística'' define uma metodologia de nível superior que atua como uma estratégia guia para projetar heurísticas subjacentes aplicáveis a uma ampla variedade de problemas de otimização \cite{talbi2009metaheuristics}. Embora não garantam a otimalidade global, elas fornecem soluções de alta qualidade (``aceitáveis'') em um tempo de processamento razoável \cite{talbi2009metaheuristics}.
+
+O \textit{design} de qualquer meta-heurística envolve o balanceamento de dois critérios conflitantes, a \textit{exploração} (diversificação), que garante que todas as regiões do espaço de busca sejam visitadas, e a \textit{explotação} (intensificação), que refina as melhores soluções encontradas para gerar resultados ainda melhores \cite{talbi2009metaheuristics}. De acordo com suas características de busca, as meta-heurísticas são tipicamente divididas em duas grandes famílias:
+
+\begin{itemize}
+    \item \textbf{Meta-heurísticas baseadas em trajetória (\textit{S-metaheuristics}):} Focam na transformação iterativa de uma única solução, sendo altamente orientadas à explotação (intensificação). A Busca Tabu (\textit{Tabu Search} - TS) utiliza estruturas de memória (listas tabu) para registrar o histórico recente da busca, impedindo que o algoritmo visite soluções recém-avaliadas e fique preso em ótimos locais \cite{talbi2009metaheuristics}. Demeester et al. \cite{demeester2010hybrid} aplicaram um algoritmo de Busca Tabu híbrido para o problema de admissão de pacientes, demonstrando superioridade em relação a métodos exatos em tempo viável. O \textit{Simulated Annealing} (SA), inspirado no processo de recozimento de metais, utiliza uma função de probabilidade decrescente (temperatura) para aceitar soluções piores no início da busca, evitando ótimos locais e convergindo gradativamente para uma solução refinada \cite{talbi2009metaheuristics}. Ceschia e Schaerf \cite{ceschia2012modeling} utilizaram o SA para modelar e resolver o PAS dinâmico sob incerteza com excelentes resultados.
+    
+    \item \textbf{Meta-heurísticas baseadas em população (\textit{P-metaheuristics}):} Lidam simultaneamente com um conjunto de soluções (população), sendo naturalmente orientadas à exploração (diversificação) do espaço de busca. Os Algoritmos Genéticos (\textit{Genetic Algorithms} - GA) e outras abordagens evolutivas imitam a evolução biológica e a seleção natural, combinando soluções através de operadores de cruzamento (\textit{crossover}) e mutação para gerar novas ``descendências'' \cite{talbi2009metaheuristics, ala2022appointment}. A Inteligência de Enxame, como a Otimização por Nuvem de Partículas (\textit{Particle Swarm Optimization - PSO}) e Otimização por Colônia de Formigas (\textit{Ant Colony Optimization - ACO}), baseia-se no comportamento descentralizado e auto-organizado de animais na natureza \cite{talbi2009metaheuristics, he2019systematic, ala2022appointment}.
+\end{itemize}
+
+
+\section{Combinação de algoritmos}
+
+A literatura demonstra que a aplicação de meta-heurísticas puras pode apresentar limitações ao lidar com espaços de busca altamente combinatórios e restritos. A hibridização, ou seja, a combinação de diferentes algoritmos, é uma estratégia adotada para suprir as fraquezas de um método com os pontos fortes de outro \cite{talbi2009metaheuristics}.
+
+No contexto da saúde e do planejamento de capacidade, diversas abordagens híbridas obtiveram sucesso ao aliar qualidade e velocidade computacional:
+\begin{itemize}
+    \item \textbf{Híbridos de P-metaheurísticas e S-metaheurísticas:} Uma abordagem clássica (conhecida como Algoritmo Memético) incorpora um algoritmo de busca local dentro de um Algoritmo Genético. Enquanto o GA explora globalmente o espaço de soluções por meio da população, a busca local atua como um operador de ``mutação inteligente'', refinando cada indivíduo e acelerando a convergência para ótimos locais de alta qualidade \cite{talbi2009metaheuristics}.
+    \item \textbf{Híbridos de Meta-heurísticas e Métodos Exatos:} Métodos baseados em Programação Matemática podem ser usados para resolver subproblemas específicos ou inicializar meta-heurísticas. Beliën e Demeulemeester \cite{belien2007building} desenvolveram uma abordagem na qual o \textit{Simulated Annealing} é inicializado com uma solução já muito boa, gerada previamente por um modelo de Programação Quadrática, garantindo melhor tempo computacional e qualidade do que o uso de ambos isoladamente.
+    \item \textbf{Integração com \textit{Machine Learning}:} Schäfer et al. \cite{schafer2023combining} integraram previsões de aprendizado de máquina a uma \textit{hiper-heurística} para o gerenciamento dinâmico de leitos, contexto que envolve incertezas não tratadas neste trabalho.
+\end{itemize}
+
+
+\section{Etapa de decisão}
+
+Em problemas de saúde, formular e otimizar um modelo matemático é apenas parte do desafio, e a fase crítica reside na etapa de tomada de decisão. A tomada de decisão é o processo interativo no qual os resultados algorítmicos são avaliados frente a cenários reais, levando à implementação de uma solução prática \cite{talbi2009metaheuristics}.
+
+No gerenciamento de leitos, a etapa de decisão é de suma importância porque o problema é inerentemente multiobjetivo e sujeito a incertezas \cite{schafer2023combining}. Uma otimização estrita baseada apenas em custos ou taxas de ocupação pode negligenciar fatores humanos relevantes, como o conforto e a segurança do paciente \cite{schafer2023combining}. A etapa de decisão é o momento em que os múltiplos interesses (muitas vezes conflitantes) dos \textit{stakeholders} são balanceados para garantir uma alocação que seja não apenas matematicamente ótima, mas clinicamente e operacionalmente viável.
+
+
+\subsection{Tomadores de decisão}
+
+Na literatura de otimização multiobjetivo, a interação entre o solucionador (o algoritmo) e o tomador de decisão (gestor hospitalar) pode ocorrer sob três abordagens principais \cite{talbi2009metaheuristics}:
+
+\begin{itemize}
+    \item \textbf{Abordagem \textit{A Priori}:} O tomador de decisão estabelece suas preferências antes do início da otimização. Isso é frequentemente feito através da agregação das funções objetivo em uma única função de utilidade, na qual cada critério recebe um peso. Essa abordagem é computacionalmente rápida (gera uma única solução e requer apenas uma execução da meta-heurística), mas exige que o gestor conheça antecipadamente o comportamento exato e a importância de cada variável \cite{talbi2009metaheuristics, schafer2023combining}.
+    \item \textbf{Abordagem \textit{A Posteriori}:} O algoritmo executa a busca e devolve um conjunto de soluções de compromisso (a Fronteira de Pareto), representando diferentes cenários otimizados (por exemplo, uma solução com menos transferências e outra com menos alocações em especialidade inadequada). Apenas no final o tomador de decisão escolhe a solução desejada. É muito útil quando o cenário não é claro, mas requer alto custo computacional \cite{talbi2009metaheuristics}.
+    \item \textbf{Abordagem Interativa:} Há uma cooperação progressiva entre o gestor e o algoritmo durante a busca. O algoritmo apresenta soluções parciais, o tomador de decisão refina suas preferências, e a busca é redirecionada. É altamente flexível, mas exige envolvimento constante do gestor \cite{talbi2009metaheuristics}.
+\end{itemize}
+
+
+\section{Fechamento da revisão e definição da arquitetura}
+
+A gestão de leitos hospitalares foi confirmada ao longo desta revisão como um desafio multiobjetivo e de complexidade NP-difícil, que, em sua forma geral, envolve ainda incertezas na chegada e no tempo de permanência dos pacientes \cite{ceschia2012modeling, demeester2010hybrid, he2019systematic}. Este trabalho trata a versão determinística do problema, voltada ao planejamento do censo, na qual, ainda assim, os métodos exatos tornam-se inviáveis em tempo hábil nas instâncias de grande porte.
+
+Diante desse cenário, este trabalho adota os Algoritmos Genéticos (GA) como o motor central de otimização global. A escolha pelos GAs justifica-se fortemente por sua natureza baseada em população (\textit{P-metaheuristic}), o que lhes confere a capacidade inerente de explorar o espaço de busca de forma ampla e de gerar, em uma única execução, uma diversidade de soluções candidatas \cite{talbi2009metaheuristics}. Além disso, algoritmos genéticos possuem excelente maleabilidade para integrações multiobjetivo e permitem hibridizações com regras clínicas específicas.
+
+Contudo, embora os GAs sejam métodos poderosos para a exploração global (\textit{diversificação}), a literatura aponta que eles frequentemente apresentam limitações na fase de explotação (\textit{intensificação}), ou seja, no ajuste fino das soluções para alcançar ótimos locais de alta qualidade \cite{talbi2009metaheuristics}. Para suprir essa lacuna e lidar com o alto nível de restrições do PBA, este trabalho propõe uma arquitetura híbrida, frequentemente denominada Algoritmo Memético (classificada como um híbrido de baixo nível, ou \textit{Low-Level Teamwork Hybrid}) \cite{talbi2009metaheuristics}.
+
+Nesta abordagem, o GA é acoplado a um algoritmo de busca local baseada em múltiplas vizinhanças, sendo o \textit{Variable Neighborhood Descent} (VND) o escolhido. A busca local não substitui o operador de mutação. A mutação do GA é mantida como fonte de diversidade e a busca local atua em seguida como um operador de intensificação aplicado a uma parcela da população a cada geração. Sob uma ótica Lamarckiana \cite{talbi2009metaheuristics}, o indivíduo refinado substitui o original na população, de modo que as melhorias obtidas pela busca local são herdadas pelas gerações seguintes por meio do cruzamento.
+
+A escolha específica do VND como agente de busca local justifica-se pela topologia restrita do problema de alocação de leitos. Estudos em escalonamento de pacientes, como os conduzidos por Demeester et al. \cite{demeester2010hybrid} e Ceschia e Schaerf \cite{ceschia2012modeling}, demonstraram que o uso de um único tipo de movimento (ex.: apenas trocar pacientes de quarto) é insuficiente para escapar de ótimos locais no ambiente hospitalar. O VND supera essa barreira ao explorar diferentes estruturas de vizinhança, alternando entre mudança de quarto, troca de pacientes e suas variantes parciais. Essa combinação funciona porque o GA garante que diferentes bacias de atração do espaço de busca sejam descobertas, enquanto o VND refina cada solução dentro do escopo local de sua bacia.
+
+Quanto ao tomador de decisão, este trabalho adota uma postura \textit{a priori}, por meio de um sistema de penalidades agregadas em uma única função de utilidade. No planejamento do censo, a equipe responsável precisa de uma alocação em tempo compatível com a rotina de planejamento, o que torna pouco prático gerar e analisar um conjunto de soluções de compromisso a cada novo planejamento. Os pesos das restrições e dos interesses dos \textit{stakeholders} são, portanto, pré-parametrizados \cite{schafer2023combining}, permitindo que o algoritmo recomende uma alocação de forma autônoma, sem intervenção do gestor durante a busca.
+
+Com a base teórica acerca das características estruturais do problema estabelecida e a arquitetura híbrida (GA + VND) definida, o \autoref{cap:metodologia} detalha a metodologia, apresentando o modelo matemático adotado e as estratégias de implementação das abordagens exata e heurística.

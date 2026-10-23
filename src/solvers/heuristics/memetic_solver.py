@@ -71,6 +71,7 @@ class MemeticSolver:
         best = population[0].copy()
         initial_fitness = best.fitness
         convergence_history = [best.fitness]
+        capacity_violation_history = [best.capacity_violation]
         local_search_evaluations = 0
         generations = 0
 
@@ -122,6 +123,7 @@ class MemeticSolver:
             else:
                 stale_generations += 1
             convergence_history.append(best.fitness)
+            capacity_violation_history.append(best.capacity_violation)
 
         runtime = time.perf_counter() - start
         evaluation_count = generations * population_size + local_search_evaluations
@@ -132,6 +134,7 @@ class MemeticSolver:
             initial_fitness=initial_fitness,
             evaluation_count=evaluation_count,
             convergence_history=convergence_history,
+            capacity_violation_history=capacity_violation_history,
             best_feasible_fitness=best_feasible.fitness if best_feasible is not None else None,
             best_feasible_generation=best_feasible_generation,
             best_feasible_solution=best_feasible,

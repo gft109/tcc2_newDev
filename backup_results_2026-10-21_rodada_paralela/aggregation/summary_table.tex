@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+    \caption{Resumo agregado entre os 10 conjuntos de cada porte (média $\pm$ desvio padrão)}
+    \label{tab:agregado}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lrrrr}
+        \hline
+        \textbf{Métrica} & \textbf{Pequena} & \textbf{Média} & \textbf{Grande} & \textbf{Muito grande} \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Instâncias}} \\
+        Horizonte (dias) & 15,1 $\pm$ 0,6 & 15,1 $\pm$ 0,3 & 15,0 $\pm$ 0,0 & 15,0 $\pm$ 0,0 \\
+        Ocupação Média (todo o horizonte) & 87,9\% $\pm$ 1,9\% & 89,0\% $\pm$ 1,4\% & 89,2\% $\pm$ 0,6\% & 88,9\% $\pm$ 0,4\% \\
+        Pico de Ocupação Diária & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% & 100,0\% $\pm$ 0,0\% \\
+        Mínimo de Ocupação Diária & 11,3\% $\pm$ 6,9\% & 14,3\% $\pm$ 6,4\% & 12,3\% $\pm$ 2,6\% & 11,0\% $\pm$ 1,2\% \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Gurobi}} \\
+        $Z$ (Limite Superior) & 10\,370,0 $\pm$ 3\,461,4 & 83\,992,5 $\pm$ 7\,816,0 & 820\,270,0 $\pm$ 8\,025,5 & 3\,277\,170,0 $\pm$ 14\,301,5 \\
+        Limite Inferior & 9\,845,0 $\pm$ 3\,391,1 & 23\,950,0 $\pm$ 5\,336,1 & 7\,735,0 $\pm$ 16\,852,7 & 0,0 $\pm$ 0,0 \\
+        Gap de Otimalidade & 5,4\% $\pm$ 3,6\% & 71,4\% $\pm$ 6,1\% & 99,1\% $\pm$ 2,1\% & 100,0\% $\pm$ 0,0\% \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Heurística}} \\
+        $Z$ & 10\,567,5 $\pm$ 3\,493,4 & 28\,807,5 $\pm$ 5\,560,8 & 56\,260,0 $\pm$ 9\,935,3 & 210\,675,0 $\pm$ 22\,841,7 \\
+        \hline
+        \multicolumn{5}{l}{\textbf{Métricas Operacionais}} \\
+        \multicolumn{5}{l}{Especialidade Incorreta (contagem)} \\
+        \quad Gurobi & 93,0 $\pm$ 35,7 & 369,9 $\pm$ 70,0 & 4\,618,8 $\pm$ 56,6 & 18\,470,5 $\pm$ 99,3 \\
+        \quad Heurística & 93,3 $\pm$ 35,2 & 240,1 $\pm$ 54,0 & 346,2 $\pm$ 102,6 & 1\,082,6 $\pm$ 200,2 \\
+        \multicolumn{5}{l}{Transferências (contagem)} \\
+        \quad Gurobi & 3,7 $\pm$ 1,8 & 575,4 $\pm$ 150,3 & 4\,789,4 $\pm$ 39,9 & 19\,170,7 $\pm$ 108,2 \\
+        \quad Heurística & 6,3 $\pm$ 1,9 & 52,0 $\pm$ 11,8 & 284,9 $\pm$ 30,4 & 1\,239,8 $\pm$ 88,2 \\
+        \multicolumn{5}{l}{Quarto-dias Mistos (contagem)} \\
+        \quad Gurobi & 11,8 $\pm$ 4,1 & 243,1 $\pm$ 38,8 & 1\,585,6 $\pm$ 19,1 & 6\,287,8 $\pm$ 29,7 \\
+        \quad Heurística & 12,3 $\pm$ 4,4 & 29,3 $\pm$ 5,5 & 98,6 $\pm$ 13,8 & 539,0 $\pm$ 25,3 \\
+        \multicolumn{5}{l}{Violação de Capacidade (pacientes-dia)} \\
+        \quad Gurobi & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 \\
+        \quad Heurística & 0,0 $\pm$ 0,0 & 0,0 $\pm$ 0,0 & 0,9 $\pm$ 0,7 & 24,4 $\pm$ 2,5 \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}

@@ -1,0 +1,144 @@
+[1/10] Rodando GRANDE — conjunto 01 (10 repetições, 480s por solver)...
+Set parameter Username
+Set parameter LicenseID to value 2806061
+Academic license - for non-commercial use only - expires 2027-04-12
+  > Repetição 01/10 concluída | Fitness: 59500.0   | Tempo: 480.0134 s
+  > Repetição 02/10 concluída | Fitness: 61050.0   | Tempo: 480.0111 s
+  > Repetição 03/10 concluída | Fitness: 58875.0   | Tempo: 480.0103 s
+  > Repetição 04/10 concluída | Fitness: 60175.0   | Tempo: 480.0105 s
+  > Repetição 05/10 concluída | Fitness: 60725.0   | Tempo: 480.0059 s
+  > Repetição 06/10 concluída | Fitness: 59625.0   | Tempo: 480.0107 s
+  > Repetição 07/10 concluída | Fitness: 58125.0   | Tempo: 480.0099 s
+  > Repetição 08/10 concluída | Fitness: 54775.0   | Tempo: 480.0063 s
+  > Repetição 09/10 concluída | Fitness: 54375.0   | Tempo: 480.2855 s
+  > Repetição 10/10 concluída | Fitness: 60475.0   | Tempo: 480.0317 s
+[1/10] Conjunto 01 concluído | Gurobi: 811250.0 | Heur. (Melhor): 54375.0 | Heur. (Melhor Viável): 54375.0
+          -> CSVs e gráficos em results/grande/set_01/
+
+[2/10] Rodando GRANDE — conjunto 02 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 76150.0   | Tempo: 480.0294 s
+  > Repetição 02/10 concluída | Fitness: 70975.0   | Tempo: 480.0064 s
+  > Repetição 03/10 concluída | Fitness: 73650.0   | Tempo: 480.0348 s
+  > Repetição 04/10 concluída | Fitness: 72750.0   | Tempo: 480.0115 s
+  > Repetição 05/10 concluída | Fitness: 69300.0   | Tempo: 480.0129 s
+  > Repetição 06/10 concluída | Fitness: 65125.0   | Tempo: 480.0144 s
+  > Repetição 07/10 concluída | Fitness: 70525.0   | Tempo: 480.0100 s
+  > Repetição 08/10 concluída | Fitness: 75075.0   | Tempo: 480.0105 s
+  > Repetição 09/10 concluída | Fitness: 71775.0   | Tempo: 480.0113 s
+  > Repetição 10/10 concluída | Fitness: 68900.0   | Tempo: 480.0111 s
+[2/10] Conjunto 02 concluído | Gurobi: 819575.0 | Heur. (Melhor): 65125.0 | Heur. (Melhor Viável): 65125.0
+          -> CSVs e gráficos em results/grande/set_02/
+
+[3/10] Rodando GRANDE — conjunto 03 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 76725.0   | Tempo: 480.0138 s
+  > Repetição 02/10 concluída | Fitness: 72025.0   | Tempo: 480.0065 s
+  > Repetição 03/10 concluída | Fitness: 76400.0   | Tempo: 480.0137 s
+  > Repetição 04/10 concluída | Fitness: 74875.0   | Tempo: 480.0108 s
+  > Repetição 05/10 concluída | Fitness: 70325.0   | Tempo: 480.0056 s
+  > Repetição 06/10 concluída | Fitness: 77450.0   | Tempo: 480.0056 s
+  > Repetição 07/10 concluída | Fitness: 75950.0   | Tempo: 480.0137 s
+  > Repetição 08/10 concluída | Fitness: 73850.0   | Tempo: 480.0054 s
+  > Repetição 09/10 concluída | Fitness: 76025.0   | Tempo: 480.0060 s
+  > Repetição 10/10 concluída | Fitness: 71450.0   | Tempo: 480.0109 s
+[3/10] Conjunto 03 concluído | Gurobi: 820500.0 | Heur. (Melhor): 70325.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/grande/set_03/
+
+[4/10] Rodando GRANDE — conjunto 04 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 48775.0   | Tempo: 480.0108 s
+  > Repetição 02/10 concluída | Fitness: 47625.0   | Tempo: 480.0115 s
+  > Repetição 03/10 concluída | Fitness: 51725.0   | Tempo: 480.0103 s
+  > Repetição 04/10 concluída | Fitness: 48575.0   | Tempo: 480.0109 s
+  > Repetição 05/10 concluída | Fitness: 47550.0   | Tempo: 480.0116 s
+  > Repetição 06/10 concluída | Fitness: 51550.0   | Tempo: 480.0113 s
+  > Repetição 07/10 concluída | Fitness: 52800.0   | Tempo: 480.0119 s
+  > Repetição 08/10 concluída | Fitness: 50350.0   | Tempo: 480.0110 s
+  > Repetição 09/10 concluída | Fitness: 46325.0   | Tempo: 480.0109 s
+  > Repetição 10/10 concluída | Fitness: 47275.0   | Tempo: 480.0130 s
+[4/10] Conjunto 04 concluído | Gurobi: 830875.0 | Heur. (Melhor): 46325.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/grande/set_04/
+
+[5/10] Rodando GRANDE — conjunto 05 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 61525.0   | Tempo: 480.0053 s
+  > Repetição 02/10 concluída | Fitness: 61475.0   | Tempo: 480.0105 s
+  > Repetição 03/10 concluída | Fitness: 61300.0   | Tempo: 480.0059 s
+  > Repetição 04/10 concluída | Fitness: 60450.0   | Tempo: 480.0108 s
+  > Repetição 05/10 concluída | Fitness: 59675.0   | Tempo: 480.0101 s
+  > Repetição 06/10 concluída | Fitness: 59550.0   | Tempo: 480.0108 s
+  > Repetição 07/10 concluída | Fitness: 58850.0   | Tempo: 480.0110 s
+  > Repetição 08/10 concluída | Fitness: 57550.0   | Tempo: 480.0116 s
+  > Repetição 09/10 concluída | Fitness: 60725.0   | Tempo: 480.0067 s
+  > Repetição 10/10 concluída | Fitness: 58725.0   | Tempo: 480.0059 s
+[5/10] Conjunto 05 concluído | Gurobi: 816925.0 | Heur. (Melhor): 57550.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/grande/set_05/
+
+[6/10] Rodando GRANDE — conjunto 06 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 59925.0   | Tempo: 480.0612 s
+  > Repetição 02/10 concluída | Fitness: 57000.0   | Tempo: 480.1225 s
+  > Repetição 03/10 concluída | Fitness: 59475.0   | Tempo: 480.0358 s
+  > Repetição 04/10 concluída | Fitness: 58500.0   | Tempo: 480.0130 s
+  > Repetição 05/10 concluída | Fitness: 58325.0   | Tempo: 480.0114 s
+  > Repetição 06/10 concluída | Fitness: 54975.0   | Tempo: 480.0112 s
+  > Repetição 07/10 concluída | Fitness: 57200.0   | Tempo: 480.0108 s
+  > Repetição 08/10 concluída | Fitness: 55375.0   | Tempo: 480.0112 s
+  > Repetição 09/10 concluída | Fitness: 56100.0   | Tempo: 480.0108 s
+  > Repetição 10/10 concluída | Fitness: 58800.0   | Tempo: 480.0105 s
+[6/10] Conjunto 06 concluído | Gurobi: 815200.0 | Heur. (Melhor): 54975.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/grande/set_06/
+
+[7/10] Rodando GRANDE — conjunto 07 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 49175.0   | Tempo: 480.0656 s
+  > Repetição 02/10 concluída | Fitness: 46725.0   | Tempo: 480.0105 s
+  > Repetição 03/10 concluída | Fitness: 52950.0   | Tempo: 480.0107 s
+  > Repetição 04/10 concluída | Fitness: 43600.0   | Tempo: 480.0057 s
+  > Repetição 05/10 concluída | Fitness: 46925.0   | Tempo: 480.0106 s
+  > Repetição 06/10 concluída | Fitness: 45075.0   | Tempo: 480.0109 s
+  > Repetição 07/10 concluída | Fitness: 45175.0   | Tempo: 480.0063 s
+  > Repetição 08/10 concluída | Fitness: 49650.0   | Tempo: 480.0125 s
+  > Repetição 09/10 concluída | Fitness: 50175.0   | Tempo: 480.0102 s
+  > Repetição 10/10 concluída | Fitness: 51575.0   | Tempo: 480.0109 s
+[7/10] Conjunto 07 concluído | Gurobi: 821300.0 | Heur. (Melhor): 43600.0 | Heur. (Melhor Viável): N/A (nenhuma viável encontrada)
+          -> CSVs e gráficos em results/grande/set_07/
+
+[8/10] Rodando GRANDE — conjunto 08 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 69375.0   | Tempo: 480.0180 s
+  > Repetição 02/10 concluída | Fitness: 69250.0   | Tempo: 480.0188 s
+  > Repetição 03/10 concluída | Fitness: 68650.0   | Tempo: 480.1767 s
+  > Repetição 04/10 concluída | Fitness: 65950.0   | Tempo: 480.0109 s
+  > Repetição 05/10 concluída | Fitness: 69550.0   | Tempo: 480.0119 s
+  > Repetição 06/10 concluída | Fitness: 68425.0   | Tempo: 480.0136 s
+  > Repetição 07/10 concluída | Fitness: 72250.0   | Tempo: 480.0110 s
+  > Repetição 08/10 concluída | Fitness: 70550.0   | Tempo: 480.0116 s
+  > Repetição 09/10 concluída | Fitness: 66650.0   | Tempo: 480.0138 s
+  > Repetição 10/10 concluída | Fitness: 71975.0   | Tempo: 480.0132 s
+[8/10] Conjunto 08 concluído | Gurobi: 835450.0 | Heur. (Melhor): 65950.0 | Heur. (Melhor Viável): 69250.0
+          -> CSVs e gráficos em results/grande/set_08/
+
+[9/10] Rodando GRANDE — conjunto 09 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 42800.0   | Tempo: 480.0106 s
+  > Repetição 02/10 concluída | Fitness: 44125.0   | Tempo: 480.0108 s
+  > Repetição 03/10 concluída | Fitness: 41875.0   | Tempo: 480.0061 s
+  > Repetição 04/10 concluída | Fitness: 39475.0   | Tempo: 480.0109 s
+  > Repetição 05/10 concluída | Fitness: 42550.0   | Tempo: 480.0108 s
+  > Repetição 06/10 concluída | Fitness: 44150.0   | Tempo: 480.0138 s
+  > Repetição 07/10 concluída | Fitness: 45675.0   | Tempo: 480.0135 s
+  > Repetição 08/10 concluída | Fitness: 44600.0   | Tempo: 480.0106 s
+  > Repetição 09/10 concluída | Fitness: 43350.0   | Tempo: 480.0103 s
+  > Repetição 10/10 concluída | Fitness: 41650.0   | Tempo: 480.0159 s
+[9/10] Conjunto 09 concluído | Gurobi: 809600.0 | Heur. (Melhor): 39475.0 | Heur. (Melhor Viável): 41650.0
+          -> CSVs e gráficos em results/grande/set_09/
+
+[10/10] Rodando GRANDE — conjunto 10 (10 repetições, 480s por solver)...
+  > Repetição 01/10 concluída | Fitness: 61275.0   | Tempo: 480.0364 s
+  > Repetição 02/10 concluída | Fitness: 61475.0   | Tempo: 480.0177 s
+  > Repetição 03/10 concluída | Fitness: 62000.0   | Tempo: 480.0458 s
+  > Repetição 04/10 concluída | Fitness: 61925.0   | Tempo: 480.0207 s
+  > Repetição 05/10 concluída | Fitness: 64150.0   | Tempo: 480.0133 s
+  > Repetição 06/10 concluída | Fitness: 59100.0   | Tempo: 480.0120 s
+  > Repetição 07/10 concluída | Fitness: 61825.0   | Tempo: 480.0059 s
+  > Repetição 08/10 concluída | Fitness: 53125.0   | Tempo: 480.0197 s
+  > Repetição 09/10 concluída | Fitness: 61125.0   | Tempo: 480.2445 s
+  > Repetição 10/10 concluída | Fitness: 60825.0   | Tempo: 480.0138 s
+[10/10] Conjunto 10 concluído | Gurobi: 822025.0 | Heur. (Melhor): 53125.0 | Heur. (Melhor Viável): 53125.0
+          -> CSVs e gráficos em results/grande/set_10/
+
+DONE

@@ -1,0 +1,54 @@
+% Monografia para Projeto de Fim de Curso
+%-----------------------------------------------------------
+
+
+%---------------Inicialização de pacotes--------------------
+
+\documentclass[12pt,a4paper,notitlepage,twoside,openany]{book}
+\usepackage{times}
+
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}   % permite acentos e cedilha diretamente
+\usepackage[brazilian]{babel}
+\usepackage[T1]{fontenc}      % garante boa saída de fontes com acentos
+\usepackage{amsmath}
+\usepackage{amsthm,amsfonts}
+\usepackage{color}
+\usepackage{abntex2abrev}
+\usepackage[colorlinks=true, allcolors=black]{hyperref}
+\usepackage{textcomp}         % para símbolos adicionais
+\usepackage{float}
+\usepackage{adjustbox}
+\usepackage{tabularx}
+\usepackage{array}
+
+\usepackage[a4paper,top=30mm,bottom=30mm,inner=30mm,outer=25mm,headheight=7mm,headsep=6mm,footskip=7mm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+\def\baselinestretch{1.0}
+\raggedbottom % evita esticar o espaço vertical quando uma figura [H] passa para a página seguinte
+
+
+
+%---------------Início do documento-------------------------
+
+\begin{document}
+
+\include{capa}
+
+\pagenumbering{arabic}
+
+\include{Resumo}
+\include{Introducao}
+\include{RevisaoBibliografica}
+\include{Metodologia}
+\include{Resultados}
+\include{Conclusao}
+
+\nocite{*}
+\input{bibliografia}
+
+\end{document}
+
+%---------------Fim do documento----------------------------

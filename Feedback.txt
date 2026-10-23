@@ -1,0 +1,111 @@
+
+
+BLOCO 1 — CORRIGIR ANTES DE QUALQUER COISA
+
+1) Fórmula do gap contra o limite inferior (seção 4.1)
+Você escreve (Z − LB)/Z e chama isso de "teto máximo de distância em relação ao ótimo". A fórmula está na convenção de MIPGap do solver, que mede outra coisa.
+
+Sendo L o limite inferior, Z* o ótimo e Z_h o valor da heurística, vale L ≤ Z* ≤ Z_h. Logo o excesso sobre o ótimo satisfaz:
+
+   (Z_h − Z*)/Z* ≤ (Z_h − L)/L
+
+O denominador tem que ser L, não Z_h. Exemplo, instância média, conjunto 01 (L = 22.350; Z_h = 29.350): você reporta 23,9%, mas a afirmação rigorosa é 31,3% acima do ótimo. Em todas as instâncias os valores reportados estão subestimados.
+
+Duas saídas aceitáveis: trocar o denominador para L e manter a frase, ou manter a fórmula e chamá-la de "gap relativo na convenção do solver" — mas neste caso não pode mais dizer "teto de distância ao ótimo".
+
+2) Gap de 100% quando LB = 0
+LB = 0 é o limite trivial (todos os coeficientes são não-negativos). Quando o solver reporta zero, ele está dizendo que não concluiu a relaxação da raiz. Aplicar a fórmula nesse caso dá (Z − 0)/Z = 100% por construção aritmética, não por medição — por isso oito células idênticas na Tabela 4.3.
+
+Substitua por "—", com nota de rodapé dizendo que o solver não obteve limite não-trivial dentro do teto.
+
+3) Parágrafo sobre o limite do branch-and-bound (seção 3.5)
+O parágrafo está logicamente invertido. O limite inferior do B&B é a relaxação da raiz, fortalecida por presolve e cortes — não existe bound não-trivial sem ter resolvido a relaxação. Dizer "optou-se pelo limite do B&B em vez da relaxação porque esta é impraticável" não fecha.
+
+Uma opção seria reescrever assim: "Não foi construído um modelo separado para a relaxação linear, cuja montagem isolada consumiu cerca de 289 s na instância muito grande. Utilizou-se o limite inferior reportado pelo próprio solver ao fim do tempo, que corresponde à relaxação da raiz fortalecida por presolve e cortes. Nas instâncias grande e muito grande esse limite permaneceu trivial (zero), indicando que o solver não concluiu a relaxação inicial dentro do teto."
+
+4) Você já tem um limite inferior não-trivial e não percebeu
+Na seção 4.2.2 você calcula, contando por dia os pacientes que excedem os leitos da própria especialidade, os mínimos de 23,2% / 14,6% / 4,7% / 3,0% dos pacientes-dia. Isso é um lower bound combinatório legítimo:
+
+   M = Σ_d Σ_s max(0, demanda(s,d) − leitos(s))
+
+Como as parcelas de transferência e de gênero são não-negativas, Z* ≥ W_spec · M para qualquer solução viável. Na instância muito grande: 100 × 768 ≈ 76.800, contra LB = 0 do Gurobi em 10 de 10 conjuntos.
+
+Dois cuidados: M é por conjunto, então são 40 valores, não 4 — nas Tabelas 4.1 a 4.4 cada linha usa o M do seu conjunto, nunca a média do porte. E o LB efetivo é o maior entre esse e o do Gurobi.
+
+Esta é, na minha avaliação, a melhor melhoria possível no capítulo de resultados, e não exige rodar nada.
+
+5) Declarar que a heurística resolve um problema relaxado
+Você diz isso uma vez na seção 3.3 e nunca mais. No capítulo 4 as duas abordagens são comparadas como se resolvessem o mesmo problema, quando a heurística otimiza sobre um conjunto viável maior. Precisa de uma frase na abertura de 4.1 e, nas Tabelas 4.1 a 4.4, de uma coluna com o V_cap da solução reportada.
+
+Sem isso, a leitura natural de 4.1.4 é que a heurística venceu com soluções que, formalmente, não são soluções.
+
+6) Limitar o custo de reparo (resolve o item anterior)
+Como o gerador garante censo diário não superior à capacidade total, todo paciente-dia excedente pode ser realocado a um quarto com vaga, ao custo máximo de W_spec + W_gen + 2·W_transf = 275 por unidade. Na instância muito grande: 24,4 × 275 ≈ 6.710 sobre Z ≈ 200.000, ou seja, menos de 4%.
+
+Acrescente esse parágrafo em 4.1.5. Com ele, a comparação com o Gurobi se mantém mesmo exigindo viabilidade estrita. Sem ele, é o ponto mais frágil do trabalho.
+
+7) A viabilidade é trivialmente alcançável — e o texto sugere o contrário
+Como o censo diário nunca excede Σc_r, os leitos são indistinguíveis e transferências são permitidas, basta percorrer os dias distribuindo os internados pelos quartos para obter uma solução viável, em tempo linear. Péssima em Z, mas viável.
+
+Hoje a seção 4.1.5 trata a inviabilidade como dificuldade intrínseca do porte, e não é: é a busca otimizar F sem mecanismo de reparo dedicado. Isso precisa estar escrito. Note que seu construtor guloso quase faz isso — o que impede é a exigência de manter o paciente no mesmo quarto a internação inteira.
+
+Não peço que conserte. Peço que diagnostique corretamente, o que é bem mais favorável a você do que a leitura atual.
+
+8) As transferências são consequência dos pesos, não falha do algoritmo
+W_spec = 100 é cobrado por dia; W_transf = 50 é cobrado uma vez. Transferir um paciente para o quarto correto compensa sempre que restarem dois dias ou mais de internação. Ou seja, a função objetivo pede explicitamente as transferências que você observa.
+
+Você chega perto disso em 4.2.2 e conclui que as transferências são "o principal ponto de atenção das soluções heurísticas". Está invertido: o ponto de atenção é a calibração dos pesos. Reescreva essa discussão em cima da razão W_transf/W_spec = 0,5, não em cima das vizinhanças N3 e N4.
+
+9) W_cap: o diagnóstico está errado
+O ganho máximo em Z ao exceder a capacidade em um paciente-dia é W_spec + W_gen + 2·W_transf ≈ 275. Portanto qualquer W_cap acima de ~275 já torna a violação não-lucrativa — 1900 é sete vezes isso. Se as soluções ainda assim violam, o problema não é o peso, é a busca.
+
+Dois agravantes a registrar: (a) W_cap foi calibrado na instância média, onde 100/100 execuções são viáveis com qualquer peso razoável, e aplicado onde a viabilidade é difícil; (b) a viabilidade colapsa exatamente onde o desvio padrão de Z entre execuções alcança 1900 — pequena e média têm desvio de 100 a 900 e 100% de viabilidade; grande tem desvio de 900 a 2.000 e 5/100; muito grande tem desvio de até 7.200 e 0/50. A penalidade perde pressão seletiva no torneio quando o ruído de Z a supera.
+
+Essa tabela, montada com os números que você já tem, é um achado melhor do que boa parte do capítulo 4.
+
+10) Métricas operacionais recalculadas a partir de x
+As variáveis f, m, b e t aparecem em restrições de um lado só — nada impede que valham 1 sem a violação correspondente; o que as segura é a função objetivo, e só no ótimo. Como em nenhum dos 40 conjuntos houve otimalidade comprovada, somar b e t pode estar inflando as contagens do Gurobi na Tabela 4.7.
+
+Recalcule tudo a partir de x, com o mesmo avaliador para as duas abordagens, e diga isso na seção 3.5.
+
+BLOCO 2 — REDAÇÃO E ORGANIZAÇÃO
+
+11) Escopo do capítulo 1
+A introdução justifica a heurística com "decisões em segundos, não em horas", mas o método usa até 900 s e o problema modelado é offline e determinístico, com admissões e altas conhecidas. Reescreva o objetivo como planejamento tático do censo, não admissão em tempo real, e pode o capítulo 2 do que não é modelado (carga de enfermagem, proximidade médica, chegadas de emergência, isolamento).
+
+12) Semântica dos pesos (seção 3.1.3)
+Falta um parágrafo dizendo que (a) os três critérios são comensuráveis — todos são contagens de eventos — e por isso não há normalização; (b) qual é a taxa de troca de cada par (spec/transf = 2 dias; gênero/transf = 1,5; spec/gênero = 1,33); (c) que Z é soma sobre pacientes-dia e portanto não é comparável entre portes.
+
+Sobre (c): hoje nada no texto avisa isso, e a síntese ("valores de 54% a 95% menores") e a Tabela 4.7 convidam o leitor a comparar. Normalizado por paciente-dia, Z cai de ~28 na pequena para ~8 na muito grande, ou seja, a qualidade por paciente melhora com o porte. É um resultado, e está invisível hoje.
+
+13) Tabelas 4.1 a 4.4
+- Renomeie "melhor execução" para "execução de menor F". Como a seleção é por F e o valor exibido é Z, há conjuntos em que a coluna fica acima da média — o que hoje parece erro.
+- Acrescente a coluna V_cap, uma coluna "melhor Z viável" (onde existir) e a contagem de execuções viáveis.
+- Acrescente a coluna de gap contra o LB, com o LB combinatório do item 5.
+- Rotule a comparação com o Gurobi como "redução de Z vs. incumbente do solver sob o mesmo teto de tempo", nunca como "gap". Nos portes média em diante ela mede intratabilidade do exato, não qualidade da heurística, e 93% lido como qualidade é leitura errada.
+- Mantenha média +- desvio, mas declarada como medida de dispersão. Prefiro em coeficiente de variação (%), que é como você já cita no texto.
+
+14) Seção 4.2
+Está confusa por seis motivos, todos de organização:
+- A Tabela 4.7 mistura três objetos: características da instância, solução do Gurobi e solução da heurística.
+- A subseção 4.2.1 descreve propriedades do gerador (horizonte, ocupação, pico), não métricas de desempenho. Mova para o capítulo 3.
+- Tudo está em contagem absoluta, e o texto converte para taxas na hora, com números que não estão na tabela. Coloque as taxas normalizadas na tabela.
+- A ressalva de que o Gurobi é um incumbente não convergido vem no fim e devia abrir a seção — ou, melhor, remova as linhas do solver dos portes média em diante e mantenha só na pequena, onde a comparação é legítima.
+- O limite combinatório está entre parênteses e é o resultado mais forte do capítulo: a folga da heurística para o mínimo teórico é de 0,3 / 0,3 / 0,7 / 1,2 pontos percentuais. Isso vira tabela e sobe para a síntese.
+- Reorganize por critério, uma subseção cada, respondendo sempre: qual o melhor possível dado o cenário, o que a heurística entregou, o que significa para o hospital.
+
+Observação metodológica: toda métrica normalizada deve ser calculada dentro de cada conjunto e só depois agregada, com desvio. Razão de médias não é média de razões, e o desvio da folga é o que diz se a heurística é consistente ou se acerta em uns conjuntos e erra em outros.
+
+15) Figuras
+São 12 painéis sem uma linha de discussão. Mantenha apenas o painel (a), de convergência, reunido numa figura única com quatro painéis, eixo y em log em vez do eixo quebrado. Corte o painel (b), que duplica a tabela e esmaga as barras da heurística, e substitua o (c) por um boxplot com os dez conjuntos lado a lado — isso sim separa a variação entre execuções da variação entre conjuntos, que você promete analisar na seção 3.5 e não analisa.
+
+Falta uma figura: V_cap do melhor indivíduo ao longo das gerações, nas instâncias grande e muito grande. É a figura que a discussão de viabilidade exige, e os dados já estão no mesmo registro da curva de convergência.
+
+
+
+
+
+
+
+
+

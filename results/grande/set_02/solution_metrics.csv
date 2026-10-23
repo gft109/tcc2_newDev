@@ -1,2 +1,3 @@
-solucao,horizon_days,specialty_mismatch_count,transfer_count,mixed_room_day_count,capacity_violation,occupancy_rate_mean,occupancy_rate_std,peak_occupancy_day,peak_occupancy_patients,peak_occupancy_total_capacity,occupancy_rate_GENERAL,occupancy_rate_ORTHOPEDICS,occupancy_rate_SURGERY,occupancy_rate_CARDIOLOGY
-melhor,15,463,307,85,1,0.8918055555555555,0.2855212326461158,1,480,480,0.9001949317738791,0.8854700854700854,0.8781144781144782,0.8989247311827957
+solucao,horizon_days,specialty_mismatch_count,transfer_count,mixed_room_day_count,capacity_violation,occupancy_rate_mean,occupancy_rate_std,peak_occupancy_day,peak_occupancy_patients,peak_occupancy_total_capacity,occupancy_rate_GENERAL,occupancy_rate_ORTHOPEDICS,occupancy_rate_SURGERY,occupancy_rate_CARDIOLOGY,mesma_que_melhor
+melhor,15,434,313,81,0,0.8918055555555555,0.2864928645276968,1,480,480,0.9005847953216374,0.8843304843304844,0.8794612794612794,0.8982078853046596,
+melhor_viavel,15,434,313,81,0,0.8918055555555555,0.2864928645276968,1,480,480,0.9005847953216374,0.8843304843304844,0.8794612794612794,0.8982078853046596,True

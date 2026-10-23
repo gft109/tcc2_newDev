@@ -230,6 +230,7 @@ class SolverResult:
     initial_fitness: float | None = None
     evaluation_count: int | None = None  # heuristic: fitness evaluations; Gurobi: simplex iterations
     convergence_history: list[float] = field(default_factory=list)  # best fitness per generation
+    capacity_violation_history: list[int] = field(default_factory=list)  # V_cap of that best, per generation
     upper_bound: float | None = None  # Gurobi only
     lower_bound: float | None = None  # Gurobi only
     gap: float | None = None  # Gurobi only

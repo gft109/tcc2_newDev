@@ -1,0 +1,2 @@
+solucao,horizon_days,specialty_mismatch_count,transfer_count,mixed_room_day_count,capacity_violation,occupancy_rate_mean,occupancy_rate_std,peak_occupancy_day,peak_occupancy_patients,peak_occupancy_total_capacity,occupancy_rate_GENERAL,occupancy_rate_ORTHOPEDICS,occupancy_rate_CARDIOLOGY,occupancy_rate_SURGERY
+melhor,15,860,1167,560,24,0.88625,0.2880894111060402,1,1920,1920,0.8847606499780413,0.8885389326334209,0.8867891513560805,0.8863826232247285

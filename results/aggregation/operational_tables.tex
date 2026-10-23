@@ -1,0 +1,59 @@
+\begin{table}[htbp]
+    \caption{Especialidade inadequada por porte (\% dos pacientes-dia, média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-op-especialidade}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{3.0cm}}}
+        \hline
+        \textbf{Porte} & \textbf{Mínimo estrutural ($M/N_{pd}$)} & \textbf{Heurística} & \textbf{Folga da heurística (p.p.)} & \textbf{Gurobi} \\
+        \hline
+        Pequena & 23,2 $\pm$ 9,1 & 23,4 $\pm$ 9,0 & 0,2 $\pm$ 0,4 & 23,4 $\pm$ 9,0 \\
+        Média & 14,6 $\pm$ 3,5 & 14,8 $\pm$ 3,4 & 0,2 $\pm$ 0,3 & --- \\
+        Grande & 4,7 $\pm$ 1,7 & 5,2 $\pm$ 1,6 & 0,5 $\pm$ 0,2 & --- \\
+        Muito grande & 3,0 $\pm$ 1,0 & 3,7 $\pm$ 0,9 & 0,8 $\pm$ 0,1 & --- \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - Folga calculada em cada conjunto, como a taxa da heurística menos o mínimo estrutural do próprio conjunto, e só então agregada. Gurobi reportado apenas na instância pequena. Nas demais, sua solução incumbente está distante do ótimo e não é um termo de comparação legítimo (\autoref{sec:res-operacionais}).}
+\end{table}
+
+\begin{table}[htbp]
+    \caption{Transferências por porte (por 100 pacientes, média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-op-transferencias}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{2}{>{\centering\arraybackslash}p{3.0cm}}}
+        \hline
+        \textbf{Porte} & \textbf{Heurística} & \textbf{Gurobi} \\
+        \hline
+        Pequena & 8,2 $\pm$ 4,5 & 3,6 $\pm$ 1,7 \\
+        Média & 13,6 $\pm$ 2,7 & --- \\
+        Grande & 17,0 $\pm$ 2,4 & --- \\
+        Muito grande & 19,4 $\pm$ 1,6 & --- \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - Não há limite inferior não trivial para o número de transferências. Gurobi reportado apenas na instância pequena. Nas demais, sua solução incumbente está distante do ótimo e não é um termo de comparação legítimo (\autoref{sec:res-operacionais}).}
+\end{table}
+
+\begin{table}[htbp]
+    \caption{Quartos-dia mistos por porte (\% dos quartos-dia, média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \label{tab:res-op-mistos}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{3.0cm}}}
+        \hline
+        \textbf{Porte} & \textbf{Mínimo por paridade ($G$)} & \textbf{Heurística} & \textbf{Folga da heurística (p.p.)} & \textbf{Gurobi} \\
+        \hline
+        Pequena & 5,2 $\pm$ 1,7 & 8,3 $\pm$ 2,8 & 3,1 $\pm$ 2,4 & 7,9 $\pm$ 2,8 \\
+        Média & 1,4 $\pm$ 0,4 & 4,6 $\pm$ 1,1 & 3,3 $\pm$ 1,3 & --- \\
+        Grande & 0,3 $\pm$ 0,1 & 3,7 $\pm$ 0,5 & 3,4 $\pm$ 0,5 & --- \\
+        Muito grande & 0,1 $\pm$ 0,0 & 3,7 $\pm$ 0,3 & 3,6 $\pm$ 0,3 & --- \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - Mínimo por paridade conforme a Equação~\eqref{eq:minimo-misto}. Folga calculada em cada conjunto e só então agregada. Gurobi reportado apenas na instância pequena. Nas demais, sua solução incumbente está distante do ótimo e não é um termo de comparação legítimo (\autoref{sec:res-operacionais}).}
+\end{table}
