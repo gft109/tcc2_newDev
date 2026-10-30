@@ -186,6 +186,18 @@ class Solution:
     def occupancy(self, room_id: int, day: int) -> int:
         return len(self._room_day_occupants.get((room_id, day), ()))
 
+    def occupants(self, room_id: int, day: int) -> list[int]:
+        return sorted(self._room_day_occupants.get((room_id, day), ()))
+
+    def overflowing_room_days(self) -> list[tuple[int, int]]:
+        """(room, day) cells holding more patients than the room's capacity."""
+        rooms = self.data_manager.rooms
+        return sorted(
+            (room_id, day)
+            for (room_id, day), occupants in self._room_day_occupants.items()
+            if len(occupants) > rooms[room_id].capacity
+        )
+
     @property
     def capacity_violation(self) -> int:
         """V_cap: patient-days above room capacity, summed over all rooms and days."""
@@ -238,6 +250,9 @@ class SolverResult:
     best_feasible_fitness: float | None = None  # heuristic: best capacity-feasible individual seen
     best_feasible_generation: int | None = None
     best_feasible_solution: Solution | None = None
+    pre_repair_objective: float | None = None  # repair_mode="final": Z and V_cap of the best before repair
+    pre_repair_capacity_violation: int | None = None
+    repair_time: float | None = None  # repair_mode != "none": seconds spent repairing
 
     @property
     def specialty_cost(self) -> float:

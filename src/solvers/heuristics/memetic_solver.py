@@ -1,7 +1,14 @@
 """Memetic solver: GA loop with VND local search (Lamarckian) on part of each generation.
 
 Runs until the time limit. After `patience` generations without improvement, mutation
-switches to a fixed `boosted_mutation_fraction` until the next improvement."""
+switches to a fixed `boosted_mutation_fraction` until the next improvement.
+
+repair_mode (capacity repair, see utils/repair.py; its time counts within the time limit):
+    "always" - every individual is repaired as soon as it is created, and again after the
+               VND, so the population is always feasible (default).
+    "final"  - the GA stops early enough to repair the final population and returns the
+               feasible solution with the lowest Z.
+    "none"   - no repair; the best solution may violate capacity."""
 
 from __future__ import annotations
 
@@ -11,7 +18,10 @@ import time
 from solvers.heuristics.genetic import GeneticAlgorithm
 from solvers.heuristics.local_search import LocalSearch
 from utils.data_manager import DataManager
+from utils.repair import CapacityRepair
 from utils.solution import Solution, SolverResult
+
+REPAIR_MODES = ("none", "final", "always")
 
 
 class MemeticSolver:
@@ -32,9 +42,16 @@ class MemeticSolver:
         max_local_search_candidates: int = 10,
         max_local_search_evaluations: int | None | str = "auto",
         patience: int = 5,
+        repair_mode: str = "always",
         seed: int | None = None,
     ):
+        if repair_mode not in REPAIR_MODES:
+            raise ValueError(f"repair_mode must be one of {REPAIR_MODES}, got '{repair_mode}'")
         self.data_manager = data_manager
+        self.repair_mode = repair_mode
+        self.repair = CapacityRepair(data_manager, max_candidates=max_local_search_candidates, seed=seed)
+        self._repair_time = 0.0
+        self._repair_evaluations = 0
         self.genetic = GeneticAlgorithm(
             data_manager,
             population_size=population_size,
@@ -64,9 +81,25 @@ class MemeticSolver:
         start = time.perf_counter()
         deadline = start + time_limit
         population_size = self.genetic.population_size
+        self._repair_time = 0.0
+        self._repair_evaluations = 0
 
         population = self.genetic.create_initial_population()
+        if self.repair_mode == "always":
+            for individual in population:
+                self._timed_repair(individual)
         population.sort(key=Solution.sort_key)
+
+        # "final" stops the GA early by the time it took to repair the initial best, whose
+        # violation is far above that of the final population.
+        loop_deadline = deadline
+        if self.repair_mode == "final":
+            reserve_start = time.perf_counter()
+            self.repair.repair(population[0].copy())
+            reserve = time.perf_counter() - reserve_start
+            self._repair_time += reserve
+            self._repair_evaluations += self.repair.last_run_evaluations
+            loop_deadline = deadline - reserve
 
         best = population[0].copy()
         initial_fitness = best.fitness
@@ -84,32 +117,55 @@ class MemeticSolver:
 
         elite_count = max(1, round(population_size * self.elite_fraction))
         stale_generations = 0
+        # "always": the VND stops early by the longest post-VND repair seen, and new offspring
+        # are only created if their pre-VND repair (longest seen) still fits before that;
+        # otherwise the remaining time goes to the VND on the current, already feasible,
+        # population. Either way the repairs of the last generation finish within the limit.
+        pre_vnd_repair_reserve = 0.0
+        post_vnd_repair_reserve = 0.0
 
-        while time.perf_counter() < deadline:
+        while time.perf_counter() < loop_deadline:
             generations += 1
-
-            offspring = [individual.copy() for individual in population[:elite_count]]
             non_elite_indices = list(range(elite_count, population_size))
+            refine_only = time.perf_counter() >= loop_deadline - pre_vnd_repair_reserve
 
-            is_boosted = stale_generations >= self.patience
+            if refine_only:
+                offspring = [individual.copy() for individual in population]
+            else:
+                offspring = [individual.copy() for individual in population[:elite_count]]
 
-            while len(offspring) < population_size:
-                parent_a = self.genetic.tournament_select(population)
-                parent_b = self.genetic.tournament_select(population)
-                child = self.genetic.crossover(parent_a, parent_b)
-                if is_boosted:
-                    self.genetic.mutate_fraction(child, self.boosted_mutation_fraction)
-                else:
-                    self.genetic.mutate(child, rate=self.mutation_rate)
-                offspring.append(child)
+                is_boosted = stale_generations >= self.patience
 
-            n_immigrants = min(len(non_elite_indices), round(len(offspring) * self.immigrant_fraction))
-            for index in self._rng.sample(non_elite_indices, n_immigrants):
-                offspring[index] = self.genetic.create_random_individual()
+                while len(offspring) < population_size:
+                    parent_a = self.genetic.tournament_select(population)
+                    parent_b = self.genetic.tournament_select(population)
+                    child = self.genetic.crossover(parent_a, parent_b)
+                    if is_boosted:
+                        self.genetic.mutate_fraction(child, self.boosted_mutation_fraction)
+                    else:
+                        self.genetic.mutate(child, rate=self.mutation_rate)
+                    offspring.append(child)
+
+                n_immigrants = min(len(non_elite_indices), round(len(offspring) * self.immigrant_fraction))
+                for index in self._rng.sample(non_elite_indices, n_immigrants):
+                    offspring[index] = self.genetic.create_random_individual()
+
+                if self.repair_mode == "always":
+                    repair_time_before = self._repair_time
+                    for individual in offspring[elite_count:]:
+                        self._timed_repair(individual)
+                    pre_vnd_repair_reserve = max(pre_vnd_repair_reserve, self._repair_time - repair_time_before)
 
             offspring, local_search_evaluations = self._refine(
-                offspring, elite_count, non_elite_indices, deadline, local_search_evaluations
+                offspring, elite_count, non_elite_indices, loop_deadline, local_search_evaluations
             )
+            if self.repair_mode == "always":
+                # VND is driven by F and almost never adds violation; this keeps it guaranteed
+                repair_time_before = self._repair_time
+                for individual in offspring:
+                    self._timed_repair(individual)
+                post_vnd_repair_reserve = max(post_vnd_repair_reserve, self._repair_time - repair_time_before)
+                loop_deadline = deadline - post_vnd_repair_reserve
             offspring.sort(key=Solution.sort_key)
             population = offspring
 
@@ -125,11 +181,23 @@ class MemeticSolver:
             convergence_history.append(best.fitness)
             capacity_violation_history.append(best.capacity_violation)
 
+        pre_repair_objective = None
+        pre_repair_capacity_violation = None
+        if self.repair_mode == "final":
+            pre_repair_objective = best.objective_value
+            pre_repair_capacity_violation = best.capacity_violation
+            best = self._repair_final(best, population, best_feasible, deadline)
+
         runtime = time.perf_counter() - start
-        evaluation_count = generations * population_size + local_search_evaluations
+        evaluation_count = (
+            generations * population_size + local_search_evaluations + self._repair_evaluations
+        )
 
         return SolverResult(
             solution=best,
+            pre_repair_objective=pre_repair_objective,
+            pre_repair_capacity_violation=pre_repair_capacity_violation,
+            repair_time=self._repair_time if self.repair_mode != "none" else None,
             runtime=runtime,
             initial_fitness=initial_fitness,
             evaluation_count=evaluation_count,
@@ -139,6 +207,31 @@ class MemeticSolver:
             best_feasible_generation=best_feasible_generation,
             best_feasible_solution=best_feasible,
         )
+
+    def _timed_repair(self, individual: Solution) -> None:
+        if individual.capacity_violation == 0:
+            return
+        repair_start = time.perf_counter()
+        self.repair.repair(individual)
+        self._repair_time += time.perf_counter() - repair_start
+        self._repair_evaluations += self.repair.last_run_evaluations
+
+    def _repair_final(
+        self, best: Solution, population: list[Solution], best_feasible: Solution | None, deadline: float
+    ) -> Solution:
+        """Repairs the overall best (always) and then the final population in F order while
+        time remains; returns the feasible solution with the lowest Z, including the best
+        feasible individual seen during the search."""
+        repaired: list[Solution] = []
+        for index, individual in enumerate([best] + population):
+            if index > 0 and time.perf_counter() >= deadline:
+                break
+            candidate = individual.copy()
+            self._timed_repair(candidate)
+            repaired.append(candidate)
+        if best_feasible is not None:
+            repaired.append(best_feasible.copy())
+        return min(repaired, key=lambda solution: solution.objective_value)
 
     @staticmethod
     def _track_best_feasible(

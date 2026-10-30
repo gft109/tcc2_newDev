@@ -1,0 +1,51 @@
+\begin{table}[htbp]
+    \caption{Limites do valor ótimo de $Z$ por conjunto --- instância grande}
+    \label{tab:res-limites-grande}
+    \centering
+    \begin{tabular}{crrrr}
+        \hline
+        & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\
+        \cline{2-4} \cline{5-5}
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & \textbf{$LB_{comb}$} \\
+        \hline
+        01 & 811\,250,0 & 0,0 & --- & 30\,200,0 \\
+        02 & 819\,575,0 & 0,0 & --- & 40\,800,0 \\
+        03 & 820\,500,0 & 47\,700,0 & 94,2\% & 47\,300,0 \\
+        04 & 830\,875,0 & 0,0 & --- & 15\,500,0 \\
+        05 & 816\,925,0 & 0,0 & --- & 32\,700,0 \\
+        06 & 815\,200,0 & 29\,650,0 & 96,4\% & 28\,600,0 \\
+        07 & 821\,300,0 & 0,0 & --- & 13\,900,0 \\
+        08 & 835\,450,0 & 0,0 & --- & 42\,100,0 \\
+        09 & 809\,600,0 & 0,0 & --- & 20\,000,0 \\
+        10 & 822\,025,0 & 0,0 & --- & 30\,300,0 \\
+        \hline
+    \end{tabular}
+    \par\smallskip
+    {\footnotesize Nota - --- indica que o \textit{solver} não obteve limite inferior não trivial dentro do teto de tempo. Gap na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
+\end{table}
+
+\begin{table}[htbp]
+    \caption{Resultados da heurística por conjunto --- instância grande (10 execuções por conjunto; $Z$ sem a penalidade de capacidade)}
+    \label{tab:res-z-grande}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{crrrrrcr}
+        \hline
+        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
+        \hline
+        01 & 54\,375,0 & 0 & 54\,400,0 & 2,6\% & 54\,375,0 & 1/10 & 80,0\% \\
+        02 & 65\,125,0 & 0 & 67\,052,5 & 2,7\% & 65\,125,0 & 1/10 & 59,6\% \\
+        03 & 68\,425,0 & 1 & 70\,137,5 & 1,9\% & --- & 0/10 & 43,4\% \\
+        04 & 44\,425,0 & 1 & 44\,695,0 & 3,4\% & --- & 0/10 & 186,6\% \\
+        05 & 55\,650,0 & 1 & 56\,372,5 & 2,6\% & --- & 0/10 & 70,2\% \\
+        06 & 51\,175,0 & 2 & 51\,677,5 & 2,9\% & --- & 0/10 & 72,6\% \\
+        07 & 39\,800,0 & 2 & 42\,022,5 & 3,3\% & --- & 0/10 & 186,3\% \\
+        08 & 64\,050,0 & 1 & 66\,032,5 & 2,2\% & 69\,250,0 & 1/10 & 52,1\% \\
+        09 & 37\,575,0 & 1 & 39\,795,0 & 3,9\% & 41\,650,0 & 1/10 & 87,9\% \\
+        10 & 53\,125,0 & 0 & 55\,742,5 & 3,2\% & 53\,125,0 & 1/10 & 75,3\% \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
+\end{table}

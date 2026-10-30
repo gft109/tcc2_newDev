@@ -6,7 +6,7 @@
         \hline
         & \multicolumn{3}{c}{\textbf{Gurobi}} & \textbf{Limite combinatório} \\
         \cline{2-4} \cline{5-5}
-        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{Gap} & \textbf{$LB_{comb}$} \\
+        \textbf{Conjunto} & \textbf{Limite superior} & \textbf{Limite inferior} & \textbf{\textit{Gap}} & \textbf{$LB_{comb}$} \\
         \hline
         01 & 3\,273\,725,0 & 0,0 & --- & 65\,900,0 \\
         02 & 3\,276\,950,0 & 0,0 & --- & 67\,900,0 \\
@@ -21,7 +21,7 @@
         \hline
     \end{tabular}
     \par\smallskip
-    {\footnotesize Nota - --- indica que o \textit{solver} não obteve limite inferior não trivial dentro do teto de tempo. Gap na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
+    {\footnotesize Nota - --- indica que o \textit{solver} não obteve limite inferior não trivial dentro do teto de tempo. \textit{Gap} na convenção do \textit{solver}. $LB_{comb}$: limite inferior combinatório, conforme a Equação~\eqref{eq:limite-combinatorio}.}
 \end{table}
 
 \begin{table}[htbp]
@@ -33,16 +33,16 @@
         \hline
         \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
         \hline
-        01 & 159\,025,0 & 18 & 164\,787,5 & 2,3\% & --- & 0/10 & 141,3\% \\
-        02 & 184\,150,0 & 16 & 187\,187,5 & 1,6\% & --- & 0/10 & 171,2\% \\
-        03 & 183\,200,0 & 22 & 189\,565,0 & 2,6\% & --- & 0/10 & 146,6\% \\
-        04 & 214\,625,0 & 18 & 214\,165,0 & 1,9\% & --- & 0/10 & 113,8\% \\
-        05 & 191\,350,0 & 18 & 193\,560,0 & 2,1\% & --- & 0/10 & 148,8\% \\
-        06 & 152\,500,0 & 16 & 156\,070,0 & 3,4\% & --- & 0/10 & 247,4\% \\
-        07 & 172\,725,0 & 17 & 174\,922,5 & 1,1\% & --- & 0/10 & 165,7\% \\
-        08 & 152\,375,0 & 19 & 158\,397,5 & 1,9\% & --- & 0/10 & 235,6\% \\
-        09 & 240\,050,0 & 16 & 239\,077,5 & 1,0\% & --- & 0/10 & 83,2\% \\
-        10 & 186\,700,0 & 14 & 187\,087,5 & 1,8\% & --- & 0/10 & 118,9\% \\
+        01 & 140\,350,0 & 0 & 142\,217,5 & 1,0\% & 140\,350,0 & 10/10 & 113,0\% \\
+        02 & 156\,950,0 & 0 & 159\,045,0 & 0,9\% & 156\,950,0 & 10/10 & 131,1\% \\
+        03 & 161\,300,0 & 0 & 163\,847,5 & 1,0\% & 161\,300,0 & 10/10 & 117,1\% \\
+        04 & 184\,550,0 & 0 & 187\,877,5 & 1,0\% & 184\,550,0 & 10/10 & 83,8\% \\
+        05 & 163\,575,0 & 0 & 165\,377,5 & 1,1\% & 163\,575,0 & 10/10 & 112,7\% \\
+        06 & 123\,425,0 & 0 & 125\,275,0 & 1,0\% & 123\,425,0 & 10/10 & 181,2\% \\
+        07 & 147\,325,0 & 0 & 151\,670,0 & 1,9\% & 147\,325,0 & 10/10 & 126,7\% \\
+        08 & 126\,525,0 & 0 & 128\,665,0 & 1,0\% & 126\,525,0 & 10/10 & 178,7\% \\
+        09 & 215\,125,0 & 0 & 218\,490,0 & 0,8\% & 215\,125,0 & 10/10 & 64,2\% \\
+        10 & 163\,125,0 & 0 & 167\,347,5 & 1,2\% & 163\,125,0 & 10/10 & 91,2\% \\
         \hline
     \end{tabular}
     \end{adjustbox}

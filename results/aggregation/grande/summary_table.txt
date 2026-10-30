@@ -13,18 +13,18 @@ Z (Limite Superior)                       | 820270.0 ± 8025.5
 Limite Inferior                           | 7735.0 ± 16852.7
 Gap de Otimalidade                        | 99.1% ± 2.1%
 -- Heurística --------------------------------------------------------------------------------------
-Z                                         | 53372.5 ± 10560.0
+Z                                         | 49937.5 ± 11373.0
 -- Métricas Operacionais ---------------------------------------------------------------------------
 Especialidade Incorreta (contagem)
     Gurobi                                | 4618.8 ± 56.6
-    Heurística                            | 331.5 ± 102.7
+    Heurística                            | 318.9 ± 110.7
 Transferências (contagem)
     Gurobi                                | 4789.4 ± 39.9
-    Heurística                            | 271.4 ± 38.5
+    Heurística                            | 220.7 ± 27.0
 Quarto-dias Mistos (contagem)
     Gurobi                                | 1585.6 ± 19.1
-    Heurística                            | 88.7 ± 11.1
+    Heurística                            | 93.5 ± 10.9
 Violação de Capacidade (pacientes-dia)
     Gurobi                                | 0.0 ± 0.0
-    Heurística                            | 0.9 ± 0.7
+    Heurística                            | 0.0 ± 0.0
 ====================================================================================================

@@ -1,0 +1,3 @@
+solucao,horizon_days,specialty_mismatch_count,transfer_count,mixed_room_day_count,capacity_violation,occupancy_rate_mean,occupancy_rate_std,peak_occupancy_day,peak_occupancy_patients,peak_occupancy_total_capacity,occupancy_rate_CARDIOLOGY,occupancy_rate_GENERAL,occupancy_rate_ORTHOPEDICS,occupancy_rate_SURGERY,mesma_que_melhor
+melhor,15,1019,972,454,0,0.8943055555555556,0.2789592657809704,1,1920,1920,0.8865079365079366,0.8948590381426202,0.8944444444444444,0.9022988505747126,
+melhor_viavel,15,1019,972,454,0,0.8943055555555556,0.2789592657809704,1,1920,1920,0.8865079365079366,0.8948590381426202,0.8944444444444444,0.9022988505747126,True

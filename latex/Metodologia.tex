@@ -244,7 +244,7 @@ Os indivíduos são então comparados pelo \textit{fitness} $F$, que acrescenta 
 em que $Z$ é o valor da função objetivo, conforme a Equação~\eqref{eq:objetivo}, e $W_{cap}$ é o peso de penalidade atribuído a cada paciente-dia alocado além da capacidade.
 
 
-Como $W_{cap}$ não faz parte da função objetivo ($Z$), o valor comparado ao Gurobi é sempre $Z$ e a violação de capacidade $V_{cap}$ é reportada separadamente. Adotou-se $W_{cap} = 1900$, valor obtido por uma varredura experimental (\autoref{sec:calibracao}). Como a melhor solução pelo \textit{fitness} pode violar a capacidade, o algoritmo também registra a melhor solução viável encontrada em qualquer geração.
+Como $W_{cap}$ não faz parte da função objetivo ($Z$), o valor comparado ao Gurobi é sempre $Z$ e a violação de capacidade $V_{cap}$ é reportada separadamente. Adotou-se $W_{cap} = 1900$, valor obtido por uma varredura experimental (\autoref{sec:calibracao}). A penalidade, sozinha, não garante soluções viáveis, e por isso o algoritmo inclui uma etapa de reparo da capacidade, descrita adiante, que elimina a violação dos indivíduos a cada geração.
 
 
 \subsubsection{Estruturas de vizinhança:}
@@ -281,9 +281,13 @@ A população tem tamanho fixo de 30 indivíduos em todos os portes de instânci
     \item \textbf{Elitismo}: os 10\% melhores indivíduos da geração anterior são copiados para a nova geração.
     \item \textbf{Reprodução}: o restante da população é preenchido por filhos gerados a partir de dois pais escolhidos por torneio de tamanho 3, aos quais se aplicam cruzamento e mutação.
     \item \textbf{Imigrantes}: 10\% dos filhos não elite são substituídos por indivíduos novos, gerados pelo construtor aleatório da solução inicial.
+    \item \textbf{Reparo dos filhos}: os filhos não elite e os imigrantes passam pela etapa de reparo (\autoref{sec:reparo}), de modo que chegam à busca local sem violação de capacidade.
     \item \textbf{Busca local}: o VND é aplicado a todos os indivíduos de elite e a 30\% dos demais, sorteados. Os indivíduos de elite são incluídos porque, como não passam por cruzamento nem mutação, permaneceriam inalterados enquanto mantivessem sua posição na população, escolha validada experimentalmente (\autoref{sec:calibracao}).
-    \item \textbf{Atualização}: a população é ordenada pelo \textit{fitness}, e são registradas a melhor solução e a melhor solução viável encontradas até então.
+    \item \textbf{Reparo após a busca local}: como o VND é guiado pelo \textit{fitness}, ele pode aceitar um movimento que exceda a capacidade se a redução de $Z$ compensar a penalidade, e por isso os indivíduos refinados são reparados novamente.
+    \item \textbf{Atualização}: a população é ordenada pelo \textit{fitness}, e é registrada a melhor solução encontrada até então.
 \end{enumerate}
+
+A população inicial também passa pelo reparo antes da primeira geração. Assim, a população que chega à seleção por torneio é sempre composta apenas de soluções viáveis, e a capacidade permanece flexível somente dentro da busca local.
 
 Os operadores de cruzamento e de mutação usados no passo de reprodução foram adaptados à estrutura do problema e são descritos a seguir.
 
@@ -317,9 +321,26 @@ Em conjunto, esses mecanismos equilibram as duas forças da busca. O elitismo e 
         Candidatos por movimento do VND & 10 quartos, sorteados entre 30 \\
         Limite de avaliações do VND & 250 por paciente \\
         $W_{cap}$ & 1900 \\
+        Reparo da capacidade & Antes e depois do VND, a cada geração \\
+        Candidatos por realocação do reparo & 10 quartos com leito livre \\
         \hline
     \end{tabular}
 \end{table}
+
+\subsubsection{Etapa de reparo da capacidade:}
+\label{sec:reparo}
+
+Uma solução viável sempre pode ser obtida a partir de uma solução que viola a capacidade. Como o gerador garante que, em todos os dias, o número de pacientes internados não excede o total de leitos do hospital (\autoref{sec:gerador-instancias}), sempre que um quarto está acima da capacidade existe outro quarto com leito livre no mesmo dia. Cada paciente-dia excedente pode, então, ser realocado para um quarto com vaga apenas naquele dia, o que elimina uma unidade de $V_{cap}$ sem criar violação em outro quarto. No pior caso, essa realocação acrescenta a $Z$ um paciente-dia em especialidade inadequada ($W_{spec}$), um quarto-dia misto ($W_{gen}$) e duas transferências, uma para o novo quarto e outra de volta ao original ($2W_{transf}$), isto é,
+\begin{equation}
+    \Delta Z \leq W_{spec} + W_{gen} + 2W_{transf} = 275
+    \label{eq:custo-reparo}
+\end{equation}
+por unidade de $V_{cap}$ eliminada. Como $W_{cap} = 1900$ é maior que esse custo, cada realocação também reduz o \textit{fitness}.
+
+A etapa de reparo aplica essa ideia escolhendo, a cada passo, a realocação mais barata. Para cada quarto-dia acima da capacidade, são avaliados todos os seus ocupantes e até 10 quartos com leito livre naquele dia, priorizando os da especialidade requerida pelo paciente. Para cada par de paciente e quarto de destino, avaliam-se dois movimentos, que são mover apenas aquele dia e mover o maior bloco contínuo da internação, em torno daquele dia, passado no mesmo quarto e com leito livre no destino, o que evita a transferência de volta ao quarto original. Aplica-se o movimento de menor aumento de \textit{fitness}, e o processo se repete até que $V_{cap} = 0$. Como cada movimento reduz $V_{cap}$ em ao menos uma unidade e nunca cria violação em outro quarto, o reparo sempre termina com uma solução viável e, como a realocação de um único dia está entre as opções avaliadas, o \textit{fitness} da solução reparada é sempre menor que o da original, conforme a Equação~\eqref{eq:custo-reparo}.
+
+O tempo gasto no reparo é contabilizado dentro do teto de tempo da heurística. Para que os reparos da última geração também terminem dentro do teto, a busca local é encerrada antes do fim do teto, com uma antecedência igual ao maior tempo de reparo após a busca local observado até então, e, quando o tempo restante não comporta o reparo dos filhos de uma nova geração, ele é usado pelo VND na população atual, que já é viável.
+
 
 
 \section{Implementação}
@@ -335,7 +356,7 @@ Na arquitetura do Algoritmo Memético implementada neste trabalho (em Python), c
 
 Dessa forma, a heurística dispensa a declaração das variáveis auxiliares de linearização. O custo é mantido de forma incremental. A solução guarda, para cada quarto e dia, o conjunto de ocupantes e a contagem por gênero, e cada movimento atualiza apenas os quartos e dias que foram alterados. Assim, avaliar um movimento custa proporcionalmente ao tempo de permanência do paciente movido, e não ao tamanho da instância.
 
-Essa diferença entre a abordagem exata, que representa o modelo por restrições algébricas, e a abordagem heurística, que o avalia por meio de estruturas de dados, permite ao algoritmo memético avaliar entre cerca de 46 e 64 mil soluções candidatas por segundo. A taxa diminui apenas moderadamente com o porte, de aproximadamente 64 mil na instância pequena para 46 mil na muito grande, embora esta tenha 64 vezes mais pacientes.
+Essa diferença entre a abordagem exata, que representa o modelo por restrições algébricas, e a abordagem heurística, que o avalia por meio de estruturas de dados, permite ao algoritmo memético avaliar entre cerca de 43 e 55 mil soluções candidatas por segundo. A taxa diminui apenas moderadamente com o porte, de aproximadamente 55 mil na instância pequena para 43 mil na muito grande, embora esta tenha 64 vezes mais pacientes.
 
 
 \subsubsection{Ferramentas e Ambiente de Desenvolvimento}
@@ -358,7 +379,7 @@ A avaliação de desempenho de algoritmos heurísticos exige um planejamento exp
 \begin{itemize}
     \item \textbf{Eficácia (Qualidade da Solução):} A qualidade das alocações geradas é avaliada primariamente pelo valor final alcançado na função objetivo $Z$, conforme a Equação~\eqref{eq:objetivo}. Como o problema de alocação de leitos é de minimização, valores menores indicam um melhor balanceamento das restrições flexíveis. Adicionalmente, para cada solução são registrados o valor de cada parcela de $Z$ e métricas operacionais explícitas, como o número de pacientes-dia em quarto de especialidade inadequada, o número de transferências, o número de quartos-dia mistos, a violação de capacidade ($V_{cap}$), a taxa de ocupação média e por especialidade e o pico de ocupação diária do hospital. Para que as duas abordagens sejam avaliadas de forma idêntica, $Z$, suas parcelas e todas as métricas operacionais são recalculados a partir das variáveis de alocação $x_{p,r,d}$ de cada solução, pelo mesmo avaliador utilizado na heurística, e não a partir das variáveis auxiliares do modelo exato. Isso é necessário porque as variáveis $t_{p,r,d}$, $f_{r,d}$, $m_{r,d}$ e $b_{r,d}$ aparecem apenas em restrições de desigualdade, conforme as Equações~\eqref{eq:transferencia} a~\eqref{eq:quarto-misto}, e poderiam valer 1 sem que a transferência ou o quarto misto correspondente ocorresse. O que as mantém em zero é a minimização da função objetivo, garantida apenas no ótimo. Nas 40 execuções do Gurobi, o valor de $Z$ recalculado coincidiu com o valor da função objetivo reportado pelo \textit{solver}, o que indica que essas variáveis não estavam infladas nas soluções obtidas.
 
-    Como a abordagem heurística trata a capacidade como restrição flexível, nem toda execução termina com uma solução viável. Nesses casos, é preciso medir o quão distante a solução está da viabilidade, e o valor absoluto de $V_{cap}$, conforme a Equação~\eqref{eq:violacao-capacidade}, não basta para isso, pois tende a crescer com o porte da instância. Por esse motivo, $V_{cap}$ é comparada à carga de internação $N_{pd}$, isto é, ao número total de pacientes-dia da instância:
+    Como a abordagem heurística trata a capacidade como restrição flexível durante a busca local, a viabilidade das soluções reportadas é verificada à parte. Quando há violação, é preciso medir o quão distante a solução está da viabilidade, e o valor absoluto de $V_{cap}$, conforme a Equação~\eqref{eq:violacao-capacidade}, não basta para isso, pois tende a crescer com o porte da instância. Por esse motivo, $V_{cap}$ é comparada à carga de internação $N_{pd}$, isto é, ao número total de pacientes-dia da instância:
 
     \begin{equation}
         N_{pd} = \sum_{p \in P} |D_p|
@@ -399,7 +420,7 @@ A avaliação de desempenho de algoritmos heurísticos exige um planejamento exp
         \frac{Z - Z^*}{Z^*} \leq \frac{Z - L}{L}
         \label{eq:excesso-otimo}
     \end{equation}
-    isto é, a razão $(Z - L)/L$, denominada excesso máximo sobre o ótimo, indica o quanto, no máximo, a solução está acima do ótimo. Diferentemente do \textit{gap} do \textit{solver}, calculado em relação à própria solução, $(Z - LB)/Z$, essa razão tem $L$ no denominador, pois mede o excesso em relação ao ótimo. Para as soluções heurísticas que violam a capacidade, a desigualdade continua válida, mas compara o valor de uma solução inviável com o ótimo das soluções viáveis e deve ser interpretada com essa ressalva.
+    isto é, a razão $(Z - L)/L$, denominada excesso máximo sobre o ótimo, indica o quanto, no máximo, a solução está acima do ótimo. Diferentemente do \textit{gap} do \textit{solver}, calculado em relação à própria solução, $(Z - LB)/Z$, essa razão tem $L$ no denominador, pois mede o excesso em relação ao ótimo.
 
     Para os quartos mistos, utiliza-se um mínimo análogo, mais simples, que decorre da paridade. Nos dias de lotação total, em que o número de pacientes internados é igual ao total de leitos, todos os quartos estão com os três leitos ocupados em qualquer solução viável. Se, em um desses dias, o número de pacientes do sexo feminino não for múltiplo de três, não é possível distribuí-las apenas em quartos completos de um único gênero, e ao menos um quarto estará misto. Sendo $n_d$ o número de pacientes internados no dia $d$ e $n^F_d$ o número de pacientes do sexo feminino entre eles, o número de quartos-dia mistos de qualquer solução viável é ao menos
     \begin{equation}
@@ -409,7 +430,7 @@ A avaliação de desempenho de algoritmos heurísticos exige um planejamento exp
     Esse mínimo considera apenas os dias de lotação total e ignora a interação com a especialidade dos quartos, sendo, por isso, fraco, mas permite avaliar a heurística também nesse critério.
     
 
-    \item \textbf{Eficiência Computacional:} Ambos os métodos recebem o mesmo teto de tempo por execução, que cresce com o tamanho da instância (\autoref{sec:protocolo}). A heurística não possui critério de parada por estagnação e sempre utiliza o teto completo, de modo que o tempo de execução, por si só, não diferencia os métodos. Por isso, o esforço computacional é medido pelo número de avaliações da função objetivo dentro do teto. No Gurobi, esse número corresponde às iterações do simplex e, na heurística, à soma das avaliações feitas pelo GA e pela busca local. A velocidade de convergência é acompanhada pela curva do melhor \textit{fitness} a cada geração, pela geração em que a melhor solução viável foi encontrada e pela comparação com o custo da população inicial. Os tetos adotados, de 30 a 1920 segundos, foram definidos para comparar os métodos em condições iguais e não representam o tempo de resposta esperado em operação.
+    \item \textbf{Eficiência Computacional:} Ambos os métodos recebem o mesmo teto de tempo por execução, que cresce com o tamanho da instância (\autoref{sec:protocolo}). A heurística não possui critério de parada por estagnação e sempre utiliza o teto completo, de modo que o tempo de execução, por si só, não diferencia os métodos. Por isso, o esforço computacional é medido pelo número de avaliações da função objetivo dentro do teto. No Gurobi, esse número corresponde às iterações do simplex e, na heurística, à soma das avaliações feitas pelo GA e pela busca local. A velocidade de convergência é acompanhada pela curva do melhor \textit{fitness} a cada geração e pela comparação com o custo da população inicial. Os tetos adotados, de 30 a 1920 segundos, foram definidos para comparar os métodos em condições iguais e não representam o tempo de resposta esperado em operação.
 
     
     \item \textbf{Análise Estatística e Robustez:} Devido à natureza estocástica dos Algoritmos Genéticos e à aleatoriedade na exploração de vizinhanças do VND, uma única execução não é suficiente para atestar a qualidade do método \cite{talbi2009metaheuristics}. Portanto, cada conjunto de dados é resolvido por 10 execuções independentes da heurística, cada uma com sua própria sequência aleatória. Para cada conjunto, reportam-se o melhor valor, a média e o coeficiente de variação dessas execuções, sendo a dispersão visualizada em gráficos do tipo \textit{boxplot}. Além disso, cada porte de instância é composto por 10 conjuntos gerados independentemente, o que permite separar duas fontes de variação. A primeira é a variação entre execuções, devida à aleatoriedade da heurística, e a segunda é a variação entre conjuntos, devida ao sorteio da instância.
@@ -443,7 +464,7 @@ Para cada porte de instância, cada um dos dez conjuntos é resolvido uma vez pe
 
 O teto de tempo cresce com o porte da instância na mesma proporção que o número de pacientes. Como cada porte tem quatro vezes mais pacientes que o anterior, o teto é multiplicado por quatro a cada porte, partindo de 30 segundos na instância pequena, o que mantém constante o tempo disponível por paciente, de 0,3 segundo. Todos os portes utilizam o mesmo número de execuções da heurística, 10 por conjunto.
 
-As instâncias têm semente fixa (\autoref{sec:gerador-instancias}), mas cada execução da heurística utiliza uma sequência aleatória própria, de modo que as execuções de um mesmo conjunto constituem amostras independentes. Na abordagem exata, o teto de tempo se aplica à otimização, mas, a fim de possibilitar a geração de algum resultado, o tempo de construção do modelo no Gurobi não é contabilizado. Na instância muito grande, por exemplo, essa construção leva quase cinco minutos.
+As instâncias têm semente fixa (\autoref{sec:gerador-instancias}), mas cada execução da heurística utiliza uma sequência aleatória própria, de modo que as execuções de um mesmo conjunto constituem amostras independentes. Na heurística, o teto inclui o tempo gasto na etapa de reparo (\autoref{sec:reparo}). Na abordagem exata, o teto de tempo se aplica à otimização, mas, a fim de possibilitar a geração de algum resultado, o tempo de construção do modelo no Gurobi não é contabilizado. Na instância muito grande, por exemplo, essa construção leva quase cinco minutos.
 
 \subsection{Calibração de parâmetros}
 \label{sec:calibracao}
@@ -467,6 +488,8 @@ O peso da penalidade de capacidade $W_{cap}$, conforme a Equação~\eqref{eq:fit
         \hline
         Peso de capacidade & Qual valor de $W_{cap}$ reduz a violação ao longo da busca? & Varredura de 200 a 5000 na instância média; 1900 teve o menor $Z$ entre os pesos com violação média abaixo de 1 paciente-dia (\autoref{fig:calibracao-wcap}) & $W_{cap} = 1900$ \\
         \hline
+        Momento do reparo & Reparar a cada geração ou apenas a população final? & Na instância grande, reparar a cada geração deu $Z$ 9\% menor em 30 de 30 pares de execuções. Reparar só após o VND deu $Z$ equivalente, com menos gerações & Reparo antes e depois do VND \\
+        \hline
         Busca local na elite & Refinar também os indivíduos de elite? & $Z$ melhorou 2\%, 23\% e 45\% nas instâncias pequena, média e grande & Adotado \\
         \hline
         População escalada & Aumentar a população com o porte? & Com 480 indivíduos, a instância grande completou 1 geração e $Z$ quase dobrou em relação a 30 indivíduos & População fixa em 30 \\
@@ -489,7 +512,7 @@ O peso da penalidade de capacidade $W_{cap}$, conforme a Equação~\eqref{eq:fit
 
 A \autoref{fig:calibracao-wcap} mostra os dois efeitos opostos do peso. Com $W_{cap} = 200$, a penalidade é fraca o bastante para a busca aceitar exceder a capacidade em troca de um $Z$ menor, e obtém-se o menor $Z$ médio (31\,367), mas com 8,7 pacientes-dia sem leito. Ao aumentar o peso, a violação cai rapidamente, enquanto $Z$ tende a crescer.
 
-Esse efeito, porém, deve ser interpretado com cuidado. Realocar um paciente-dia excedente para um quarto com vaga custa, no pior caso, $W_{spec} + W_{gen} + 2W_{transf} = 275$ em $Z$ (\autoref{sec:res-viabilidade}). Assim, para qualquer $W_{cap}$ acima de 275, toda solução inviável pode ser convertida em uma solução viável de \textit{fitness} menor, e o menor $F$ possível corresponde sempre a uma solução viável. Abaixo desse valor, como em $W_{cap} = 200$, exceder a capacidade pode de fato compensar. Acima dele, o peso não altera o melhor $F$ possível, mas apenas a dinâmica da busca. A varredura confirma essa leitura, pois a violação persiste em todos os pesos testados, inclusive em 3300 e 5000, o que indica que a violação residual se deve à busca não eliminar os últimos excessos, e não a um peso insuficiente.
+Esse efeito, porém, deve ser interpretado com cuidado. Realocar um paciente-dia excedente para um quarto com vaga custa, no pior caso, $W_{spec} + W_{gen} + 2W_{transf} = 275$ em $Z$, conforme a Equação~\eqref{eq:custo-reparo}. Assim, para qualquer $W_{cap}$ acima de 275, toda solução inviável pode ser convertida em uma solução viável de \textit{fitness} menor, e o menor $F$ possível corresponde sempre a uma solução viável. Abaixo desse valor, como em $W_{cap} = 200$, exceder a capacidade pode de fato compensar. Acima dele, o peso não altera o melhor $F$ possível, mas apenas a dinâmica da busca. A varredura confirma essa leitura, pois a violação persiste em todos os pesos testados, inclusive em 3300 e 5000, o que indica que a violação residual se deve à busca não eliminar os últimos excessos, e não a um peso insuficiente. Por esse motivo, em vez de aumentar o peso, adotou-se a etapa de reparo (\autoref{sec:reparo}).
 
 Como critério de escolha, adotou-se o menor $Z$ entre os pesos que mantêm a violação média abaixo de 1 paciente-dia. Três valores atendem a essa condição, 1900 ($Z = 37\,650$ e $V_{cap} = 0{,}7$), 3300 ($Z = 41\,325$ e $V_{cap} = 0{,}3$) e 5000 ($Z = 40\,992$ e $V_{cap} = 0{,}7$), e, por ter o menor $Z$ entre eles, foi adotado $W_{cap} = 1900$.
 
