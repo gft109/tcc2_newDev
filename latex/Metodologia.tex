@@ -71,7 +71,7 @@ em que $\overline{LOS}$ é o tempo médio de permanência sorteado e, caso algum
 A \autoref{tab:caracteristicas-instancias} resume as características das instâncias geradas, que dependem apenas dos dados e são iguais para qualquer solução de um mesmo conjunto. O horizonte de cerca de 15 dias e a ocupação média de 88\% a 89\% são consequências do tempo médio de permanência de quatro dias e da ocupação-alvo de 90\%. O pico de 100\% em todos os conjuntos decorre da admissão por empacotamento, em que os leitos ficam totalmente ocupados durante cerca de 12 dias, e a ocupação só cai nos últimos dias do horizonte, quando restam apenas as internações mais longas, o que explica o mínimo de 11\% a 14\%. Com o hospital lotado na maior parte do horizonte, não há folga de capacidade a ser explorada, cenário de alta ocupação associado, na literatura, à superlotação dos serviços de emergência \cite{brandeau2004operations, he2019systematic}.
 
 \begin{table}[H]
-    \caption{Características das instâncias geradas (média $\pm$ desvio padrão entre os 10 conjuntos)}
+    \caption[Características das instâncias geradas]{Características das instâncias geradas (média $\pm$ desvio padrão entre os 10 conjuntos)}
     \label{tab:caracteristicas-instancias}
     \centering
     \begin{adjustbox}{max width=\textwidth}
@@ -126,9 +126,9 @@ Os pesos adotados neste trabalho refletem a prioridade atribuída a cada um dos 
         \hline
         \textbf{Pesos} & \textbf{Valor} \\
         \hline
-        $W_{\mathrm{spec}}$ & 100 \\
-        $W_{\mathrm{gen}}$ & 75 \\
-        $W_{\mathrm{transf}}$ & 50 \\
+        $W_{spec}$ & 100 \\
+        $W_{gen}$ & 75 \\
+        $W_{transf}$ & 50 \\
         \hline
     \end{tabular}
 \end{table}
@@ -136,32 +136,29 @@ Os pesos adotados neste trabalho refletem a prioridade atribuída a cada um dos 
 \subsection{Variáveis de decisão}
 O modelo baseia-se em variáveis primárias para a alocação e variáveis auxiliares para a linearização dos custos \cite{ceschia2011local}. As variáveis $x_{p,r,d}$ são definidas apenas para os dias de internação ($d \in D_p$), e as variáveis $t_{p,r,d}$, apenas para os dias de internação anteriores ao último ($d \in D_p \setminus \{d^{\text{alta}}_p\}$), pois não há transferência após a alta.
 
-\textbf{Variáveis Principais (Alocação e Transferência):}
-\begin{equation}
-x_{p,r,d} \in \{0,1\} \quad \text{Vale 1 se o paciente } p \text{ está alocado no quarto } r \text{ no dia } d.
-\end{equation}
-\begin{equation}
-t_{p,r,d} \in \{0,1\} \quad \text{Vale 1 se o paciente } p \text{ é transferido do quarto } r \text{ do dia } d \text{ para o dia } d+1.
-\end{equation}
+\textbf{Variáveis principais (alocação e transferência):}
+\begin{itemize}
+    \item $x_{p,r,d} \in \{0,1\}$: vale 1 se o paciente $p$ está alocado no quarto $r$ no dia $d$.
+    \item $t_{p,r,d} \in \{0,1\}$: vale 1 se o paciente $p$ é transferido do quarto $r$ do dia $d$ para o dia $d+1$.
+\end{itemize}
 
-\textbf{Variáveis de Linearização (Status do Quarto):}
+\textbf{Variáveis de linearização (status do quarto):}
 Para rastrear a mistura de gêneros de forma linear, definem-se as variáveis de status do quarto $r$ no dia $d$:
-\begin{equation}
-f_{r,d} \in \{0,1\} \quad \text{Vale 1 se há pelo menos uma paciente do gênero feminino no quarto } r \text{ no dia } d.
-\end{equation}
-\begin{equation}
-m_{r,d} \in \{0,1\} \quad \text{Vale 1 se há pelo menos um paciente do gênero masculino no quarto } r \text{ no dia } d.
-\end{equation}
-\begin{equation}
-b_{r,d} \in \{0,1\} \quad \text{Vale 1 se o quarto } r \text{ no dia } d \text{ possui pacientes de ambos os gêneros.}
-\end{equation}
+\begin{itemize}
+    \item $f_{r,d} \in \{0,1\}$: vale 1 se há pelo menos uma paciente do gênero feminino no quarto $r$ no dia $d$.
+    \item $m_{r,d} \in \{0,1\}$: vale 1 se há pelo menos um paciente do gênero masculino no quarto $r$ no dia $d$.
+    \item $b_{r,d} \in \{0,1\}$: vale 1 se o quarto $r$ no dia $d$ possui pacientes de ambos os gêneros.
+\end{itemize}
 
 \subsection{Função objetivo}
 A função objetivo $Z$ visa minimizar a soma total das penalidades. Ela é composta pelos custos clínicos da alocação ($C_{p,r}$), pelas penalidades aplicadas a cada transferência de quarto realizada ($W_{transf}$) e pelas penalidades geradas pelo uso de quartos mistos ($W_{gen}$):
 
 
 \begin{equation}
-\min Z = \sum_{p \in P} \sum_{r \in R} \sum_{d \in D_p} (C_{p,r} \cdot x_{p,r,d}) + \sum_{p \in P} \sum_{r \in R} \sum_{d \in D_p \setminus \{d^{\text{alta}}_p\}} (W_{transf} \cdot t_{p,r,d}) + \sum_{r \in R} \sum_{d \in D} (W_{gen} \cdot b_{r,d})
+\begin{split}
+\min Z = {} & \sum_{p \in P} \sum_{r \in R} \sum_{d \in D_p} C_{p,r} \cdot x_{p,r,d} + \sum_{p \in P} \sum_{r \in R} \sum_{d \in D_p \setminus \{d^{\text{alta}}_p\}} W_{transf} \cdot t_{p,r,d} \\
+& + \sum_{r \in R} \sum_{d \in D} W_{gen} \cdot b_{r,d}
+\end{split}
 \label{eq:objetivo}
 \end{equation}
 
@@ -219,7 +216,7 @@ x_{p,r,d}, t_{p,r,d}, f_{r,d}, m_{r,d}, b_{r,d} \in \{0,1\}
 
 O \autoref{alg:memetico} resume o fluxo do Algoritmo Memético adotado na abordagem heurística, cujos componentes são detalhados nas subseções seguintes. O símbolo $F$ denota o \textit{fitness}, conforme a Equação~\eqref{eq:fitness}, e $g_{est}$ conta as gerações consecutivas sem melhora da melhor solução.
 
-\begin{algorithm}[H]
+\begin{algorithm}[!htb]
 \caption{Algoritmo Memético com etapa de reparo da capacidade}
 \label{alg:memetico}
 \begin{algorithmic}[1]
@@ -279,10 +276,10 @@ Os 20\% restantes são construídos de forma gulosa e ciente da capacidade. Os p
 Na abordagem heurística, diferentemente da abordagem exata, a capacidade dos quartos é tratada como uma restrição flexível durante a busca local. Conforme discutido na \autoref{sec:tratamento-restricoes}, rejeitar toda solução que excedesse a capacidade criaria descontinuidades no espaço de busca e restringiria excessivamente os operadores. Em vez disso, o excesso de ocupação é contabilizado pela violação de capacidade $V_{cap}$, que soma, para cada quarto e cada dia, quantos pacientes excedem o número de leitos disponíveis:
 
 \begin{equation}
-    V_{cap} = \sum_{r \in R} \sum_{d \in D} \max\left(0,\ \sum_{p \in P} x_{p,r,d} - c_r\right)
+    V_{cap} = \sum_{r \in R} \sum_{d \in D} \max\left(0,\ \sum_{p \in P_d} x_{p,r,d} - c_r\right)
     \label{eq:violacao-capacidade}
 \end{equation}
-em que $\sum_{p \in P} x_{p,r,d}$ é o número de pacientes alocados no quarto $r$ no dia $d$, e o termo $\max(0, \cdot)$ considera apenas a parcela que ultrapassa a capacidade $c_r$, sendo nulo quando o quarto está dentro do limite. Cada unidade de $V_{cap}$ corresponde, portanto, a um paciente-dia alocado além do número de leitos do quarto, sendo uma solução viável se, e somente se, $V_{cap} = 0$.
+em que $\sum_{p \in P_d} x_{p,r,d}$ é o número de pacientes alocados no quarto $r$ no dia $d$, e o termo $\max(0, \cdot)$ considera apenas a parcela que ultrapassa a capacidade $c_r$, sendo nulo quando o quarto está dentro do limite. Cada unidade de $V_{cap}$ corresponde, portanto, a um paciente-dia alocado além do número de leitos do quarto, sendo uma solução viável se, e somente se, $V_{cap} = 0$.
 
 Os indivíduos são então comparados pelo \textit{fitness} $F$, que acrescenta à função objetivo a violação de capacidade ponderada:
 
@@ -352,7 +349,7 @@ Os operadores de cruzamento e de mutação usados no passo de reprodução foram
 Em conjunto, esses mecanismos equilibram as duas forças da busca. O elitismo e o VND intensificam a busca em torno das melhores soluções, enquanto a mutação, seu reforço por estagnação e os imigrantes mantêm a diversidade da população. Os parâmetros adotados estão resumidos na \autoref{tab:parametros-memetico}.
 
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Parâmetros do Algoritmo Memético}
     \label{tab:parametros-memetico}
@@ -532,12 +529,12 @@ Os parâmetros do Algoritmo Memético foram calibrados por meio de testes A/B is
 
 O peso da penalidade de capacidade $W_{cap}$, conforme a Equação~\eqref{eq:fitness}, foi o parâmetro com a calibração mais detalhada, obtido por meio de uma varredura na instância média (conjunto 1). Foram testados dez valores, de 200 a 5000, com três execuções independentes de 60 segundos para cada um e os demais parâmetros mantidos fixos. Para cada execução, registraram-se a função objetivo $Z$ e a violação de capacidade $V_{cap}$ da melhor solução encontrada.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Testes de calibração dos parâmetros do Algoritmo Memético}
     \label{tab:calibracao}
     \small
-    \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+    \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.3cm} >{\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.8cm}}
         \hline
         \textbf{Teste} & \textbf{Pergunta} & \textbf{Resultado} & \textbf{Decisão} \\
         \hline
@@ -563,7 +560,7 @@ O peso da penalidade de capacidade $W_{cap}$, conforme a Equação~\eqref{eq:fit
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{Figuras/resultados/calibracao/fitness_vs_capacity_penalty.png}
-    \caption{Função objetivo $Z$ (média $\pm$ desvio padrão) e violação de capacidade $V_{cap}$ (média) da melhor solução heurística para cada valor de $W_{cap}$ --- instância média, conjunto 1, três execuções de 60 s por valor}
+    \caption[Calibração do peso de capacidade $W_{cap}$ --- instância média]{Função objetivo $Z$ (média $\pm$ desvio padrão) e violação de capacidade $V_{cap}$ (média) da melhor solução heurística para cada valor de $W_{cap}$ --- instância média, conjunto 1, três execuções de 60 s por valor}
     \label{fig:calibracao-wcap}
 \end{figure}
 

@@ -459,7 +459,7 @@ def render_viability_latex_table(dfs: dict[str, pd.DataFrame]) -> str:
     """Capacity feasibility of the best heuristic solution of each set, one row per instance."""
     lines = [
         r"\begin{table}[htbp]",
-        r"    \caption{Viabilidade das soluções heurísticas por porte (melhor solução de cada conjunto, "
+        r"    \caption[Viabilidade das soluções heurísticas por porte]{Viabilidade das soluções heurísticas por porte (melhor solução de cada conjunto, "
         r"média $\pm$ desvio padrão entre os 10 conjuntos)}",
         r"    \label{tab:res-viabilidade}",
         r"    \centering",
@@ -516,7 +516,7 @@ def render_objective_latex_table(df: pd.DataFrame, instance_name: str) -> str:
 
     heuristic = [
         r"\begin{table}[htbp]",
-        f"    \\caption{{Resultados da heurística por conjunto --- instância {display_name} "
+        f"    \\caption[Resultados da heurística por conjunto --- instância {display_name}]{{Resultados da heurística por conjunto --- instância {display_name} "
         f"({n_executions} execuções por conjunto; $Z$ sem a penalidade de capacidade)}}",
         f"    \\label{{tab:res-z-{label_suffix}}}",
         r"    \centering",
@@ -600,7 +600,7 @@ def render_per_patient_day_latex_table(dfs: dict[str, pd.DataFrame]) -> str:
 
     lines = [
         r"\begin{table}[htbp]",
-        r"    \caption{Função objetivo por paciente-dia e mínimo estrutural por porte (média $\pm$ desvio padrão "
+        r"    \caption[Função objetivo por paciente-dia e mínimo estrutural por porte]{Função objetivo por paciente-dia e mínimo estrutural por porte (média $\pm$ desvio padrão "
         r"entre os 10 conjuntos)}",
         r"    \label{tab:res-z-paciente-dia}",
         r"    \centering",
@@ -644,7 +644,8 @@ GUROBI_ONLY_SMALL_NOTE = (
 def _criterion_table(dfs, caption, label, columns, row_values, note) -> str:
     lines = [
         r"\begin{table}[htbp]",
-        f"    \\caption{{{caption}}}",
+        # short caption (before the parenthetical details) for the list of tables
+        f"    \\caption[{caption.split(' (')[0]}]{{{caption}}}",
         f"    \\label{{{label}}}",
         r"    \centering",
         r"    \begin{adjustbox}{max width=\textwidth}",
@@ -720,7 +721,7 @@ def render_instance_characteristics_latex_table(dfs: dict[str, pd.DataFrame]) ->
     header = " & ".join(f"\\textbf{{{INSTANCE_DISPLAY_NAMES.get(i, i).capitalize()}}}" for i in dfs)
     lines = [
         r"\begin{table}[htbp]",
-        r"    \caption{Características das instâncias geradas (média $\pm$ desvio padrão entre os 10 conjuntos)}",
+        r"    \caption[Características das instâncias geradas]{Características das instâncias geradas (média $\pm$ desvio padrão entre os 10 conjuntos)}",
         r"    \label{tab:caracteristicas-instancias}",
         r"    \centering",
         r"    \begin{adjustbox}{max width=\textwidth}",
