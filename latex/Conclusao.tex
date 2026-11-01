@@ -26,9 +26,7 @@ Por fim, os experimentos foram realizados em instâncias sintéticas e determin�
 As limitações observadas indicam as seguintes direções para trabalhos futuros:
 
 \begin{itemize}
-    \item \textbf{Reparo mais barato e ciente do gênero:} considerar o gênero dos ocupantes na escolha do quarto de destino do reparo, para conter o aumento de quartos mistos, e reduzir o tempo gasto no reparo dos indivíduos gerados ao acaso, por exemplo, construindo-os já cientes da capacidade.
     \item \textbf{Mecanismos contra a estagnação:} nas instâncias pequenas, avaliar estratégias de diversificação acionadas quando a busca deixa de melhorar, de modo a aproveitar as gerações restantes \cite{talbi2009metaheuristics}.
-    \item \textbf{Mais gerações nas instâncias grandes:} reduzir o custo de cada geração, por exemplo, limitando o esforço da busca local, ou ampliar o teto de tempo, de modo que a busca não seja interrompida ainda em progresso.
     \item \textbf{Limites inferiores mais fortes:} desenvolver limites que considerem também as transferências e os quartos mistos, capazes de certificar a qualidade da heurística nas instâncias maiores.
     \item \textbf{Abordagens híbridas com o método exato:} utilizar a solução da heurística como ponto de partida para o Gurobi, ou o Gurobi para resolver subproblemas da heurística, como em abordagens que combinam meta-heurísticas e programação matemática \cite{belien2007building}.
     \item \textbf{Calibração dos pesos:} avaliar, com gestores hospitalares, a relação entre $W_{transf}$, $W_{gen}$ e $W_{spec}$, já que ela determina o número de transferências e de quartos mistos das soluções, e calibrar os parâmetros do algoritmo em mais de um porte e conjunto.
