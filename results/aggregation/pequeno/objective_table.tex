@@ -29,23 +29,23 @@
     \label{tab:res-z-pequeno}
     \centering
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{crrrrrcr}
+    \begin{tabular}{crrrrr}
         \hline
-        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & \textbf{Excesso máx.} \\
+        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & \textbf{$Z$ médio} & \textbf{CV} & \textbf{Excesso máx.} \\
         \hline
-        01 & 12\,225,0 & 0 & 12\,547,5 & 1,9\% & 12\,225,0 & 10/10 & 10,6\% \\
-        02 & 12\,075,0 & 0 & 12\,367,5 & 1,5\% & 12\,075,0 & 10/10 & 1,9\% \\
-        03 & 9\,050,0 & 0 & 9\,302,5 & 1,8\% & 9\,050,0 & 10/10 & 11,7\% \\
-        04 & 5\,825,0 & 0 & 5\,945,0 & 2,3\% & 5\,825,0 & 10/10 & 4,0\% \\
-        05 & 8\,725,0 & 0 & 8\,950,0 & 2,0\% & 8\,725,0 & 10/10 & 8,7\% \\
-        06 & 16\,350,0 & 0 & 16\,450,0 & 0,5\% & 16\,350,0 & 10/10 & 6,5\% \\
-        07 & 5\,575,0 & 0 & 5\,892,5 & 3,3\% & 5\,575,0 & 10/10 & 21,2\% \\
-        08 & 11\,625,0 & 0 & 11\,782,5 & 1,4\% & 11\,625,0 & 10/10 & 9,9\% \\
-        09 & 9\,375,0 & 0 & 9\,675,0 & 3,2\% & 9\,375,0 & 10/10 & 3,0\% \\
-        10 & 14\,600,0 & 0 & 14\,835,0 & 1,2\% & 14\,600,0 & 10/10 & 4,7\% \\
+        01 & 12\,225,0 & 0 & 12\,547,5 & 1,9\% & 10,6\% \\
+        02 & 12\,075,0 & 0 & 12\,367,5 & 1,5\% & 1,9\% \\
+        03 & 9\,050,0 & 0 & 9\,302,5 & 1,8\% & 11,7\% \\
+        04 & 5\,825,0 & 0 & 5\,945,0 & 2,3\% & 4,0\% \\
+        05 & 8\,725,0 & 0 & 8\,950,0 & 2,0\% & 8,7\% \\
+        06 & 16\,350,0 & 0 & 16\,450,0 & 0,5\% & 6,5\% \\
+        07 & 5\,575,0 & 0 & 5\,892,5 & 3,3\% & 21,2\% \\
+        08 & 11\,625,0 & 0 & 11\,782,5 & 1,4\% & 9,9\% \\
+        09 & 9\,375,0 & 0 & 9\,675,0 & 3,2\% & 3,0\% \\
+        10 & 14\,600,0 & 0 & 14\,835,0 & 1,2\% & 4,7\% \\
         \hline
     \end{tabular}
     \end{adjustbox}
     \par\smallskip
-    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
+    {\footnotesize Nota - $Z$ da execução de menor $F$: valor de $Z$ da execução com menor \textit{fitness}, conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia, conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de dispersão. Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}
 \end{table}

@@ -521,20 +521,18 @@ def render_objective_latex_table(df: pd.DataFrame, instance_name: str) -> str:
         f"    \\label{{tab:res-z-{label_suffix}}}",
         r"    \centering",
         r"    \begin{adjustbox}{max width=\textwidth}",
-        r"    \begin{tabular}{crrrrrcr}",
+        r"    \begin{tabular}{crrrrr}",
         r"        \hline",
         r"        \textbf{Conjunto} & \textbf{$Z$ da execução de menor $F$} & \textbf{$V_{cap}$} & "
-        r"\textbf{$Z$ médio} & \textbf{CV} & \textbf{Melhor $Z$ viável} & \textbf{Execuções viáveis} & "
-        r"\textbf{Excesso máx.} \\",
+        r"\textbf{$Z$ médio} & \textbf{CV} & \textbf{Excesso máx.} \\",
         r"        \hline",
     ]
+    # With repair_mode="always" every run is feasible, so "best feasible Z" equals the
+    # min-F run's Z and the feasible-run count is always n/n; V_cap alone records the check.
     for _, row in df.iterrows():
-        feasible = row.get("heur_melhor_viavel_fitness")
-        feasible_tex = "---" if pd.isna(feasible) else _latex_number(feasible)
         heuristic.append(
             f"        {int(row['set']):02d} & {_latex_number(row['heur_melhor_z'])} & {int(row['heur_melhor_v_cap'])} & "
             f"{_latex_number(row['heur_media_z'])} & {_latex_number(row['heur_dp_z'] / row['heur_media_z'] * 100)}\\% & "
-            f"{feasible_tex} & {int(row['heur_execucoes_viaveis'])}/{int(row['heur_execucoes'])} & "
             f"{_latex_number(row['heur_melhor_excesso'] * 100)}\\% \\\\"
         )
     heuristic += [
@@ -543,8 +541,7 @@ def render_objective_latex_table(df: pd.DataFrame, instance_name: str) -> str:
         r", conforme a Equação~\eqref{eq:fitness}. $V_{cap}$: violação de capacidade dessa execução, em pacientes-dia"
         r", conforme a Equação~\eqref{eq:violacao-capacidade}, sendo $V_{cap} > 0$ uma solução inviável para o modelo exato. "
         r"CV: coeficiente de variação de $Z$ entre as execuções (desvio padrão dividido pela média), como medida de "
-        r"dispersão. Melhor $Z$ viável: menor $Z$ entre as soluções viáveis encontradas nas execuções (--- se "
-        r"nenhuma). Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, "
+        r"dispersão. Excesso máx.: excesso máximo da execução de menor $F$ sobre o ótimo, conforme a Equação~\eqref{eq:excesso-otimo}, "
         r"calculado com o maior entre o limite inferior do Gurobi e $LB_{comb}$.}",
         r"\end{table}",
     ]

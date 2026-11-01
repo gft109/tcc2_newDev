@@ -18,6 +18,19 @@
 \usepackage[colorlinks=true, allcolors=black]{hyperref}
 \usepackage{textcomp}         % para símbolos adicionais
 \usepackage{float}
+\usepackage{algorithm}        % pseudocódigo (carregado depois do hyperref)
+\usepackage{algpseudocode}
+\floatname{algorithm}{Algoritmo}
+\providecommand{\algorithmautorefname}{Algoritmo}
+\algrenewcommand\algorithmicrequire{\textbf{Entrada:}}
+\algrenewcommand\algorithmicensure{\textbf{Saída:}}
+\algrenewcommand\algorithmicwhile{\textbf{enquanto}}
+\algrenewcommand\algorithmicdo{\textbf{faça}}
+\algrenewcommand\algorithmicif{\textbf{se}}
+\algrenewcommand\algorithmicthen{\textbf{então}}
+\algrenewcommand\algorithmicelse{\textbf{senão}}
+\algrenewcommand\algorithmicend{\textbf{fim}}
+\algrenewcommand\algorithmicreturn{\textbf{retorne}}
 \usepackage{adjustbox}
 \usepackage{tabularx}
 \usepackage{array}
@@ -46,7 +59,6 @@
 \include{Resultados}
 \include{Conclusao}
 
-\nocite{*}
 \input{bibliografia}
 
 \end{document}
