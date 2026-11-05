@@ -1,0 +1,5 @@
+instance,time_limit,protocol_runs,runs_initial_population_beats_gurobi,runs_reaching_gurobi,gurobi_sets_reaching_heuristic_mean,gurobi_ttt_mean,gurobi_ttt_min_set,gurobi_ttt_max_set,gurobi_rerun_sets_same_final_z,heuristic_ttt_mean,heuristic_ttt_min_set,heuristic_ttt_max_set
+pequeno,30.0,100,0,1,10,3.254856824874878,1.0725090503692627,7.735252141952515,8.0,,,
+medio,120.0,100,100,100,0,,,,,2.9406282375101,2.3999981527061514,3.7124821251103035
+grande,480.0,100,100,100,0,,,,,11.818875201395711,9.631576721866926,12.816094625275582
+muito_grande,1920.0,100,100,100,0,,,,,57.09694756522465,50.07013676362112,62.427584944370516

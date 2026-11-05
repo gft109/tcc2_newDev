@@ -1,9 +1,9 @@
 \chapter{Resultados}
 \label{cap:resultados}
 
-Este capítulo apresenta a avaliação experimental e comparativa das abordagens exata (Gurobi) e heurística (Algoritmo Memético) aplicadas ao Problema de Alocação de Leitos (PBA), considerando os quatro portes de instâncias definidos no protocolo experimental (\autoref{tab:protocolo-experimental}). 
+Este capítulo apresenta a avaliação experimental e comparativa das abordagens exata (Gurobi) e heurística (algoritmo memético) aplicadas ao problema de alocação de leitos (PBA), considerando os quatro portes de instâncias definidos no protocolo experimental (\autoref{tab:protocolo-experimental}). 
 
-A \autoref{sec:res-comparacao} analisa o desempenho relativo entre o \textit{solver} exato e a heurística em cada escala de problema, avaliando o valor da função objetivo $Z$, conforme a Equação~\eqref{eq:objetivo}, a viabilidade das soluções geradas pelo método estocástico e o esforço computacional despendido. A \autoref{sec:res-operacionais} examina o impacto operacional das alocações sob a perspectiva da gestão hospitalar, detalhando a adequação de especialidade médica, o volume de transferências internas e a incidência de quartos mistos, além de comparar os portes entre si. Os principais achados são retomados no \autoref{cap:conclusao}.
+A \autoref{sec:res-comparacao} analisa o desempenho relativo entre o \textit{solver} exato e a heurística em cada escala de problema, avaliando o valor da função objetivo $Z$, conforme a Equação~\eqref{eq:objetivo}, a viabilidade das soluções geradas pelo método estocástico e a eficiência computacional dos dois métodos. A \autoref{sec:res-operacionais} examina o impacto operacional das alocações sob a perspectiva da gestão hospitalar, detalhando a adequação de especialidade médica, o volume de transferências internas e a incidência de quartos mistos, além de comparar os portes entre si. Os principais achados são retomados no \autoref{cap:conclusao}.
 
 % =====================================================================
 \section{Comparação entre o Gurobi e a heurística}
@@ -613,30 +613,50 @@ O reparo tem um custo em tempo, descontado do mesmo teto concedido ao Gurobi. A 
 Esse custo, porém, é compensado pela melhora da busca. Em uma execução anterior do mesmo protocolo, com a mesma heurística sem a etapa de reparo, apenas 5 das 100 execuções da instância grande e nenhuma da muito grande encontraram uma solução viável, e a melhor solução violou a capacidade em 7 e em 10 dos 10 conjuntos, respectivamente, ainda que em menos de 0,1\% da carga de internação. Em comparação com essa versão, o $Z$ médio das execuções com reparo foi 1,3\%, 1,2\%, 6,1\% e 13,7\% menor nas instâncias pequena, média, grande e muito grande, com redução em 8, 8, 10 e 10 dos 10 conjuntos, respectivamente. A comparação é conservadora, pois a versão com reparo foi executada com mais processos simultâneos na mesma máquina (\autoref{sec:ambiente}) e realizou, por isso, de 3\% a 14\% menos avaliações por execução. O ganho vem principalmente das transferências, que caíram de 10\% a 24\% conforme o porte, e, na instância muito grande, também da especialidade inadequada, que caiu 15\%. Uma explicação é que, sem o reparo, os filhos chegam ao VND com excessos de capacidade que a busca local desfaz movimento a movimento, muitas vezes com mudanças parciais de quarto ($N_3$) que criam transferências, enquanto o reparo elimina esses excessos pelas realocações mais baratas e deixa o esforço do VND para a redução de $Z$. Em contrapartida, os quartos-dia mistos aumentaram de 9\% a 15\% nas instâncias média, grande e muito grande, já que a realocação mais barata disponível às vezes coloca pacientes de gêneros distintos no mesmo quarto.
 
 % ---------------------------------------------------------------------
-\subsection{Esforço computacional}
+\subsection{Eficiência computacional}
 \label{sec:res-esforco}
 
-Conforme descrito na \autoref{sec:ambiente}, a heurística é executada em um único núcleo, enquanto o Gurobi utiliza, por padrão, todos os núcleos disponíveis.
+A \autoref{tab:res-ttt} compara os dois métodos pelo tempo até o alvo, definido na \autoref{sec:metricas}. Como as execuções do protocolo não registram o instante de cada melhora, esses tempos foram obtidos de medições adicionais, com as mesmas instâncias. No Gurobi, os conjuntos da instância pequena foram resolvidos novamente, com o mesmo teto, registrando-se o instante de cada nova solução incumbente, e a solução final coincidiu com a do protocolo em 8 dos 10 conjuntos. Nas demais instâncias, a solução final do Gurobi tem $Z$ maior que o de todas as execuções da heurística, de modo que o alvo não é alcançado dentro do teto. Na heurística, os dados do protocolo mostram que, a partir da instância média, a melhor solução da população inicial, já reparada, tem $Z$ menor que a solução final do Gurobi em todas as 100 execuções de cada porte. O tempo até o alvo é, portanto, no máximo o tempo de construção e reparo da população inicial, medido em três construções adicionais por conjunto, executadas quatro a quatro em paralelo, como no protocolo.
 
-A \autoref{tab:res-esforco} compara o esforço de busca das duas abordagens dentro do mesmo teto de tempo, medido pelo número de iterações do simplex no Gurobi e pelo número de avaliações da função objetivo na heurística. As duas medidas não têm a mesma unidade, mas a forma como variam com o porte é comparável.
+Na instância pequena, o Gurobi alcançou o $Z$ médio da heurística em 3,3 segundos, em média (de 1,1 a 7,7 segundos), o equivalente a 10,8\% do teto, enquanto a heurística alcançou o $Z$ final do Gurobi em apenas 1 das 100 execuções. A partir da instância média, a relação se inverte. A população inicial da heurística, obtida em média em 2,9, 11,8 e 57,1 segundos nas instâncias média, grande e muito grande, de 2,5\% a 3,0\% do teto, já supera a solução que o Gurobi obtém com o teto inteiro, enquanto o Gurobi não alcança o resultado da heurística dentro do teto. Nesses portes, portanto, a heurística alcança o resultado final do \textit{solver} em uma pequena fração do tempo concedido a ele.
 
-O esforço do Gurobi não acompanha o crescimento das instâncias. Com o modelo cada vez maior, cada iteração se torna mais custosa e, na instância muito grande, o \textit{solver} realizou apenas 1\,334 iterações em 1920 segundos, sem concluir a relaxação inicial. A heurística, por sua vez, manteve uma taxa de 43 a 55 mil avaliações por segundo, incluindo as do reparo, chegando a 82,1 milhões de avaliações por execução na instância muito grande. Essa diferença decorre da avaliação procedural e incremental descrita na \autoref{sec:implementacao}, em que o custo de cada movimento depende apenas da internação do paciente movido, e não do tamanho do modelo.
+\begin{table}[H]
+    \caption{Tempo até o alvo por porte (média dos conjuntos)}
+    \label{tab:res-ttt}
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lrcc}
+        \hline
+        \textbf{Porte} & \textbf{Teto} & \textbf{Gurobi até o $Z$ médio da heurística} & \textbf{Heurística até o $Z$ final do Gurobi} \\
+        \hline
+        Pequena      & 30 s   & 3,3 s (10,8\%) & 1 de 100 execuções \\
+        Média        & 120 s  & não alcança    & $\leq$ 2,9 s (2,5\%) \\
+        Grande       & 480 s  & não alcança    & $\leq$ 11,8 s (2,5\%) \\
+        Muito grande & 1920 s & não alcança    & $\leq$ 57,1 s (3,0\%) \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+    \par\smallskip
+    {\footnotesize Nota - Entre parênteses, a fração do teto. Não alcança: o $Z$ final do Gurobi é maior que o de todas as execuções da heurística, em todos os conjuntos. 1 de 100 execuções: na instância pequena, a heurística alcançou o $Z$ final do Gurobi em uma única execução. $\leq$: tempo de construção e reparo da população inicial, cuja melhor solução já supera o alvo em todas as execuções.}
+\end{table}
+
+O esforço de busca da heurística dentro do teto é resumido na \autoref{tab:res-esforco}, pelo número de avaliações da função objetivo e pelo número de gerações concluídas, medidas que descrevem apenas a heurística. Ela manteve uma taxa de 43 a 55 mil avaliações por segundo, incluindo as do reparo, chegando a 82,1 milhões de avaliações por execução na instância muito grande. Essa taxa praticamente constante decorre da avaliação procedural e incremental descrita na \autoref{sec:implementacao}, em que o custo de cada movimento depende apenas da internação do paciente movido, e não do tamanho da instância.
 
 O número de gerações, por outro lado, cai com o porte, de 20,9 na instância pequena para 10,5 na muito grande, pois, embora o teto de tempo cresça na mesma proporção que o número de pacientes, cada geração exige refinar e reparar indivíduos com cada vez mais pacientes e se torna proporcionalmente mais custosa. Combinado com a convergência discutida nas subseções anteriores, isso explica os dois regimes observados. Na instância pequena, sobram gerações e a heurística estagna, enquanto nas demais as gerações se esgotam enquanto a busca ainda melhora.
 
 \begin{table}[H]
-    \caption{Esforço computacional por porte (média por execução)}
+    \caption{Esforço computacional da heurística por porte (média por execução)}
     \label{tab:res-esforco}
     \centering
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{lrrrr}
+    \begin{tabular}{lrrr}
         \hline
-        \textbf{Porte} & \textbf{Teto} & \textbf{Nº Iterações do Gurobi} & \textbf{Nº Avaliações da heurística} & \textbf{Nº Gerações} \\
+        \textbf{Porte} & \textbf{Teto} & \textbf{Nº Avaliações} & \textbf{Nº Gerações} \\
         \hline
-        Pequena      & 30 s   & 771\,234   & 1\,643\,274  & 20,9 \\
-        Média        & 120 s  & 51\,233    & 6\,493\,237  & 14,7 \\
-        Grande       & 480 s  & 258\,168   & 25\,852\,469 & 13,4 \\
-        Muito grande & 1920 s & 1\,334     & 82\,093\,944 & 10,5 \\
+        Pequena      & 30 s   & 1\,643\,274  & 20,9 \\
+        Média        & 120 s  & 6\,493\,237  & 14,7 \\
+        Grande       & 480 s  & 25\,852\,469 & 13,4 \\
+        Muito grande & 1920 s & 82\,093\,944 & 10,5 \\
         \hline
     \end{tabular}
     \end{adjustbox}

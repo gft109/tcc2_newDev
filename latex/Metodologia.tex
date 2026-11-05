@@ -1,31 +1,31 @@
 \chapter{Metodologia}
 \label{cap:metodologia}
 
-Este capítulo apresenta a metodologia utilizada para modelar e resolver o Problema de Alocação de Leitos (PBA). Primeiramente, são descritos o problema e as instâncias de teste. Em seguida, apresentam-se o modelo matemático, resolvido pela abordagem exata, e depois o Algoritmo Memético, base da abordagem heurística, com sua representação da solução, seus operadores e a etapa de reparo, e a sua implementação. Por fim, são descritas as métricas de avaliação e o protocolo experimental.
+Este capítulo apresenta a metodologia utilizada para modelar e resolver o problema de alocação de leitos (PBA). Inicialmente, são descritos o problema e as instâncias de teste, em seguida, apresentam-se o modelo matemático, resolvido pela abordagem exata, e, por fim, a abordagem heurística, com sua representação da solução, operadores, etapa de reparo e implementação. Ao final, são descritas as métricas de avaliação e o protocolo experimental.
 
 \section{Descrição do problema}
 
-O Problema de Alocação de Leitos (PBA) abordado neste trabalho concentra-se no nível tático da gestão hospitalar, isto é, o planejamento do censo ao longo de um horizonte, no qual um conjunto conhecido de pacientes, com diferentes necessidades clínicas e datas de admissão e de alta definidas, deve ser alocado a um conjunto finito de quartos e leitos disponíveis nas diversas alas do hospital \cite{demeester2010hybrid}. A alocação deve garantir a viabilidade clínica e, simultaneamente, maximizar o conforto do paciente e a eficiência dos recursos operacionais \cite{schafer2023combining}.
+O problema de alocação de leitos (PBA) abordado neste trabalho concentra-se no nível tático da gestão hospitalar, isto é, o planejamento do censo ao longo de um horizonte de tempo, no qual um conjunto conhecido de pacientes, com diferentes necessidades clínicas, datas de admissão e de alta definidas, deve ser alocado a um conjunto finito de quartos e leitos disponíveis nas diversas alas do hospital \cite{demeester2010hybrid}. A alocação deve simultaneamente garantir a viabilidade clínica, o conforto do paciente e a eficiência do uso dos recursos operacionais \cite{schafer2023combining}.
 
 \subsection{Parâmetros, variáveis e discretização do tempo}
 
-Para reduzir a complexidade computacional e refletir a rotina de censos hospitalares, o tempo é discretizado e modelado em dias consecutivos \cite{ceschia2012modeling, demeester2010hybrid}. O dia atua como a menor unidade indivisível de tempo do sistema. Dessa forma, as internações, altas e transferências ocorrem estritamente na transição de um dia para o outro \cite{demeester2010hybrid}.
+Para reduzir a complexidade computacional e refletir a rotina de censos hospitalares, o tempo é discretizado e modelado em dias consecutivos \cite{ceschia2012modeling, demeester2010hybrid}. O dia atua como a menor unidade de tempo do sistema. Dessa forma, as internações, altas e transferências ocorrem estritamente na transição de um dia para o outro \cite{demeester2010hybrid}.
 
 O sistema recebe como entrada uma lista de pacientes que possuem uma data de admissão e uma data de alta, resultando em um tempo de permanência (LOS) ininterrupto \cite{ceschia2012modeling}. Durante todo o LOS estipulado, o paciente deve obrigatoriamente permanecer alocado nas dependências do hospital, não sendo consideradas transferências para unidades externas. 
 
-O hospital é composto por quartos, cada um associado a uma especialidade clínica e com uma capacidade máxima definida (número de leitos). Como não há diferenciação de equipamentos vitais ou infraestrutura entre leitos de um mesmo quarto, os leitos tornam-se indistinguíveis. Conforme proposto por Ceschia e Schaerf \cite{ceschia2012modeling}, o problema pode ser simplificado passando de uma alocação baseada em leitos individuais para uma alocação direta em quartos, o que reduz substancialmente o espaço de busca. Assim, as variáveis de decisão centrais definem em qual quarto o paciente passará cada dia do seu período de internação.
+O hospital é composto por quartos, cada um associado a uma especialidade clínica e com uma capacidade máxima definida (número de leitos). Sendo estipulado que não há diferenciação de equipamentos vitais ou infraestrutura entre leitos de um mesmo quarto, os leitos tornam-se indistinguíveis. Conforme proposto por Ceschia e Schaerf \cite{ceschia2012modeling}, o problema pode ser simplificado passando de uma alocação baseada em leitos individuais para uma alocação direta em quartos, o que reduz substancialmente o espaço de busca. Assim, as variáveis de decisão centrais definem em qual quarto o paciente passará cada dia do seu período de internação.
 
 \subsection{Restrições}
 
 O problema está sujeito a dois conjuntos de regras \cite{ceschia2012modeling, demeester2010hybrid}:
 \begin{itemize}
-    \item \textbf{Restrições Rígidas (\textit{Hard Constraints}):} Devem ser obrigatoriamente satisfeitas para que a solução seja viável:
+    \item \textbf{Restrições rígidas (\textit{hard constraints}):} Devem ser obrigatoriamente satisfeitas para que a solução seja viável:
     \begin{itemize}
-        \item \textit{Garantia de Internação Contínua:} todo paciente admitido deve ocupar exatamente um quarto em cada dia de seu tempo de permanência.
-        \item \textit{Capacidade do Quarto:} o número de pacientes alocados simultaneamente em um quarto não pode exceder a capacidade máxima (número de leitos) daquele quarto. Na abordagem heurística, essa restrição é relaxada e penalizada durante a busca local, e a viabilidade é restabelecida pela etapa de reparo (\autoref{sec:reparo}).
+        \item \textit{Garantia de internação contínua:} todo paciente admitido deve ocupar exatamente um quarto em cada dia de seu tempo de permanência.
+        \item \textit{Capacidade do quarto:} o número de pacientes alocados simultaneamente em um quarto não pode exceder a capacidade máxima (número de leitos) daquele quarto. Na abordagem heurística, essa restrição é relaxada e penalizada durante a busca local, e a viabilidade é restabelecida pela etapa de reparo (\autoref{sec:reparo}).
         
     \end{itemize}
-    \item \textbf{Restrições Flexíveis (\textit{Soft Constraints}):} Representam preferências que, se violadas, geram penalidades na função objetivo, sem inviabilizar a solução:
+    \item \textbf{Restrições flexíveis (\textit{soft constraints}):} Representam preferências que, se violadas, geram penalidades na função objetivo, sem inviabilizar a solução:
     \begin{itemize}
         \item \textit{Especialidade:} alocar o paciente em um quarto da especialidade clínica adequada à sua patologia.
         \item \textit{Transferências:} evitar que o paciente mude de quarto durante a internação.
@@ -39,13 +39,13 @@ Outras regras citadas na literatura, como agrupamento por faixa etária, requisi
 \subsection{Pesos e abordagem multiobjetivo}
 \label{sec:pesos}
 
-A natureza multiobjetivo do PBA exige o balanceamento de interesses conflitantes, como entre minimizar transferências e manter cada paciente em um quarto de sua especialidade. Conforme discutido no \autoref{cap:revisao}, este trabalho adota uma abordagem \textit{a priori} \cite{talbi2009metaheuristics}. Todos os objetivos e violações de restrições flexíveis são agregados em uma única função de utilidade através do Método das Somas Ponderadas \cite{schafer2023combining, demeester2010hybrid}. Dessa forma, pesos específicos ($W$) são atribuídos a cada violação, representando prioridades que, em uma aplicação real, seriam definidas pela administração hospitalar. Quanto maior o peso de um critério (como a penalidade por transferências), maior será o esforço do algoritmo para evitá-lo.
+A natureza multiobjetivo do PBA exige o balanceamento de interesses conflitantes, como entre minimizar transferências e manter cada paciente em um quarto adequado à especialidade de sua patologia. Conforme discutido no \autoref{cap:revisao}, este trabalho adota uma abordagem \textit{a priori} \cite{talbi2009metaheuristics}, onde todos os objetivos e violações de restrições flexíveis são agregados em uma única função de utilidade através do método das somas ponderadas \cite{schafer2023combining, demeester2010hybrid}. Dessa forma, pesos específicos ($W$) são atribuídos a cada violação, representando prioridades que, em uma aplicação real, seriam definidas pela administração hospitalar. Quanto maior o peso de um critério (como a penalidade por transferências), maior será o esforço do algoritmo para evitá-lo.
 
 Os três critérios da função objetivo são comensuráveis, pois todos correspondem a contagens de eventos, sejam pacientes-dia em quarto de especialidade inadequada, transferências realizadas ou quartos-dia ocupados por pacientes de gêneros distintos. Por isso, não se aplica nenhuma normalização entre eles, e os pesos (\autoref{tab:pesos}) expressam diretamente as taxas de troca entre os critérios. Um paciente-dia em especialidade inadequada ($W_{spec} = 100$) equivale a duas transferências ($W_{transf} = 50$), ou seja, uma transferência vale meio paciente-dia em especialidade inadequada. Um quarto-dia misto ($W_{gen} = 75$) equivale a 1,5 transferência, e um paciente-dia em especialidade inadequada equivale a cerca de 1,33 quarto-dia misto. Uma consequência direta dessas taxas é que, considerando apenas as parcelas de especialidade e de transferência, transferir um paciente de um quarto de especialidade inadequada para um quarto de sua especialidade compensa sempre que lhe resta ao menos um dia de internação, pois a transferência custa $W_{transf} = 50$ uma única vez, enquanto cada dia no quarto adequado economiza $W_{spec} = 100$. As transferências presentes nas soluções são, portanto, em parte uma escolha induzida pelos próprios pesos. Como $Z$ é uma soma sobre pacientes-dia, quartos-dia e transferências, o seu valor cresce com o porte da instância e não é comparável entre portes. Por esse motivo, os resultados comparam as abordagens dentro de cada porte e, entre portes, utilizam métricas relativas, como porcentagens da carga de internação.
 
 \subsection{Dados e instâncias de teste}
 
-A literatura aponta a dificuldade de obter dados hospitalares reais e abertos para testar algoritmos de alocação, devido a questões de sigilo médico, e trabalhos como o de Demeester et al. \cite{demeester2010hybrid} também recorrem a dados gerados aleatoriamente.
+A literatura aponta a dificuldade de obter dados hospitalares reais e abertos para testar algoritmos de alocação, devido a questões de sigilo médico. Assim, trabalhos como o de Demeester et al. \cite{demeester2010hybrid} recorrem a dados artificiais.
 
 Dessa forma, as instâncias de teste foram geradas sinteticamente por um gerador próprio, descrito na \autoref{sec:gerador-instancias}. Os parâmetros do gerador, como a ocupação-alvo de 90\% e o tempo médio de permanência de quatro dias, foram escolhidos para produzir cenários de alta ocupação, nos quais as decisões de alocação têm maior impacto.
 
@@ -55,11 +55,11 @@ Além disso, com o objetivo de isolar e avaliar o desempenho computacional e a q
 \subsection{Gerador de instâncias}
 \label{sec:gerador-instancias}
 
-As instâncias de teste são produzidas por um gerador sintético desenvolvido neste trabalho, em quatro portes (pequena, média, grande e muito grande), com 10, 40, 160 e 640 quartos, respectivamente. Todos os quartos têm capacidade de três leitos, e cada instância contém dez pacientes por quarto, totalizando de 100 a 6400 pacientes. Para cada porte são gerados dez conjuntos independentes, o que permite avaliar a variação dos resultados devida ao próprio sorteio dos dados, e não apenas à aleatoriedade da heurística.
+As instâncias de teste são produzidas por um gerador de dados desenvolvido neste trabalho, em quatro portes (pequena, média, grande e muito grande), com 10, 40, 160 e 640 quartos, respectivamente. Todos os quartos têm capacidade de três leitos, e cada instância contém dez pacientes por quarto, totalizando de 100 a 6400 pacientes. Para cada porte são gerados dez conjuntos independentes, o que permite avaliar a variação dos resultados devida ao próprio sorteio dos dados, e não apenas à natureza estocástica da heurística.
 
 Cada conjunto é gerado a partir de uma semente própria, calculada como $100b + k$, em que $b$ é a semente base do porte (42, 43, 44 e 45, respectivamente) e $k \in \{1, \dots , 10\}$ é o número do conjunto. Dessa forma, toda execução do gerador reproduz exatamente as mesmas instâncias, e nenhum par de conjuntos compartilha a mesma semente.
 
-A especialidade de cada quarto e a especialidade requerida por cada paciente são sorteadas com a mesma distribuição, de 40\% para Clínica Geral e 20\% para cada uma das especialidades de Cirurgia, Cardiologia e Ortopedia. O gênero é sorteado com probabilidade igual entre feminino e masculino. O tempo de permanência é sorteado a partir de uma distribuição normal com média de quatro dias e desvio padrão de um dia, arredondado para o inteiro mais próximo e limitado inferiormente a um dia.
+As especialidades de cada leito e a demanda dos pacientes são definidas sob a mesma distribuição probabilística: 40\% para clínica geral e 20\% para cirurgia, cardiologia e ortopedia. O gênero do paciente é atribuído com igual probabilidade entre os sexos feminino e masculino, enquanto seu tempo de permanência obedece a uma distribuição normal com média de quatro dias e desvio padrão de um dia (arredondado para o inteiro mais próximo, com limite mínimo de um dia)
 
 O dia de admissão de cada paciente não é sorteado, mas definido por uma estratégia de empacotamento, na qual os pacientes são ordenados do maior para o menor tempo de permanência, com desempate aleatório, e cada um é admitido no primeiro dia a partir do qual há leito livre no hospital durante toda a sua internação. O horizonte inicial é dimensionado para uma ocupação-alvo de 90\% da capacidade total:
 
@@ -68,7 +68,7 @@ H = \left\lceil \frac{|P| \cdot \overline{LOS}}{0{,}9 \cdot \sum_{r \in R} c_r} 
 \end{equation}
 em que $\overline{LOS}$ é o tempo médio de permanência sorteado e, caso algum paciente não caiba no horizonte, ele é estendido. Definir a admissão por empacotamento, e não por sorteio, evita que a capacidade fique fragmentada ao longo do horizonte, o que reduziria a ocupação efetiva abaixo do alvo. Além disso, como o número de pacientes internados em cada dia nunca excede o total de leitos do hospital, toda instância gerada admite ao menos uma solução viável para o modelo da \autoref{sec:modelagem-matematica}.
 
-A \autoref{tab:caracteristicas-instancias} resume as características das instâncias geradas, que dependem apenas dos dados e são iguais para qualquer solução de um mesmo conjunto. O horizonte de cerca de 15 dias e a ocupação média de 88\% a 89\% são consequências do tempo médio de permanência de quatro dias e da ocupação-alvo de 90\%. O pico de 100\% em todos os conjuntos decorre da admissão por empacotamento, em que os leitos ficam totalmente ocupados durante cerca de 12 dias, e a ocupação só cai nos últimos dias do horizonte, quando restam apenas as internações mais longas, o que explica o mínimo de 11\% a 14\%. Com o hospital lotado na maior parte do horizonte, não há folga de capacidade a ser explorada, cenário de alta ocupação associado, na literatura, à superlotação dos serviços de emergência \cite{brandeau2004operations, he2019systematic}.
+A \autoref{tab:caracteristicas-instancias} resume as características das instâncias geradas, as quais dependem apenas dos dados e são iguais para qualquer solução de um mesmo conjunto. O horizonte de cerca de 15 dias e a ocupação média de 88\% a 89\% são consequências do tempo médio de permanência de quatro dias e da ocupação-alvo de 90\%. O pico de 100\% em todos os conjuntos decorre da admissão por empacotamento, em que os leitos ficam totalmente ocupados durante cerca de 12 dias, e a ocupação só cai nos últimos dias do horizonte, quando restam apenas as internações mais longas, o que explica o mínimo de 11\% a 14\%. Com o hospital lotado na maior parte do horizonte, não há folga de capacidade a ser explorada, cenário de alta ocupação associado, na literatura, à superlotação dos serviços de emergência \cite{brandeau2004operations, he2019systematic}.
 
 \begin{table}[H]
     \caption[Características das instâncias geradas]{Características das instâncias geradas (média $\pm$ desvio padrão entre os 10 conjuntos)}
@@ -93,7 +93,7 @@ A \autoref{tab:caracteristicas-instancias} resume as características das instâ
 \section{Modelagem matemática}
 \label{sec:modelagem-matematica}
 
-A formulação a seguir define o Problema de Alocação de Leitos (PBA) como um modelo de Programação Linear Inteira (PLI), resolvido diretamente pelo \textit{solver} comercial Gurobi na abordagem exata.
+A formulação a seguir define o problema de alocação de leitos (PBA) como um modelo de programação linear inteira (PLI), resolvido diretamente pelo \textit{solver} comercial Gurobi na abordagem exata.
 
 A formulação adota a abordagem de linearização proposta por Ceschia e Schaerf \cite{ceschia2011local} para rastrear as características dinâmicas de convivência nos quartos (como a política de separação de gêneros), introduzindo variáveis auxiliares que definem o estado de ocupação de cada quarto a cada dia.
 
@@ -167,37 +167,37 @@ A função objetivo $Z$ visa minimizar a soma total das penalidades. Ela é comp
 
 O modelo está sujeito às seguintes restrições:
 
-\textbf{1. Atribuição Única e Contínua:} Cada paciente $p$ deve estar alocado a exatamente um quarto durante todos os dias contínuos da sua internação ($D_p$).
+\textbf{1. Atribuição única e contínua:} Cada paciente $p$ deve estar alocado a exatamente um quarto durante todos os dias contínuos da sua internação ($D_p$).
 \begin{equation}
 \sum_{r \in R} x_{p,r,d} = 1, \quad \forall p \in P, \forall d \in D_p
 \label{eq:atribuicao-unica}
 \end{equation}
 
-\textbf{2. Limite de Capacidade do Quarto:} O número total de pacientes acomodados simultaneamente em um quarto $r$ no dia $d$ não pode exceder sua capacidade máxima $c_r$.
+\textbf{2. Limite de capacidade do quarto:} O número total de pacientes acomodados simultaneamente em um quarto $r$ no dia $d$ não pode exceder sua capacidade máxima $c_r$.
 \begin{equation}
 \sum_{p \in P_d} x_{p,r,d} \leq c_r, \quad \forall r \in R, \forall d \in D
 \label{eq:capacidade}
 \end{equation}
 
-\textbf{3. Rastreamento de Transferências:} A variável de transferência deve ser ativada caso o paciente ocupe o quarto $r$ no dia $d$, mas não esteja mais alocado nele no dia subsequente $d+1$ da sua internação \cite{ceschia2011local}.
+\textbf{3. Rastreamento de transferências:} A variável de transferência deve ser ativada caso o paciente ocupe o quarto $r$ no dia $d$, mas não esteja mais alocado nele no dia subsequente $d+1$ da sua internação \cite{ceschia2011local}.
 \begin{equation}
 t_{p,r,d} \geq x_{p,r,d} - x_{p,r,d+1}, \quad \forall p \in P, \forall r \in R, \forall d \in D_p  \setminus \{d^{\text{alta}}_p \}
 \label{eq:transferencia}
 \end{equation}
 
-\textbf{4. Identificação de Presença Feminina:} Se uma paciente do conjunto feminino ($P_F$) for alocada ao quarto $r$ no dia $d$, a \textit{flag} indicadora de presença feminina desse quarto deve ser ativada.
+\textbf{4. Identificação de presença feminina:} Se uma paciente do conjunto feminino ($P_F$) for alocada ao quarto $r$ no dia $d$, a \textit{flag} indicadora de presença feminina desse quarto deve ser ativada.
 \begin{equation}
 f_{r,d} \geq x_{p,r,d}, \quad \forall p \in P_F, \forall r \in R, \forall d \in D_p
 \label{eq:presenca-feminina}
 \end{equation}
 
-\textbf{5. Identificação de Presença Masculina:} Semelhantemente à restrição anterior, a \textit{flag} deve ser ativada para pacientes do conjunto masculino ($P_M$).
+\textbf{5. Identificação de presença masculina:} Semelhantemente à restrição anterior, a \textit{flag} deve ser ativada para pacientes do conjunto masculino ($P_M$).
 \begin{equation}
 m_{r,d} \geq x_{p,r,d}, \quad \forall p \in P_M, \forall r \in R, \forall d \in D_p
 \label{eq:presenca-masculina}
 \end{equation}
 
-\textbf{6. Detecção de Mistura de Gêneros (Quarto Misto):} Esta restrição força a variável $b_{r,d}$ a assumir o valor 1 caso o quarto possua representantes de ambos os gêneros no mesmo dia, acionando a penalidade $W_{gen}$ na função objetivo \cite{ceschia2011local}.
+\textbf{6. Detecção de mistura de gêneros (quarto misto):} Esta restrição força a variável $b_{r,d}$ a assumir o valor 1 caso o quarto possua representantes de ambos os gêneros no mesmo dia, acionando a penalidade $W_{gen}$ na função objetivo \cite{ceschia2011local}.
 \begin{equation}
 b_{r,d} \geq m_{r,d} + f_{r,d} - 1, \quad \forall r \in R, \forall d \in D
 \label{eq:quarto-misto}
@@ -211,13 +211,13 @@ x_{p,r,d}, t_{p,r,d}, f_{r,d}, m_{r,d}, b_{r,d} \in \{0,1\}
 
 % --------
 
-\section{Algoritmo Memético}
+\section{Algoritmo memético}
 \label{sec:algoritmo-memetico}
 
-O \autoref{alg:memetico} resume o fluxo do Algoritmo Memético adotado na abordagem heurística, cujos componentes são detalhados nas subseções seguintes. O símbolo $F$ denota o \textit{fitness}, conforme a Equação~\eqref{eq:fitness}, e $g_{est}$ conta as gerações consecutivas sem melhora da melhor solução.
+O \autoref{alg:memetico} resume o fluxo do algoritmo memético adotado na abordagem heurística, cujos componentes são detalhados nas subseções seguintes. O símbolo $F$ denota o \textit{fitness}, conforme a Equação~\eqref{eq:fitness}, e $g_{est}$ conta as gerações consecutivas sem melhora da melhor solução.
 
 \begin{algorithm}[!htb]
-\caption{Algoritmo Memético com etapa de reparo da capacidade}
+\caption{Algoritmo memético com etapa de reparo da capacidade}
 \label{alg:memetico}
 \begin{algorithmic}[1]
 \Require pacientes $P$, quartos $R$, teto de tempo $T$
@@ -226,7 +226,7 @@ O \autoref{alg:memetico} resume o fluxo do Algoritmo Memético adotado na aborda
 \State \textsc{Reparar} cada indivíduo de $Pop$ \Comment{\autoref{sec:reparo}}
 \State ordenar $Pop$ por $F$ crescente
 \State $s^* \gets$ primeiro indivíduo de $Pop$
-\State $g_{est} \gets 0$
+\State $g_{est} \gets 0$ \Comment{gerações sem melhora}
 \While{o teto de tempo $T$ não for atingido}
     \State $Filhos \gets$ cópias dos 3 indivíduos de elite de $Pop$
     \While{$|Filhos| < 30$}
@@ -260,9 +260,9 @@ Para simplificar, o \autoref{alg:memetico} omite o controle de tempo dos reparos
 \subsection{Representação da solução}
 \label{sec:representacao-solucao}
 
-Um dos passos mais críticos no \textit{design} de qualquer meta-heurística, especialmente em Algoritmos Genéticos (GA), é a escolha de uma representação de solução (cromossomo) que seja ao mesmo tempo eficiente em termos de memória e fácil de ser manipulada pelos operadores de busca \cite{talbi2009metaheuristics}. 
+Um dos passos mais críticos no \textit{design} de qualquer meta-heurística, especialmente em algoritmos genéticos (GA), é a escolha de uma representação de solução (cromossomo) que seja ao mesmo tempo eficiente em termos de memória e fácil de ser manipulada pelos operadores de busca \cite{talbi2009metaheuristics}. 
 
-Para o Problema de Alocação de Leitos (PBA), a representação computacional de um indivíduo na população precisa espelhar a variável de decisão $x_{p,r,d}$. Em vez de utilizar uma matriz tridimensional esparsa, que consumiria processamento excessivo, a solução é representada como um \textit{array} (ou dicionário de dados), em que cada índice representa um paciente $p \in P$. O valor (alelo) contido nesse índice é um subvetor que lista o quarto $r \in R$ ocupado pelo paciente em cada dia contínuo $d \in D_p$ do seu tempo de permanência (LOS) \cite{demeester2010hybrid, ceschia2012modeling}.
+Para o problema de alocação de leitos (PBA), a representação computacional de um indivíduo na população precisa espelhar a variável de decisão $x_{p,r,d}$. Em vez de utilizar uma matriz tridimensional esparsa, que consumiria processamento excessivo, a solução é representada como um \textit{array} (ou dicionário de dados), em que cada índice representa um paciente $p \in P$. O valor (alelo) contido nesse índice é um subvetor que lista o quarto $r \in R$ ocupado pelo paciente em cada dia contínuo $d \in D_p$ do seu tempo de permanência (LOS) \cite{demeester2010hybrid, ceschia2012modeling}.
 
 \subsection{Solução inicial}
 \label{sec:solucao-inicial}
@@ -297,18 +297,18 @@ Como $W_{cap}$ não faz parte da função objetivo ($Z$), o valor comparado ao G
 \subsection{Estruturas de vizinhança e busca local}
 \label{sec:vnd}
 
-Na arquitetura do Algoritmo Memético adotada, a busca local (VND) é aplicada a cada geração, após o cruzamento e a mutação. Como uma solução que é ótimo local em uma vizinhança ainda pode ser melhorada em outra, o VND alterna sistematicamente entre diferentes estruturas de vizinhança \cite{talbi2009metaheuristics}.
+Na arquitetura do algoritmo memético adotada, a busca local (VND) é aplicada a cada geração, após o cruzamento e a mutação. Como uma solução que é ótimo local em uma vizinhança ainda pode ser melhorada em outra, o VND alterna sistematicamente entre diferentes estruturas de vizinhança \cite{talbi2009metaheuristics}.
 
 Baseando-se nas abordagens de Ceschia e Schaerf \cite{ceschia2011local, ceschia2012modeling} e Demeester et al. \cite{demeester2010hybrid} para a alocação de pacientes a quartos, as seguintes estruturas de vizinhança formam o núcleo do otimizador local:
 
 \begin{itemize}
-    \item \textbf{$N_1$: Mudança de Quarto (\textit{Change Room - CR}):} Este movimento consiste em transferir virtualmente um paciente $p$ de seu quarto atual para um novo quarto $r'$ durante toda a sua estadia. Trata-se de uma exploração primária do espaço de busca, mantendo o número de transferências intra-hospitalares igual a zero, mas buscando quartos que reduzam o custo estático $C_{p,r}$ \cite{ceschia2012modeling, demeester2010hybrid}.
+    \item \textbf{$N_1$: Mudança de quarto (\textit{Change Room - CR}):} Este movimento consiste em transferir virtualmente um paciente $p$ de seu quarto atual para um novo quarto $r'$ durante toda a sua estadia. Trata-se de uma exploração primária do espaço de busca, mantendo o número de transferências intra-hospitalares igual a zero, mas buscando quartos que reduzam o custo estático $C_{p,r}$ \cite{ceschia2012modeling, demeester2010hybrid}.
     
-    \item \textbf{$N_2$: Troca entre Pacientes (\textit{Swap Patients - SP}):} Consiste em permutar os quartos atribuídos a dois pacientes distintos $p_1$ e $p_2$, cujos dias de internação possuam alguma sobreposição. Esse movimento é vital, pois, frequentemente, a mudança de um paciente isolado ($N_1$) é inviabilizada por limites de capacidade. A troca simultânea permite que o algoritmo contorne a falta de leitos livres e acomode melhor os pacientes sem inflar a ocupação máxima do quarto \cite{ceschia2012modeling, demeester2010hybrid}.
+    \item \textbf{$N_2$: Troca entre pacientes (\textit{Swap Patients - SP}):} Consiste em permutar os quartos atribuídos a dois pacientes distintos $p_1$ e $p_2$, cujos dias de internação possuam alguma sobreposição. Esse movimento é vital, pois, frequentemente, a mudança de um paciente isolado ($N_1$) é inviabilizada por limites de capacidade. A troca simultânea permite que o algoritmo contorne a falta de leitos livres e acomode melhor os pacientes sem inflar a ocupação máxima do quarto \cite{ceschia2012modeling, demeester2010hybrid}.
     
-    \item \textbf{$N_3$: Mudança Parcial de Quarto (\textit{Partial Change Room - PCR}):} As vizinhanças anteriores exploram apenas soluções sem transferências. No entanto, quartos ideais podem estar disponíveis apenas em parte do período de internação. O movimento PCR atua no espaço de soluções expandido, com transferências, ao selecionar um dia $d$ no meio da internação de um paciente $p$ e alterar seu quarto apenas daquele dia em diante. Embora esse movimento ative a variável de transferência $t_{p,r,d}$ e adicione a penalidade de transferência ($W_{transf}$) à função objetivo, ele confere a flexibilidade necessária para resolver gargalos de capacidade em dias de pico \cite{ceschia2012modeling}.
+    \item \textbf{$N_3$: Mudança parcial de quarto (\textit{Partial Change Room - PCR}):} As vizinhanças anteriores exploram apenas soluções sem transferências. No entanto, quartos ideais podem estar disponíveis apenas em parte do período de internação. O movimento PCR atua no espaço de soluções expandido, com transferências, ao selecionar um dia $d$ no meio da internação de um paciente $p$ e alterar seu quarto apenas daquele dia em diante. Embora esse movimento ative a variável de transferência $t_{p,r,d}$ e adicione a penalidade de transferência ($W_{transf}$) à função objetivo, ele confere a flexibilidade necessária para resolver gargalos de capacidade em dias de pico \cite{ceschia2012modeling}.
 
-    \item \textbf{$N_4$: Troca Parcial entre Pacientes
+    \item \textbf{$N_4$: Troca parcial entre pacientes
     (\textit{Partial Swap Patients - PSP}):} Generalização de $N_2$ proposta por Ceschia e Schaerf \cite{ceschia2011local}. Em vez de permutar as internações inteiras de dois pacientes, troca os quartos apenas nos dias em que as internações se sobrepõem, preservando o restante da sequência de cada um. Com isso, resolve conflitos restritos a parte da internação sem desfazer transferências já construídas por $N_3$.
 \end{itemize}
 
@@ -321,7 +321,7 @@ A busca local (VND) mantém uma fila de pacientes ativos, que contém inicialmen
 \end{enumerate}
 
 
-\subsection{Operadores do Algoritmo Genético}
+\subsection{Operadores do algoritmo genético}
 \label{sec:operadores-ga}
 
 A população tem tamanho fixo de 30 indivíduos em todos os portes de instância. A cada geração, o algoritmo executa os passos a seguir, até que o teto de tempo seja atingido:
@@ -351,7 +351,7 @@ Em conjunto, esses mecanismos equilibram as duas forças da busca. O elitismo e 
 
 \begin{table}[htbp]
     \centering
-    \caption{Parâmetros do Algoritmo Memético}
+    \caption{Parâmetros do algoritmo memético}
     \label{tab:parametros-memetico}
     \begin{tabular}{ll}
         \hline
@@ -397,15 +397,15 @@ O tempo gasto no reparo é contabilizado dentro do teto de tempo da heurística.
 
 \subsection{Avaliação procedural e simplificação do modelo}
 
-Embora a \autoref{sec:modelagem-matematica} apresente a formulação matemática exata e completa do problema por meio de Programação Linear Inteira (PLI), necessária para a execução com \textit{solvers} comerciais como o Gurobi, a implementação computacional da meta-heurística pode adotar uma abordagem mais enxuta para a avaliação da função objetivo \cite{demeester2010hybrid}.
+Embora a \autoref{sec:modelagem-matematica} apresente a formulação matemática exata e completa do problema por meio de programação linear inteira (PLI), necessária para a execução com \textit{solvers} comerciais como o Gurobi, a implementação computacional da meta-heurística pode adotar uma abordagem mais enxuta para a avaliação da função objetivo \cite{demeester2010hybrid}.
 
-Em modelos estritamente lineares, a detecção de penalidades dinâmicas, como a violação da política de gênero no mesmo quarto, exige a criação de múltiplas variáveis de decisão auxiliares (por exemplo, $f_{r,d}$, $m_{r,d}$ e $b_{r,d}$) e restrições de amarração para cada quarto e cada dia do horizonte de planejamento \cite{ceschia2011local}. Como o número de variáveis cresce com o produto entre o número de pacientes-dia e o número de quartos, um hospital de grande porte resulta em um modelo muito grande, com cerca de 28,6 milhões de variáveis na instância muito grande deste trabalho, o que torna o modelo intratável em tempo hábil \cite{demeester2010hybrid}.
+Em modelos estritamente lineares, a detecção de penalidades dinâmicas, como a violação da política de gênero no mesmo quarto, exige a criação de múltiplas variáveis de decisão auxiliares ( $f_{r,d}$, $m_{r,d}$ e $b_{r,d}$) e restrições de amarração para cada quarto e cada dia do horizonte de planejamento \cite{ceschia2011local}. Como o número de variáveis cresce com o produto entre o número de pacientes-dia e o número de quartos, um hospital de grande porte resulta em um modelo muito grande, com cerca de 28,6 milhões de variáveis na instância muito grande deste trabalho, o que torna o modelo intratável em tempo hábil \cite{demeester2010hybrid}.
 
-Na arquitetura do Algoritmo Memético implementada neste trabalho (em Python), contorna-se essa limitação através da \textbf{avaliação procedural}. Como a meta-heurística explora o espaço de busca gerando arranjos completos (ou vizinhanças) a cada iteração, o algoritmo possui conhecimento total e imediato sobre o estado de ocupação de qualquer quarto $r$ no dia $d$. 
+Na arquitetura do algoritmo memético implementada neste trabalho, contorna-se essa limitação através da avaliação procedural. Como a meta-heurística explora o espaço de busca gerando arranjos completos (vizinhanças) a cada iteração, o algoritmo possui conhecimento total e imediato sobre o estado de ocupação de qualquer quarto $r$ no dia $d$. 
 
-Dessa forma, a heurística dispensa a declaração das variáveis auxiliares de linearização. O custo é mantido de forma incremental. A solução guarda, para cada quarto e dia, o conjunto de ocupantes e a contagem por gênero, e cada movimento atualiza apenas os quartos e dias que foram alterados. Assim, avaliar um movimento custa proporcionalmente ao tempo de permanência do paciente movido, e não ao tamanho da instância.
+Dessa forma, a heurística dispensa a declaração das variáveis auxiliares de linearização. A solução guarda, para cada quarto e dia, o conjunto de ocupantes e a contagem por gênero, com cada movimento atualizando apenas os quartos e dias que foram alterados. Assim, avaliar um movimento tem custo proporcional ao tempo de permanência do paciente movido e não ao tamanho da instância.
 
-Essa diferença entre a abordagem exata, que representa o modelo por restrições algébricas, e a abordagem heurística, que o avalia por meio de estruturas de dados, permite ao Algoritmo Memético avaliar entre cerca de 43 e 55 mil soluções candidatas por segundo. A taxa diminui apenas moderadamente com o porte, de aproximadamente 55 mil na instância pequena para 43 mil na muito grande, embora esta tenha 64 vezes mais pacientes.
+Essa diferença entre a abordagem exata, a qual representa o modelo por restrições algébricas, e a abordagem heurística, que o avalia por meio de estruturas de dados, permite ao algoritmo memético avaliar entre cerca de 43 e 55 mil soluções candidatas por segundo. A taxa diminui apenas moderadamente com o porte, de aproximadamente 55 mil na instância pequena para 43 mil na muito grande, embora esta tenha 64 vezes mais pacientes.
 
 
 \subsection{Ferramentas e ambiente de execução}
@@ -413,12 +413,12 @@ Essa diferença entre a abordagem exata, que representa o modelo por restriçõe
 
 O algoritmo heurístico proposto, bem como a modelagem de dados e rotinas de avaliação, foram desenvolvidos em Python 3.13, juntamente com as bibliotecas NumPy, Pandas e Matplotlib, com o \textit{solver} exato executado com o Gurobi 13.0.1.
 
-Todos os experimentos foram executados em um computador Apple MacBook Air com processador Apple M4, de 10 núcleos (4 de desempenho e 6 de eficiência), 16 GB de memória unificada e sistema operacional macOS 26.6.2, com Python 3.13.7. A heurística é executada em um único núcleo, enquanto o Gurobi utiliza, por padrão, todos os núcleos disponíveis. Para reduzir o tempo total de execução, o Gurobi foi executado em dois processos simultâneos na mesma máquina, e a heurística, em quatro processos simultâneos, um por núcleo de desempenho, de modo que parte da capacidade de processamento foi compartilhada entre eles.
+Todos os experimentos foram executados em um computador Apple MacBook Air com processador Apple M4, de 10 núcleos (4 de desempenho e 6 de eficiência), 16 GB de memória unificada e sistema operacional macOS 26.6.2. A heurística é executada em um único núcleo, enquanto o Gurobi utiliza, por padrão, todos os núcleos disponíveis. Para reduzir o tempo total de execução, o Gurobi foi executado em dois processos simultâneos na mesma máquina, e a heurística, em quatro processos simultâneos, um por núcleo de desempenho, de modo que parte da capacidade de processamento foi compartilhada entre eles.
 
 Para o controle de versionamento e armazenamento do código-fonte, utiliza-se a ferramenta Git, com o projeto hospedado publicamente na plataforma GitHub, onde o repositório oficial do trabalho pode ser acessado \cite{tavares2026repositorio}.
 
 
-O ambiente de desenvolvimento foi estruturado seguindo boas práticas de engenharia de \textit{software} para garantir a reprodutibilidade dos experimentos. A execução do projeto é isolada através de um ambiente virtual (\texttt{venv}), com todas as dependências de bibliotecas e suas respectivas versões documentadas no arquivo \texttt{requirements.txt}. A arquitetura do código está modularizada no diretório \texttt{src}, no qual o \textit{script} \texttt{main.py} atua como o orquestrador principal da otimização, interligando a fonte de dados, a avaliação da função objetivo e os operadores do Algoritmo Memético (GA + VND).
+O ambiente de desenvolvimento foi estruturado seguindo boas práticas de engenharia de \textit{software} para garantir a reprodutibilidade dos experimentos. A execução do projeto é isolada através de um ambiente virtual (\texttt{venv}), com todas as dependências de bibliotecas e suas respectivas versões documentadas no arquivo \texttt{requirements.txt}. A arquitetura do código está modularizada no diretório \texttt{src}, no qual o \textit{script} \texttt{main.py} atua como o orquestrador principal da otimização, interligando a fonte de dados, a avaliação da função objetivo e os operadores do algoritmo memético (GA + VND).
 
 
 
@@ -426,10 +426,10 @@ O ambiente de desenvolvimento foi estruturado seguindo boas práticas de engenha
 \section{Métricas para avaliação de desempenho}
 \label{sec:metricas}
 
-A avaliação de desempenho de algoritmos heurísticos exige um planejamento experimental rigoroso para comprovar sua eficácia e eficiência frente ao problema proposto. Conforme definido por Talbi \cite{talbi2009metaheuristics}, para a análise de algoritmos de otimização, o desempenho do Algoritmo Memético desenvolvido é medido sob três perspectivas principais, que são a qualidade da solução, a eficiência computacional e a robustez estatística.
+A avaliação de desempenho de algoritmos heurísticos exige um planejamento experimental rigoroso para comprovar sua eficácia e eficiência frente ao problema proposto. Conforme definido por Talbi \cite{talbi2009metaheuristics}, para a análise de algoritmos de otimização, o desempenho do algoritmo memético desenvolvido é medido sob três perspectivas principais, que são a qualidade da solução, a eficiência computacional e a robustez estatística.
 
 \begin{itemize}
-    \item \textbf{Eficácia (Qualidade da Solução):} A qualidade das alocações geradas é avaliada primariamente pelo valor final alcançado na função objetivo $Z$, conforme a Equação~\eqref{eq:objetivo}. Como o PBA é um problema de minimização, valores menores indicam um melhor balanceamento das restrições flexíveis. Adicionalmente, para cada solução são registrados o valor de cada parcela de $Z$ e métricas operacionais explícitas, como o número de pacientes-dia em quarto de especialidade inadequada, o número de transferências, o número de quartos-dia mistos, a violação de capacidade ($V_{cap}$), a taxa de ocupação média e por especialidade e o pico de ocupação diária do hospital. Para que as duas abordagens sejam avaliadas de forma idêntica, $Z$, suas parcelas e todas as métricas operacionais são recalculados a partir das variáveis de alocação $x_{p,r,d}$ de cada solução, pelo mesmo avaliador utilizado na heurística, e não a partir das variáveis auxiliares do modelo exato. Isso é necessário porque as variáveis $t_{p,r,d}$, $f_{r,d}$, $m_{r,d}$ e $b_{r,d}$ aparecem apenas em restrições de desigualdade, conforme as Equações~\eqref{eq:transferencia} a~\eqref{eq:quarto-misto}, e poderiam valer 1 sem que a transferência ou o quarto misto correspondente ocorresse. O que as mantém em zero é a minimização da função objetivo, garantida apenas no ótimo. Nas 40 execuções do Gurobi, o valor de $Z$ recalculado coincidiu com o valor da função objetivo reportado pelo \textit{solver}, o que indica que essas variáveis não estavam infladas nas soluções obtidas.
+    \item \textbf{Eficácia (qualidade da solução):} A qualidade das alocações geradas é avaliada primariamente pelo valor final alcançado na função objetivo $Z$, conforme a Equação~\eqref{eq:objetivo}. Como o PBA é um problema de minimização, valores menores indicam um melhor balanceamento das restrições flexíveis. Adicionalmente, para cada solução são registrados o valor de cada parcela de $Z$ e métricas operacionais explícitas, como o número de pacientes-dia em quarto de especialidade inadequada, o número de transferências, o número de quartos-dia mistos, a violação de capacidade ($V_{cap}$), a taxa de ocupação média e por especialidade e o pico de ocupação diária do hospital. Para que as duas abordagens sejam avaliadas de forma idêntica, $Z$, suas parcelas e todas as métricas operacionais são recalculados a partir das variáveis de alocação $x_{p,r,d}$ de cada solução, pelo mesmo avaliador utilizado na heurística, e não a partir das variáveis auxiliares do modelo exato. Isso é necessário porque as variáveis $t_{p,r,d}$, $f_{r,d}$, $m_{r,d}$ e $b_{r,d}$ aparecem apenas em restrições de desigualdade, conforme as Equações~\eqref{eq:transferencia} a~\eqref{eq:quarto-misto}, e poderiam valer 1 sem que a transferência ou o quarto misto correspondente ocorresse. O que as mantém em zero é a minimização da função objetivo, garantida apenas no ótimo. Nas 40 execuções do Gurobi, o valor de $Z$ recalculado coincidiu com o valor da função objetivo reportado pelo \textit{solver}, o que indica que essas variáveis não estavam infladas nas soluções obtidas.
 
     Como a abordagem heurística trata a capacidade como restrição flexível durante a busca local, a viabilidade das soluções reportadas é verificada à parte. Para que a violação, quando houver, possa ser comparada entre portes, o valor absoluto de $V_{cap}$, conforme a Equação~\eqref{eq:violacao-capacidade}, não basta, pois tende a crescer com o porte da instância. Por esse motivo, $V_{cap}$ é comparada à carga de internação $N_{pd}$, isto é, ao número total de pacientes-dia da instância:
 
@@ -447,13 +447,13 @@ A avaliação de desempenho de algoritmos heurísticos exige um planejamento exp
     
     que expressa a porcentagem da demanda de internação que ficou sem leito. Assim, $\rho_{cap} = 0\%$ indica uma solução viável, e valores próximos de zero indicam soluções próximas da viabilidade.
 
-    Para atestar a eficácia do Algoritmo Memético, as soluções heurísticas são comparadas às obtidas pelo método exato, com o \textit{solver} Gurobi, executado sobre o modelo completo da \autoref{sec:modelagem-matematica} com o mesmo teto de tempo concedido a cada execução da heurística. Ao final do tempo, o Gurobi fornece a melhor solução inteira encontrada (limite superior), o melhor limite inferior ($LB$, do inglês \textit{lower bound}) do \textit{branch-and-bound} e o \textit{gap} de otimalidade entre eles. Quando o \textit{gap} é nulo, a solução é ótima comprovada. Caso contrário, o limite inferior indica o quanto, no máximo, qualquer solução poderia melhorar.
+    Para atestar a eficácia do algoritmo memético, as soluções heurísticas são comparadas às obtidas pelo método exato, com o \textit{solver} Gurobi, executado sobre o modelo completo da \autoref{sec:modelagem-matematica} com o mesmo teto de tempo concedido a cada execução da heurística. Ao final do tempo, o Gurobi fornece a melhor solução inteira encontrada (limite superior), o melhor limite inferior ($LB$, do inglês \textit{lower bound}) do \textit{branch-and-bound} e o \textit{gap} de otimalidade entre eles. Quando o \textit{gap} é nulo, a solução é ótima comprovada. Caso contrário, o limite inferior indica o quanto, no máximo, qualquer solução poderia melhorar.
 
     Não foi construído um modelo separado para a relaxação linear. Em testes preliminares, essa relaxação isolada não foi resolvida em 300 segundos na instância grande (1600 pacientes) e, na muito grande (6400 pacientes), apenas a montagem do modelo, com cerca de 28,6 milhões de variáveis, consumiu cerca de 289 segundos. Utilizou-se, em vez disso, o limite inferior reportado pelo próprio \textit{solver} ao fim do tempo, que corresponde à relaxação da raiz fortalecida por \textit{presolve} e planos de corte e, quando o \textit{solver} avança na árvore de busca, aprimorada pela exploração dos nós do \textit{branch-and-bound}.
 
     Esse limite só deixa de ser trivial depois que a relaxação da raiz é concluída. Antes disso, o \textit{solver} reporta zero, valor que vale para qualquer solução, pois todos os coeficientes da função objetivo são não negativos. Nesses casos, o \textit{gap} do \textit{solver} não é reportado, o que é coerente com a limitação dos métodos exatos discutida na \autoref{sec:complexidade} e na \autoref{sec:implementacao}.
 
-    Para que a distância das soluções ao ótimo possa ser avaliada mesmo quando o \textit{solver} não fornece um limite útil, utiliza-se também um limite inferior combinatório, calculado diretamente a partir dos dados de cada conjunto, sem recorrer ao \textit{solver}. Ele segue a ideia de relaxação utilizada por Ceschia e Schaerf \cite{ceschia2011local} para obter limites inferiores para o PAS e decorre da restrição de capacidade. Se, em um dia, há mais pacientes internados que requerem determinada especialidade do que leitos em quartos dessa especialidade, os pacientes excedentes necessariamente ocupam quartos de outra especialidade naquele dia, em qualquer solução viável. Por exemplo, se em um dia estão internados 20 pacientes que requerem Cirurgia e os quartos de Cirurgia somam 15 leitos, ao menos 5 desses pacientes estão em quartos de outra especialidade nesse dia, qualquer que seja a alocação.
+    Para que a distância das soluções ao ótimo possa ser avaliada mesmo quando o \textit{solver} não fornece um limite útil, utiliza-se também um limite inferior combinatório, calculado diretamente a partir dos dados de cada conjunto, sem recorrer ao \textit{solver}. Ele segue a ideia de relaxação utilizada por Ceschia e Schaerf \cite{ceschia2011local} para obter limites inferiores para o PAS e decorre da restrição de capacidade. Se, em um dia, há mais pacientes internados que requerem determinada especialidade do que leitos em quartos dessa especialidade, os pacientes excedentes necessariamente ocupam quartos de outra especialidade naquele dia, em qualquer solução viável. Por exemplo, se em um dia estão internados 20 pacientes que requerem cirurgia e os quartos de cirurgia somam 15 leitos, ao menos 5 desses pacientes estão em quartos de outra especialidade nesse dia, qualquer que seja a alocação.
 
     Formalmente, seja $S$ o conjunto de especialidades, $n_{s,d} = |\{p \in P : e_p = s,\ d \in D_p\}|$ o número de pacientes internados no dia $d$ que requerem a especialidade $s$, e $c_s = \sum_{r \in R : e_r = s} c_r$ o total de leitos dos quartos da especialidade $s$. O número mínimo de pacientes-dia em quarto de especialidade inadequada, em qualquer solução viável, é
     \begin{equation}
@@ -482,10 +482,10 @@ A avaliação de desempenho de algoritmos heurísticos exige um planejamento exp
     Esse mínimo considera apenas os dias de lotação total e ignora a interação com a especialidade dos quartos, sendo, por isso, fraco, mas permite avaliar a heurística também nesse critério.
     
 
-    \item \textbf{Eficiência Computacional:} Ambos os métodos recebem o mesmo teto de tempo por execução, que cresce com o tamanho da instância (\autoref{sec:protocolo}). A heurística não possui critério de parada por estagnação e sempre utiliza o teto completo, de modo que o tempo de execução, por si só, não diferencia os métodos. Por isso, o esforço computacional é medido pelo número de avaliações da função objetivo dentro do teto. No Gurobi, esse número corresponde às iterações do simplex e, na heurística, à soma das avaliações feitas pelo GA, pela busca local e pelo reparo. As duas medidas não têm a mesma unidade, pois uma iteração do simplex não corresponde à avaliação de uma solução completa, e por isso são comparadas pela forma como variam com o porte, e não pelo valor absoluto. A velocidade de convergência é acompanhada pela curva do melhor \textit{fitness} a cada geração e pela comparação com o custo da população inicial. Os tetos adotados, de 30 a 1920 segundos, foram definidos para comparar os métodos em condições iguais e não representam o tempo de resposta esperado em operação.
+    \item \textbf{Eficiência computacional:} Ambos os métodos recebem o mesmo teto de tempo por execução, que cresce com o tamanho da instância (\autoref{sec:protocolo}). A heurística não possui critério de parada por estagnação e sempre utiliza o teto completo, de modo que o tempo de execução, por si só, não diferencia os métodos. Por isso, a eficiência dos dois métodos é comparada pelo tempo até o alvo (\textit{time-to-target}) \cite{aiex2007ttt}, isto é, o tempo que cada método leva para encontrar uma solução com $Z$ igual ou menor que um valor de referência obtido pelo outro método. Para a heurística, o alvo é o $Z$ final do Gurobi no conjunto e, para o Gurobi, o $Z$ médio das execuções da heurística no mesmo conjunto. Por ser medido em segundos nos dois métodos, o tempo até o alvo não depende de como cada um organiza internamente a sua busca. Como as execuções do protocolo não registram o instante de cada melhora, esse tempo é obtido de medições adicionais, descritas na \autoref{sec:res-esforco}. Na heurística, registram-se ainda o número de avaliações da função objetivo dentro do teto, que soma as avaliações feitas pelo GA, pela busca local e pelo reparo, e o número de gerações concluídas. Essas duas medidas descrevem o esforço da busca heurística e não são comparadas com o Gurobi. A velocidade de convergência é acompanhada pela curva do melhor \textit{fitness} a cada geração e pela comparação com o custo da população inicial. Os tetos adotados, de 30 a 1920 segundos, foram definidos para comparar os métodos em condições iguais e não representam o tempo de resposta esperado em operação.
 
     
-    \item \textbf{Análise Estatística e Robustez:} Devido à natureza estocástica dos Algoritmos Genéticos e à aleatoriedade na exploração de vizinhanças do VND, uma única execução não é suficiente para atestar a qualidade do método \cite{talbi2009metaheuristics}. Portanto, cada conjunto de dados é resolvido por 10 execuções independentes da heurística, cada uma com sua própria sequência aleatória. Para cada conjunto, reportam-se o melhor valor, a média e o coeficiente de variação dessas execuções, sendo a dispersão visualizada em gráficos do tipo \textit{boxplot}. Além disso, cada porte de instância é composto por 10 conjuntos gerados independentemente, o que permite separar duas fontes de variação. A primeira é a variação entre execuções, devida à aleatoriedade da heurística, e a segunda é a variação entre conjuntos, devida ao sorteio da instância.
+    \item \textbf{Análise estatística e robustez:} Devido à natureza estocástica dos algoritmos genéticos e à aleatoriedade na exploração de vizinhanças do VND, uma única execução não é suficiente para atestar a qualidade do método \cite{talbi2009metaheuristics}. Portanto, cada conjunto de dados é resolvido por 10 execuções independentes da heurística, cada uma com sua própria sequência aleatória. Para cada conjunto, reportam-se o melhor valor, a média e o coeficiente de variação dessas execuções, sendo a dispersão visualizada em gráficos do tipo \textit{boxplot}. Além disso, cada porte de instância é composto por 10 conjuntos gerados independentemente, o que permite separar duas fontes de variação. A primeira é a variação entre execuções, devida à aleatoriedade da heurística, e a segunda é a variação entre conjuntos, devida ao sorteio da instância.
     
 \end{itemize}
 
@@ -521,7 +521,7 @@ As instâncias têm semente fixa (\autoref{sec:gerador-instancias}), mas cada ex
 \subsection{Calibração de parâmetros}
 \label{sec:calibracao}
 
-Os parâmetros do Algoritmo Memético foram calibrados por meio de testes A/B isolados, nos quais uma única configuração é alterada e comparada à configuração de referência, com as demais mantidas fixas, em execuções independentes de um mesmo conjunto de dados. A \autoref{tab:calibracao} resume os testes realizados.
+Os parâmetros do algoritmo memético foram calibrados por meio de testes A/B isolados, nos quais uma única configuração é alterada e comparada à configuração de referência, com as demais mantidas fixas, em execuções independentes de um mesmo conjunto de dados. A \autoref{tab:calibracao} resume os testes realizados.
 
 
 
@@ -531,7 +531,7 @@ O peso da penalidade de capacidade $W_{cap}$, conforme a Equação~\eqref{eq:fit
 
 \begin{table}[htbp]
     \centering
-    \caption{Testes de calibração dos parâmetros do Algoritmo Memético}
+    \caption{Testes de calibração dos parâmetros do algoritmo memético}
     \label{tab:calibracao}
     \small
     \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.3cm} >{\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.8cm}}
