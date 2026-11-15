@@ -1,0 +1,926 @@
+% Apresentação da defesa do TCC (beamer, 16:9)
+% Compilar este arquivo diretamente (pdfLaTeX), ele é independente de Monografia.tex.
+%-----------------------------------------------------------
+
+\documentclass[aspectratio=169,10pt]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{amsmath,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{abntex2abrev}       % mesmo estilo de referências do TCC (abntex2-num)
+\usepackage{xurl}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.15}
+
+%---------------Aparência-----------------------------------
+
+\definecolor{primary}{HTML}{1F4E79}
+\definecolor{accent}{HTML}{C0392B}
+\colorlet{qA}{primary!25}
+\colorlet{qB}{accent!30}
+\colorlet{qC}{green!45!black!30}
+\colorlet{fem}{accent!40}
+\colorlet{masc}{primary!35}
+
+\usetheme{default}
+\setbeamersize{text margin left=0.7cm, text margin right=0.7cm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{blocks}[rounded][shadow=false]
+
+\setbeamercolor{structure}{fg=primary}
+\setbeamercolor{frametitle}{bg=primary, fg=white}
+\setbeamercolor{title}{fg=primary}
+\setbeamercolor{block title}{bg=primary!18, fg=primary}
+\setbeamercolor{block body}{bg=primary!5}
+\setbeamercolor{footline}{fg=black!55}
+\setbeamerfont{frametitle}{series=\bfseries, size=\large}
+\setbeamerfont{block title}{series=\bfseries, size=\small}
+\setbeamerfont{footline}{size=\tiny}
+
+% Referências do slide, mostradas no canto inferior esquerdo: \slidecites{chave1, chave2}
+\newcommand{\framerefs}{}
+\newcommand{\slidecites}[1]{\gdef\framerefs{Referências: \cite{#1}}}
+
+\setbeamertemplate{bibliography item}{\insertbiblabel}
+\setbeamerfont{bibliography item}{size=\scriptsize}
+\setbeamerfont{bibliography entry author}{size=\scriptsize}
+\setbeamerfont{bibliography entry title}{size=\scriptsize}
+\setbeamerfont{bibliography entry location}{size=\scriptsize}
+\setbeamerfont{bibliography entry note}{size=\scriptsize}
+
+\setbeamertemplate{footline}{%
+    \leavevmode%
+    \hbox{%
+    \begin{beamercolorbox}[wd=.5\paperwidth, ht=2.4ex, dp=1.2ex, leftskip=0.7cm]{footline}%
+        \usebeamerfont{footline}\framerefs%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.3\paperwidth, ht=2.4ex, dp=1.2ex, center]{footline}%
+        \usebeamerfont{footline}\insertsection%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.2\paperwidth, ht=2.4ex, dp=1.2ex, right, rightskip=0.7cm]{footline}%
+        \usebeamerfont{footline}\insertframenumber/\inserttotalframenumber%
+    \end{beamercolorbox}}%
+    \vskip0pt%
+    \gdef\framerefs{}%
+}
+
+%---------------Macros dos diagramas------------------------
+
+% Sequência de células (um quarto por dia): \cells{x}{y}{cor/rótulo, cor/rótulo, ...}
+\newcommand{\cells}[3]{%
+    \foreach \cellcol/\celllab [count=\cellidx from 0] in {#3}{%
+        \node[draw=black!60, fill=\cellcol, minimum width=4.6mm, minimum height=4mm,
+              inner sep=0pt, font=\tiny] at ({#1+\cellidx*0.46},{#2}) {\celllab};%
+    }%
+}
+
+% Internação no diagrama quartos x dias: \stay{início}{fim}{faixa}{cor}{rótulo}
+\newcommand{\stay}[5]{%
+    \fill[#4, rounded corners=1pt] ({#1+0.05},{-#3-0.88}) rectangle ({#2-0.05},{-#3-0.12});%
+    \node[font=\tiny] at ({(#1+#2)/2},{-#3-0.5}) {#5};%
+}
+
+\tikzset{
+    arr/.style={-{Stealth[length=2mm]}, thick, primary},
+    box/.style={draw=primary, rounded corners=2pt, fill=primary!8, align=center,
+                font=\scriptsize, minimum height=9mm, text width=2.1cm},
+    rep/.style={box, draw=accent, fill=accent!10},
+}
+
+%---------------Início do documento-------------------------
+
+\begin{document}
+
+% Mantém a mesma numeração das referências do TCC (ordem de citação no texto)
+\nocite{brandeau2004operations, schafer2023combining, he2019systematic, paim2011brazilian,
+        bittencourt2009intervencoes, ceschia2012modeling, ceschia2011local, demeester2010hybrid,
+        talbi2009metaheuristics, belien2007building, ala2022appointment, tavares2026repositorio,
+        aiex2007ttt}
+
+%===========================================================
+\begin{frame}[plain]
+    \centering
+    {\small Universidade Federal de Minas Gerais\\
+    Escola de Engenharia\\
+    Curso de Graduação em Engenharia de Sistemas\par}
+
+    \vspace{0.9cm}
+    {\usebeamercolor[fg]{title}\LARGE\bfseries
+    Desenvolvimento de um Algoritmo Heurístico\\[2pt]
+    para Otimização de Leitos Hospitalares\par}
+
+    \vspace{0.3cm}
+    {\color{primary}\rule{0.5\textwidth}{1pt}\par}
+
+    \vspace{0.6cm}
+    {\large Gustavo Ferreira Tavares\par}
+
+    \vspace{0.5cm}
+    {\small Orientadora: Profa. Gabriela Nunes Lopes\\
+    Coorientadora: Profa. Luiza Bernardes Real\par}
+
+    \vspace{0.7cm}
+    {\footnotesize Belo Horizonte, novembro de 2026\par}
+\end{frame}
+
+%===========================================================
+\section{Introdução}
+
+\begin{frame}{Contexto: o leito de internação no fluxo do hospital}
+    \slidecites{brandeau2004operations, schafer2023combining, he2019systematic, paim2011brazilian, bittencourt2009intervencoes}
+    \centering
+    \begin{tikzpicture}[node distance=14mm,
+            stage/.style={box, text width=2.5cm, minimum height=11mm, font=\footnotesize}]
+        \node[stage] (cheg) {Chegada de\\pacientes};
+        \node[stage, right=of cheg] (emerg) {Serviço de\\emergência};
+        \node[stage, right=of emerg, fill=primary!25, very thick] (leitos) {\textbf{Leitos de}\\\textbf{internação}};
+        \node[stage, right=of leitos] (alta) {Alta};
+        \draw[arr] (cheg) -- (emerg);
+        \draw[arr] (emerg) -- node[above, font=\tiny, text=black] {admissão} (leitos);
+        \draw[arr] (leitos) -- (alta);
+    \end{tikzpicture}
+
+    \vspace{0.35cm}
+    \raggedright
+    \begin{itemize}\setlength{\itemsep}{5pt}
+        \item A demanda cresce com o aumento e o envelhecimento da população, enquanto os recursos financeiros e físicos são limitados
+        \item No SUS, somam-se o subfinanciamento histórico e a sobrecarga das emergências, associada principalmente à falta de leitos de internação
+        \item Usar melhor os leitos existentes é uma necessidade para a qualidade e a segurança do atendimento
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{O problema e o objetivo}
+    \slidecites{schafer2023combining, ceschia2011local, ceschia2012modeling, demeester2010hybrid, talbi2009metaheuristics}
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \centering
+            \begin{tikzpicture}[
+                    who/.style={box, text width=3.1cm, minimum height=10mm}]
+                \node[who] (pac) {\textbf{Pacientes:}\\adequação clínica e conforto};
+                \node[who, below=3mm of pac] (prof) {\textbf{Profissionais da saúde:}\\carga de trabalho equilibrada};
+                \node[who, below=3mm of prof] (adm) {\textbf{Administração hospitalar:}\\uso eficiente dos recursos};
+                \node[box, text width=2.3cm, minimum height=14mm, fill=primary!25,
+                      right=12mm of prof] (dec) {\textbf{Em qual quarto fica cada paciente, a cada dia?}};
+                \draw[arr] (pac.east) -- (dec);
+                \draw[arr] (prof.east) -- (dec);
+                \draw[arr] (adm.east) -- (dec);
+            \end{tikzpicture}
+
+            \vspace{1mm}
+            {\scriptsize Interesses conflitantes sobre a mesma decisão.\\ Este trabalho considera especialidade, transferências, gênero e capacidade.\par}
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \begin{itemize}\setlength{\itemsep}{8pt}
+                \item A alocação de leitos é um problema \textbf{NP-difícil}
+                \item O tempo dos métodos exatos cresce rapidamente com o porte do hospital
+                \item Em hospitais de grande porte, a solução ótima deixa de ser obtida em tempo hábil
+                \item Daí a necessidade de \textbf{métodos heurísticos}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3cm}
+    \begin{block}{Objetivo}
+        Desenvolver um algoritmo heurístico para o \textbf{planejamento tático do censo hospitalar}, que mantenha soluções de boa qualidade em instâncias de grande porte, e compará-lo com um método exato sob o mesmo teto de tempo.
+    \end{block}
+\end{frame}
+
+%===========================================================
+\section{Revisão bibliográfica}
+
+\begin{frame}{O que a literatura mostra e o que este trabalho adota}
+    \slidecites{schafer2023combining, ceschia2012modeling, ceschia2011local, demeester2010hybrid, talbi2009metaheuristics}
+    \centering
+    \begin{tikzpicture}[
+            lit/.style={box, text width=6.2cm, minimum height=11mm, font=\footnotesize},
+            dec/.style={box, text width=5.2cm, minimum height=11mm, font=\footnotesize, fill=primary!25}]
+        \node[font=\small\bfseries, text=primary] (h1) {Na literatura};
+        \node[lit, below=2mm of h1] (l1) {Métodos exatos não escalam, resolvem só até 250 pacientes \cite{ceschia2012modeling} ou não acham solução viável em uma hora \cite{demeester2010hybrid}};
+        \node[lit, below=3mm of l1] (l2) {Alocar a quartos, e não a leitos, reduz o espaço de busca \cite{ceschia2012modeling}, e a política de gênero pode ser linearizada \cite{ceschia2011local}};
+        \node[lit, below=3mm of l2] (l3) {Objetivos conflitantes são agregados em uma soma ponderada, com pesos definidos \textit{a priori} \cite{schafer2023combining, talbi2009metaheuristics}};
+        \node[lit, below=3mm of l3] (l4) {O algoritmo genético explora bem o espaço de busca, mas é limitado no ajuste fino, que a busca local supre \cite{talbi2009metaheuristics}};
+        \node[dec, right=14mm of l1] (d1) {Heurística para os portes maiores, com o método exato como referência};
+        \node[dec, right=14mm of l2] (d2) {Modelo de programação linear inteira por quarto e por dia};
+        \node[dec, right=14mm of l3] (d3) {Função objetivo única, com pesos fixos};
+        \node[dec, right=14mm of l4] (d4) {\textbf{Algoritmo memético}, genético com busca local VND};
+        \node[font=\small\bfseries, text=primary, above=2mm of d1] {Neste trabalho};
+        \foreach \k in {1,...,4} \draw[arr] (l\k) -- (d\k);
+    \end{tikzpicture}
+\end{frame}
+
+%===========================================================
+\section{Metodologia}
+
+\begin{frame}{Modelo matemático: conjuntos e variáveis}
+    \slidecites{ceschia2012modeling, ceschia2011local}
+    \begin{columns}[t]
+        \begin{column}{0.47\textwidth}
+            \begin{block}{Conjuntos e parâmetros}
+                \small
+                \begin{tabular}{@{}ll@{}}
+                    $P = P_F \cup P_M$ & pacientes \\
+                    $R$ & quartos \\
+                    $D$ & dias do horizonte \\
+                    $D_p \subseteq D$ & dias de internação de $p$ \\
+                    $P_d$ & pacientes internados no dia $d$ \\
+                    $c_r$ & capacidade do quarto $r$ \\
+                    $e_p,\ e_r$ & especialidade de $p$ e de $r$ \\
+                \end{tabular}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Variáveis de decisão (binárias)}
+                \small
+                \begin{tabular}{@{}lp{4.9cm}@{}}
+                    $x_{p,r,d}$ & paciente $p$ no quarto $r$ no dia $d$ \\
+                    $t_{p,r,d}$ & $p$ é transferido do quarto $r$ do dia $d$ para o dia $d+1$ \\
+                    $f_{r,d}$ & há paciente do gênero feminino em $r$ no dia $d$ \\
+                    $m_{r,d}$ & há paciente do gênero masculino em $r$ no dia $d$ \\
+                    $b_{r,d}$ & quarto $r$ está misto no dia $d$ \\
+                \end{tabular}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Modelo matemático: função objetivo}
+    \slidecites{schafer2023combining, ceschia2011local, demeester2010hybrid, talbi2009metaheuristics}
+    \centering
+    \adjustbox{max width=\textwidth}{$\displaystyle
+        \min Z \;=\;
+        \underbrace{\sum_{p \in P} \sum_{r \in R} \sum_{d \in D_p} C_{p,r}\, x_{p,r,d}}_{\text{especialidade inadequada}}
+        \;+\;
+        \underbrace{\sum_{p \in P} \sum_{r \in R} \sum_{d \in D_p \setminus \{d^{\text{alta}}_p\}} W_{transf}\, t_{p,r,d}}_{\text{transferências}}
+        \;+\;
+        \underbrace{\sum_{r \in R} \sum_{d \in D} W_{gen}\, b_{r,d}}_{\text{quartos mistos}}
+    $}
+
+    \vspace{0.5cm}
+    \begin{columns}[c]
+        \begin{column}{0.48\textwidth}
+            \[
+                C_{p,r} =
+                \begin{cases}
+                    W_{spec}, & \text{se } e_p \neq e_r \\
+                    0, & \text{caso contrário}
+                \end{cases}
+            \]
+            \begin{itemize}
+                \item Soma ponderada, pesos definidos \textit{a priori}
+                \item A capacidade não entra em $Z$, pois é restrição rígida
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \centering
+            \small
+            \begin{adjustbox}{max width=\linewidth}
+            \begin{tabular}{lcl}
+                \toprule
+                \textbf{Peso} & \textbf{Valor} & \textbf{Cobrado por} \\
+                \midrule
+                $W_{spec}$ & 100 & paciente-dia em especialidade inadequada \\
+                $W_{gen}$ & 75 & quarto-dia misto \\
+                $W_{transf}$ & 50 & transferência \\
+                \bottomrule
+            \end{tabular}
+            \end{adjustbox}
+
+            \vspace{0.15cm}
+            {\scriptsize \textbf{Paciente-dia:} um paciente em um dia de sua internação.\\ \textbf{Quarto-dia:} um quarto em um dia.\par}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Modelo matemático: restrições}
+    \slidecites{ceschia2011local}
+    \centering
+    \renewcommand{\arraystretch}{1.45}
+    \begin{adjustbox}{max width=\textwidth, max totalheight=0.72\textheight}
+    \begin{tabular}{@{}l@{\qquad}l@{\qquad}l@{}}
+        \toprule
+        \textbf{Atribuição única e contínua} & $\displaystyle \sum_{r \in R} x_{p,r,d} = 1$ & $\forall p \in P,\ \forall d \in D_p$ \\
+        \textbf{Capacidade do quarto} & $\displaystyle \sum_{p \in P_d} x_{p,r,d} \leq c_r$ & $\forall r \in R,\ \forall d \in D$ \\
+        \textbf{Rastreamento de transferência} & $t_{p,r,d} \geq x_{p,r,d} - x_{p,r,d+1}$ & $\forall p \in P,\ \forall r \in R,\ \forall d \in D_p \setminus \{d^{\text{alta}}_p\}$ \\
+        \textbf{Presença feminina} & $f_{r,d} \geq x_{p,r,d}$ & $\forall p \in P_F,\ \forall r \in R,\ \forall d \in D_p$ \\
+        \textbf{Presença masculina} & $m_{r,d} \geq x_{p,r,d}$ & $\forall p \in P_M,\ \forall r \in R,\ \forall d \in D_p$ \\
+        \textbf{Quarto misto} & $b_{r,d} \geq m_{r,d} + f_{r,d} - 1$ & $\forall r \in R,\ \forall d \in D$ \\
+        \textbf{Domínio} & $x_{p,r,d},\ t_{p,r,d},\ f_{r,d},\ m_{r,d},\ b_{r,d} \in \{0,1\}$ & \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{frame}
+
+\begin{frame}{Modelo matemático: exemplo de alocação}
+    \slidecites{schafer2023combining, ceschia2012modeling, demeester2010hybrid}
+    \begin{columns}[c]
+        \begin{column}{0.5\textwidth}
+            \centering
+            \begin{tikzpicture}[x=0.95cm, y=0.36cm]
+                % dias
+                \foreach \nd in {1,...,6} \node[font=\tiny] at (\nd-0.5,0.7) {dia \nd};
+                % quartos
+                \foreach \ry/\rlab in {0/{Q1\\Cardiologia}, 4/{Q2\\Ortopedia}, 8/{Q3\\Clínica geral}}{
+                    \draw[black!50] (0,-\ry) rectangle (6,-\ry-3);
+                    \node[font=\tiny, align=right, left] at (0,-\ry-1.5) {\rlab};
+                }
+                \foreach \nd in {1,...,5} \draw[black!15] (\nd,0) -- (\nd,-11);
+                % quarto 1
+                \stay{0}{4}{0}{masc}{$p_1$}
+                \stay{0}{6}{1}{masc}{$p_2$}
+                \stay{0}{3}{2}{masc}{$p_9$}
+                \stay{3}{6}{2}{masc}{$p_3$ (cardiologia)}
+                % quarto 2
+                \stay{0}{3}{4}{masc}{$p_3$ (cardiologia)}
+                \draw[accent, thick, rounded corners=1pt] (0.05,-4.88) rectangle (2.95,-4.12);
+                \stay{0}{5}{5}{fem}{$p_4$}
+                \stay{2}{6}{6}{fem}{$p_5$}
+                \draw[accent, dashed, thick] (0,-4) rectangle (3,-7);
+                \node[font=\tiny, text=accent] at (1,-6.5) {quarto misto};
+                % quarto 3
+                \stay{0}{4}{8}{fem}{$p_6$}
+                \stay{1}{6}{9}{fem}{$p_7$}
+                \stay{4}{6}{10}{fem}{$p_8$}
+                % transferência
+                \draw[-{Stealth[length=2mm]}, thick, accent] (2.8,-4.12) -- (3.2,-2.88);
+                \node[font=\tiny, text=accent, right] at (3.25,-3.5) {transferência};
+                % legenda
+                \fill[fem] (0,-12.4) rectangle (0.4,-11.7);
+                \node[font=\tiny, right] at (0.4,-12.05) {feminino};
+                \fill[masc] (1.6,-12.4) rectangle (2,-11.7);
+                \node[font=\tiny, right] at (2,-12.05) {masculino};
+                \draw[accent, thick, rounded corners=1pt] (3.3,-12.4) rectangle (3.7,-11.7);
+                \node[font=\tiny, right] at (3.7,-12.05) {especialidade inadequada};
+            \end{tikzpicture}
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \begin{itemize}\setlength{\itemsep}{8pt}
+                \item Cada barra é um paciente em um quarto ao longo dos dias, $x_{p,r,d} = 1$
+                \item \textbf{Transferência:} $p_3$ fica internado do dia 1 ao dia 6 e muda de Q2 para Q1 após o dia 3, $t_{p,r,d} = 1$, com custo $W_{transf}$
+                \item \textbf{Quarto misto:} gêneros distintos no mesmo quarto e dia, $b_{r,d} = 1$, com custo $W_{gen}$ por dia
+                \item \textbf{Especialidade inadequada:} $p_3$, da cardiologia, passa três dias na ortopedia, com custo $W_{spec}$ por dia
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Instâncias de teste e protocolo}
+    \slidecites{brandeau2004operations, he2019systematic, demeester2010hybrid}
+    \centering
+    \small
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{Porte} & \textbf{Quartos} & \textbf{Pacientes} & \textbf{Teto por execução} & \textbf{Execuções da heurística} & \textbf{Conjuntos} \\
+        \midrule
+        Pequena      & 10  & 100  & 30 s   & 10 & 10 \\
+        Média        & 40  & 400  & 120 s  & 10 & 10 \\
+        Grande       & 160 & 1600 & 480 s  & 10 & 10 \\
+        Muito grande & 640 & 6400 & 1920 s & 10 & 10 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+
+    \vspace{0.4cm}
+    \normalsize
+    \begin{columns}[t]
+        \begin{column}{0.48\textwidth}
+            \textbf{Gerador de instâncias}
+            \begin{itemize}
+                \item 3 leitos por quarto
+                \item Número de pacientes igual a 10 vezes o número de quartos
+                \item 40\% de clínica geral e 20\% de cirurgia, cardiologia e ortopedia
+                \item Tempo médio de permanência de 4 dias
+                \item Ocupação-alvo de 90\%, com lotação total em cerca de 12 dos 15 dias
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \textbf{Comparação}
+            \begin{itemize}
+                \item Mesmo teto de tempo para o Gurobi e para a heurística
+                \item Teto proporcional ao porte, 0,3 s por paciente
+                \item Instâncias geradas com semente fixa (reprodutíveis)
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Heurística: visão geral}
+    \slidecites{talbi2009metaheuristics}
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[node distance=6mm,
+            st/.style={box, text width=2.4cm, minimum height=12mm, font=\footnotesize},
+            rp/.style={rep, text width=1.3cm, minimum height=12mm, font=\footnotesize}]
+        \node[st] (ini) {População\\inicial};
+        \node[rp, right=of ini] (r0) {Reparo};
+        \node[st, right=10mm of r0] (ga) {Algoritmo\\genético};
+        \node[rp, right=of ga] (r1) {Reparo};
+        \node[st, right=of r1] (vnd) {Busca local\\VND};
+        \node[rp, right=of vnd] (r2) {Reparo};
+        \node[draw=primary, fill=white, diamond, aspect=1.8, inner sep=1pt, align=center,
+              font=\footnotesize, right=of r2] (fim) {Tempo\\esgotado?};
+        \node[st, right=12mm of fim, fill=primary!25] (out) {\textbf{Melhor}\\\textbf{solução}};
+        \draw[arr] (ini) -- (r0);
+        \draw[arr] (r0) -- (ga);
+        \draw[arr] (ga) -- (r1);
+        \draw[arr] (r1) -- (vnd);
+        \draw[arr] (vnd) -- (r2);
+        \draw[arr] (r2) -- (fim);
+        \draw[arr] (fim) -- node[above, font=\footnotesize, text=black] {sim} (out);
+        % laço das gerações
+        \draw[arr] (fim.north) -- ++(0,6mm) -| (ga.north)
+            node[pos=0.25, above, font=\footnotesize, text=black] {não, inicia uma nova geração};
+        % papel de cada etapa
+        \node[font=\scriptsize, below=2mm of ga, align=center] {diversificação};
+        \node[font=\scriptsize, below=2mm of vnd, align=center] {intensificação};
+    \end{tikzpicture}}
+
+    \vspace{0.5cm}
+    \raggedright
+    \begin{itemize}\setlength{\itemsep}{6pt}
+        \item \textbf{Algoritmo genético:} gera novas soluções por seleção, cruzamento e mutação
+        \item \textbf{Busca local VND:} refina a elite e parte dos demais indivíduos da população
+        \item \textbf{Reparo:} elimina o excesso de capacidade, de modo que toda solução entre gerações é viável
+        \item \textbf{Parada:} o único critério é o teto de tempo, o mesmo dado ao Gurobi
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Busca local VND: quatro vizinhanças}
+    \slidecites{ceschia2012modeling, ceschia2011local, demeester2010hybrid, talbi2009metaheuristics}
+    {\footnotesize Cada solução guarda, para cada paciente, o quarto ocupado em cada dia de internação (A e B são quartos).}
+
+    \vspace{0.25cm}
+    \begin{columns}[t]
+        \begin{column}{0.48\textwidth}
+            \textbf{$N_1$ Mudança de quarto}\\[3pt]
+            \begin{tikzpicture}
+                \node[font=\tiny, left] at (-0.3,0) {$p$};
+                \cells{0}{0}{qA/A,qA/A,qA/A,qA/A}
+                \draw[arr] (3.0,0) -- (3.5,0);
+                \cells{3.9}{0}{qB/B,qB/B,qB/B,qB/B}
+            \end{tikzpicture}
+
+            \vspace{0.35cm}
+            \textbf{$N_2$ Troca entre pacientes}\\[3pt]
+            \begin{tikzpicture}
+                \node[font=\tiny, left] at (-0.3,0) {$p_1$};
+                \cells{0}{0}{qA/A,qA/A,qA/A,qA/A}
+                \node[font=\tiny, left] at (-0.3,-0.5) {$p_2$};
+                \cells{0.46}{-0.5}{qB/B,qB/B,qB/B}
+                \draw[arr] (3.0,-0.25) -- (3.5,-0.25);
+                \cells{3.9}{0}{qB/B,qB/B,qB/B,qB/B}
+                \cells{4.36}{-0.5}{qA/A,qA/A,qA/A}
+            \end{tikzpicture}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \textbf{$N_3$ Mudança parcial} (cria transferência)\\[3pt]
+            \begin{tikzpicture}
+                \node[font=\tiny, left] at (-0.3,0) {$p$};
+                \cells{0}{0}{qA/A,qA/A,qA/A,qA/A}
+                \draw[arr] (3.0,0) -- (3.5,0);
+                \cells{3.9}{0}{qA/A,qA/A,qB/B,qB/B}
+            \end{tikzpicture}
+
+            \vspace{0.35cm}
+            \textbf{$N_4$ Troca parcial} (dias sobrepostos)\\[3pt]
+            \begin{tikzpicture}
+                \node[font=\tiny, left] at (-0.3,0) {$p_1$};
+                \cells{0}{0}{qA/A,qA/A,qA/A,qA/A}
+                \node[font=\tiny, left] at (-0.3,-0.5) {$p_2$};
+                \cells{0.92}{-0.5}{qB/B,qB/B,qB/B,qB/B}
+                \draw[arr] (3.0,-0.25) -- (3.5,-0.25);
+                \cells{3.9}{0}{qA/A,qA/A,qB/B,qB/B}
+                \cells{4.82}{-0.5}{qA/A,qA/A,qB/B,qB/B}
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.45cm}
+    \begin{block}{Como a busca funciona}
+        \begin{itemize}
+            \item Para cada paciente, tenta $N_1 \rightarrow N_2 \rightarrow N_3 \rightarrow N_4$ e aplica o primeiro movimento que reduz o custo da solução
+            \item Pacientes sem movimento de melhora saem da fila (\textit{don't-look bits})
+            \item Cada movimento avalia no máximo 10 candidatos, e cada chamada, no máximo $250 \cdot |P|$ avaliações
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Etapa de reparo da capacidade}
+    \slidecites{talbi2009metaheuristics}
+    {\small Na busca local, a capacidade é \textbf{flexível}, penalizada no \textit{fitness} $F = Z + W_{cap} \cdot V_{cap}$, em que $V_{cap}$ soma, em cada quarto e dia, quantos pacientes excedem o número de leitos. O \textbf{reparo} elimina esse excesso a cada geração.\par}
+
+    \vspace{0.2cm}
+    \begin{columns}[c]
+        \begin{column}{0.4\textwidth}
+            \centering
+            \begin{tikzpicture}
+                \node[font=\scriptsize] at (0.69,0.55) {Quarto A, dia $d$};
+                \cells{0}{0}{qA/$p_1$,qA/$p_2$,qA/$p_3$,accent!60/$p_4$}
+                \draw[black!70, thick] (-0.25,-0.22) rectangle (1.17,0.22);
+                \node[font=\tiny, text=accent] at (1.38,-0.42) {excedente};
+                \node[font=\scriptsize] at (0.46,-1.25) {Quarto B, dia $d$};
+                \cells{0}{-1.8}{qB/$p_5$,qB/$p_6$,white/}
+                \draw[black!70, thick] (-0.25,-2.02) rectangle (1.17,-1.58);
+                \node[font=\tiny] at (1.05,-2.25) {leito livre};
+                \draw[arr, accent] (1.75,0) to[bend left=70] (1.25,-1.8);
+            \end{tikzpicture}
+
+            \vspace{0.3cm}
+            \footnotesize
+            Custo máximo de cada realocação
+            \[
+                \Delta Z \leq 275 < W_{cap} = 1900
+            \]
+        \end{column}
+        \begin{column}{0.56\textwidth}
+            \begin{itemize}\setlength{\itemsep}{6pt}
+                \item Cada paciente-dia excedente vai para um quarto com leito livre no dia, que sempre existe nas instâncias
+                \item Escolhe-se o movimento de menor variação de $F$, entre mover apenas aquele dia e mover o maior bloco contínuo da internação
+                \item Aplicado à população inicial e, a cada geração, antes e depois do VND
+            \end{itemize}
+            \begin{block}{Consequência}
+                Toda solução reportada respeita a capacidade, e o valor comparado ao Gurobi é sempre $Z$.
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Como a qualidade é avaliada}
+    \slidecites{ceschia2011local}
+    \centering
+    \begin{tikzpicture}
+        % eixo do custo
+        \draw[-{Stealth[length=2mm]}, thick, black!60] (0,0) -- (11.5,0) node[right, font=\scriptsize] {custo};
+        \foreach \px/\lab in {2.5/{$L$\\limite inferior}, 5.2/{$Z^*$\\ótimo (desconhecido)}, 9/{$Z$\\solução encontrada}}{
+            \fill[primary] (\px,0) circle (2pt);
+            \node[font=\scriptsize, align=center, above=2pt] at (\px,0) {\lab};
+        }
+        % excesso máximo
+        \draw[{Stealth[length=1.5mm]}-{Stealth[length=1.5mm]}, accent, thick] (2.5,-0.5) -- (9,-0.5)
+            node[midway, below=1pt, font=\scriptsize, text=accent] {\textbf{excesso máximo sobre o ótimo} $= (Z - L)/L$};
+    \end{tikzpicture}
+
+    \vspace{0.25cm}
+    {\small O ótimo não pode ser menor que $L$. Logo, a solução está, no máximo, $(Z - L)/L$ acima dele.\par}
+
+    \vspace{0.5cm}
+    \begin{columns}[t]
+        \begin{column}{0.5\textwidth}
+            \footnotesize\raggedright
+            \textbf{Limite inferior $L$}\\[2pt]
+            O maior entre dois limites.\\[2pt]
+            $LB_{Gurobi}$, calculado pelo \textit{solver}.\\[2pt]
+            $LB_{comb} = W_{spec} \cdot M$, calculado dos dados \cite{ceschia2011local}, em que $M$ conta os pacientes que, a cada dia, excedem os leitos de sua especialidade.
+        \end{column}
+        \begin{column}{0.42\textwidth}
+            \footnotesize\raggedright
+            \textbf{\textit{Gap} do Gurobi}\\[2pt]
+            $(Z_{Gurobi} - LB_{Gurobi})/Z_{Gurobi}$, a distância entre a solução do \textit{solver} e o limite inferior que ele próprio calcula.
+        \end{column}
+    \end{columns}
+\end{frame}
+
+%===========================================================
+\section{Resultados}
+
+\begin{frame}{Qualidade da solução}
+    \slidecites{ceschia2012modeling, demeester2010hybrid}
+    \centering
+    \small
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Porte} & \textbf{\textit{Gap} do Gurobi} & \textbf{$Z$ da heurística em relação à solução do Gurobi} & \textbf{Excesso máx. da heurística sobre o ótimo} \\
+        & $(Z_{Gurobi} - LB_{Gurobi})/Z_{Gurobi}$ & (mesmo teto de tempo) & $(Z - L)/L$ \\
+        \midrule
+        Pequena      & 1,0\% a 16,0\%        & 1,6\% acima     & 8,2\%        \\
+        Média        & 60,5\% a 81,3\%       & 66,1\% abaixo   & 19,3\%       \\
+        Grande       & sem limite não trivial em 8 de 10 & 93,9\% abaixo   & 76,7\%$^*$   \\
+        Muito grande & sem limite não trivial em 10 de 10 & 95,2\% abaixo  & 120,0\%$^*$  \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+
+    \vspace{0.15cm}
+    {\scriptsize \textit{Gap}: menor e maior valor entre os conjuntos. Demais colunas: média dos 10 conjuntos, com a execução de menor $F$ da heurística em cada um. $Z$ recalculado pelo mesmo avaliador nas duas abordagens. $^*$ Limite fraco, pois considera apenas a parcela de especialidade.\\ O \textit{gap} e o excesso máximo têm denominadores diferentes e não são comparáveis diretamente. Um \textit{gap} de 72\% equivale a um excesso de 255\%.\par}
+
+    \vspace{0.25cm}
+    \normalsize
+    \raggedright
+    \begin{itemize}
+        \item A partir da média, a diferença para o Gurobi mede sobretudo a dificuldade do método exato. A qualidade da heurística é medida pelo excesso máximo sobre o ótimo
+        \item Nas instâncias grande e muito grande, a solução do Gurobi equivale a uma alocação ao acaso
+        \item A dificuldade do método exato nos portes maiores é coerente com a literatura \cite{ceschia2012modeling, demeester2010hybrid}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Qualidade da solução: comparação por porte}
+    \begin{columns}[c]
+        \begin{column}{0.58\textwidth}
+            \centering
+            \begin{tikzpicture}
+                \begin{axis}[
+                    ybar, bar width=8pt,
+                    width=\linewidth, height=5.2cm,
+                    ymin=0, ymax=150,
+                    xtick={1,2,3,4},
+                    xticklabels={Pequena, Média, Grande, Muito grande},
+                    ylabel={$Z$ por paciente-dia (média dos conjuntos)},
+                    enlarge x limits=0.18,
+                    axis lines*=left, ymajorgrids,
+                    tick label style={font=\scriptsize},
+                    label style={font=\scriptsize},
+                    legend style={at={(0.02,0.98)}, anchor=north west, font=\tiny, draw=none, fill=none},
+                    legend cell align=left,
+                    nodes near coords,
+                    every node near coord/.append style={font=\tiny, /pgf/number format/.cd, fixed, fixed zerofill, precision=1, use comma},
+                ]
+                    \addplot[fill=accent!70, draw=accent] coordinates {(1,26.1) (2,52.2) (3,127.8) (4,128.0)};
+                    \addplot[fill=primary!70, draw=primary] coordinates {(1,26.5) (2,17.6) (3,7.8) (4,6.2)};
+                    \addplot[fill=black!25, draw=black!50] coordinates {(1,23.2) (2,14.6) (3,4.7) (4,3.0)};
+                    \legend{Gurobi, Heurística, Mínimo estrutural}
+                \end{axis}
+            \end{tikzpicture}
+
+            \vspace{-1mm}
+            {\scriptsize $Z$ é dividido pelo número de pacientes-dia porque seu valor bruto cresce com o porte e não é comparável entre portes. \textbf{Mínimo estrutural:} custo de especialidade inadequada presente em qualquer solução viável, $LB_{comb} = W_{spec} \cdot M$, por paciente-dia.\par}
+        \end{column}
+        \begin{column}{0.39\textwidth}
+            \begin{itemize}\setlength{\itemsep}{7pt}
+                \item \textbf{Pequena:} o Gurobi é melhor em 9 de 10 conjuntos
+                \item \textbf{A partir da média:} a heurística é melhor nos 30 conjuntos
+                \item O Gurobi não comprova a otimalidade em nenhum dos 40 conjuntos
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Robustez}
+    \slidecites{talbi2009metaheuristics}
+    \begin{columns}[c]
+        \begin{column}{0.58\textwidth}
+            \centering
+            \includegraphics[width=\linewidth, height=0.78\textheight, keepaspectratio]{Figuras/resultados/grande/boxplot_sets.png}
+        \end{column}
+        \begin{column}{0.39\textwidth}
+            {\footnotesize\raggedright \textbf{Coeficiente de variação (CV):} desvio padrão dividido pela média de $Z$ nas 10 execuções de um conjunto. Quanto menor, mais estável é a heurística.\par}
+
+            \vspace{0.3cm}
+            \centering
+            \small
+            \begin{tabular}{lc}
+                \toprule
+                \textbf{Porte} & \textbf{CV de $Z$ entre execuções} \\
+                \midrule
+                Pequena      & 1,9\% \\
+                Média        & 1,7\% \\
+                Grande       & 1,6\% \\
+                Muito grande & 1,1\% \\
+                \bottomrule
+            \end{tabular}
+
+            \vspace{0.3cm}
+            \raggedright
+            \begin{itemize}
+                \item Em um mesmo conjunto, as 10 execuções chegam a valores de $Z$ muito próximos
+                \item O resultado depende pouco da aleatoriedade da heurística
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Convergência da heurística}
+    \begin{columns}[c]
+        \begin{column}{0.6\textwidth}
+            \centering
+            \includegraphics[width=\linewidth, height=0.8\textheight, keepaspectratio]{Figuras/resultados/convergence_log.png}
+        \end{column}
+        \begin{column}{0.37\textwidth}
+            \begin{itemize}\setlength{\itemsep}{7pt}
+                \item \textbf{Pequena:} cerca de 70\% da redução de $F$ ocorre na primeira geração, e a busca estagna por volta da 12ª de 21 gerações
+                \item \textbf{Média, grande e muito grande:} 28, 74 e 93 de 100 execuções ainda melhoram na última geração
+                \item A heurística é limitada pela estagnação na instância pequena e pelo tempo nas demais
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Viabilidade e efeito do reparo}
+    \centering
+    \small
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Porte} & \textbf{Execuções viáveis} & \textbf{Tempo gasto no reparo} & \textbf{$Z$ médio em relação à versão sem reparo} \\
+        \midrule
+        Pequena      & 100/100 & 7,6\%  & $-1{,}3\%$ \\
+        Média        & 100/100 & 20,3\% & $-1{,}2\%$ \\
+        Grande       & 100/100 & 24,8\% & $-6{,}1\%$ \\
+        Muito grande & 100/100 & 26,1\% & $-13{,}7\%$ \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+
+    \vspace{0.4cm}
+    \normalsize
+    \begin{columns}[t]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Sem reparo (execução anterior do protocolo)}
+                \begin{itemize}
+                    \item Grande: 5 de 100 execuções viáveis
+                    \item Muito grande: nenhuma execução viável
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Com reparo, em relação à versão sem reparo}
+                \begin{itemize}
+                    \item Transferências caem de 10\% a 24\%
+                    \item Quartos mistos sobem de 9\% a 15\% a partir da média
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Eficiência computacional: tempo até o alvo}
+    \slidecites{aiex2007ttt}
+    \centering
+    \small
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lrccc}
+        \toprule
+        \textbf{Porte} & \textbf{Teto} & \textbf{Gurobi até o $Z$ médio da heurística} & \textbf{Heurística até o $Z$ final do Gurobi} & \textbf{Gerações da heurística} \\
+        \midrule
+        Pequena      & 30 s   & 3,3 s (10,8\%) & 1 de 100 execuções       & 20,9 \\
+        Média        & 120 s  & não alcança    & $\leq$ 2,9 s (2,5\%)     & 14,7 \\
+        Grande       & 480 s  & não alcança    & $\leq$ 11,8 s (2,5\%)    & 13,4 \\
+        Muito grande & 1920 s & não alcança    & $\leq$ 57,1 s (3,0\%)    & 10,5 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+
+    \vspace{0.15cm}
+    {\scriptsize Entre parênteses, a fração do teto de tempo. $\leq$: tempo para construir e reparar a população inicial, cuja melhor solução já supera o alvo. Não alcança: o $Z$ final do Gurobi é maior que o de todas as execuções da heurística.\par}
+
+    \vspace{0.35cm}
+    \normalsize
+    \begin{itemize}
+        \item A partir da média, a \textbf{população inicial reparada} já supera a solução final do Gurobi
+        \item A heurística avalia cerca de 55 mil soluções por segundo na instância pequena e 43 mil na muito grande, com 64 vezes mais pacientes
+        \item O número de gerações cai com o porte, pois cada geração fica mais custosa
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Métricas operacionais da heurística}
+    \slidecites{schafer2023combining, demeester2010hybrid}
+    \centering
+    \small
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{lccccc}
+        \toprule
+        & \multicolumn{2}{c}{\textbf{Especialidade inadequada}} & \textbf{Transferências} & \multicolumn{2}{c}{\textbf{Quartos mistos}} \\
+        & \multicolumn{2}{c}{(\% dos pacientes-dia)} & (por 100 pacientes) & \multicolumn{2}{c}{(\% dos quartos-dia)} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-4} \cmidrule(lr){5-6}
+        \textbf{Porte} & \textbf{Limite mínimo} & \textbf{Obtido} & \textbf{Obtido} & \textbf{Limite mínimo} & \textbf{Obtido} \\
+        \midrule
+        Pequena      & 23,2 & 23,5 & 6,4  & 5,2 & 7,6 \\
+        Média        & 14,6 & 14,8 & 12,7 & 1,4 & 4,4 \\
+        Grande       & 4,7  & 5,0  & 13,8 & 0,3 & 3,9 \\
+        Muito grande & 3,0  & 3,1  & 14,8 & 0,1 & 4,3 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+
+    \vspace{0.15cm}
+    {\scriptsize \textbf{Limite mínimo:} nenhuma solução viável fica abaixo dele, pois é imposto pelos dados da instância (mínimo estrutural na especialidade e mínimo por paridade nos quartos mistos). \textbf{Obtido:} valor das soluções da heurística. Médias dos 10 conjuntos.\\ Para as transferências, o único mínimo garantido é zero. \textbf{Paciente-dia:} um paciente em um dia de sua internação. \textbf{Quarto-dia:} um quarto em um dia.\par}
+
+    \vspace{0.3cm}
+    \normalsize
+    \begin{itemize}
+        \item \textbf{Especialidade:} no máximo 0,3 ponto percentual acima do limite mínimo
+        \item \textbf{Transferências:} induzidas pelos pesos, pois transferir para o quarto adequado reduz $Z$ em $100k - 50$ quando restam $k$ dias de internação
+        \item \textbf{Quartos mistos:} quando separar os gêneros exige tirar o paciente de sua especialidade, a função objetivo prefere o quarto misto ($W_{gen} = 75$) à especialidade inadequada ($W_{spec} = 100$)
+    \end{itemize}
+\end{frame}
+
+%===========================================================
+\section{Conclusão}
+
+\begin{frame}{Conclusões}
+    \slidecites{ceschia2012modeling, ceschia2011local, demeester2010hybrid}
+    \begin{itemize}\setlength{\itemsep}{6pt}
+        \item O objetivo foi atingido. O algoritmo memético fornece soluções \textbf{viáveis e de boa qualidade} em todos os portes
+        \item \textbf{Instância pequena:} o modelo exato é tratável. A heurística fica, em média, 1,6\% acima do Gurobi e no máximo 8,2\% acima do ótimo
+        \item \textbf{Instância média:} o Gurobi não fecha o \textit{gap} dentro do teto. A heurística obtém o menor $Z$ nos 10 conjuntos e fica, em média, no máximo 19,3\% acima do ótimo
+        \item \textbf{Grande e muito grande:} o Gurobi praticamente não otimiza dentro do teto, e sua solução equivale a uma alocação ao acaso. A heurística continua encontrando soluções efetivas, com $Z$ próximo do valor por paciente-dia do mínimo estrutural.
+        \item \textbf{Reparo:} 400 de 400 execuções viáveis e $Z$ médio de 1,2\% a 13,7\% menor que sem o reparo
+        \item \textbf{Estabilidade:} coeficiente de variação de 1,1\% a 1,9\% entre execuções
+        \item Reduzir a especialidade inadequada exige mudar a distribuição dos quartos, uma decisão estratégica do hospital
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Limitações e trabalhos futuros}
+    \slidecites{schafer2023combining, ceschia2012modeling, talbi2009metaheuristics, belien2007building}
+    \begin{columns}[t]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Limitações}
+                \begin{itemize}\setlength{\itemsep}{4pt}
+                    \item Reparo consome de 8\% a 26\% do teto e aumenta os quartos mistos
+                    \item Limites inferiores fracos nas instâncias grande e muito grande
+                    \item Estagnação na instância pequena
+                    \item Instâncias sintéticas e determinísticas
+                    \item $W_{cap}$ calibrado em um único conjunto
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Trabalhos futuros}
+                \begin{itemize}\setlength{\itemsep}{4pt}
+                    \item Mecanismos de diversificação contra a estagnação
+                    \item Limites inferiores que incluam transferências e quartos mistos
+                    \item Abordagens híbridas com o método exato
+                    \item Calibração dos pesos com gestores hospitalares
+                    \item Dados reais e versão dinâmica do problema
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+    \centering
+    {\usebeamercolor[fg]{title}\Huge\bfseries Obrigado!\par}
+
+    \vspace{0.6cm}
+    {\Large Perguntas?\par}
+
+    \vspace{1.2cm}
+    {\small Gustavo Ferreira Tavares\par}
+
+    \vspace{0.3cm}
+    {\footnotesize Código-fonte disponível em repositório público \cite{tavares2026repositorio}\par}
+\end{frame}
+
+%===========================================================
+\section{Referências}
+
+\begin{frame}[allowframebreaks]{Referências}
+    \scriptsize
+    \bibliographystyle{abntex2-num}
+    \bibliography{referencias}
+\end{frame}
+
+%===========================================================
+% Slides de apoio, para a arguição
+\appendix
+\section{Apoio}
+
+\begin{frame}{Calibração do peso de capacidade $W_{cap}$}
+    \begin{columns}[c]
+        \begin{column}{0.6\textwidth}
+            \centering
+            \includegraphics[width=\linewidth, height=0.8\textheight, keepaspectratio]{Figuras/resultados/calibracao/fitness_vs_capacity_penalty.png}
+        \end{column}
+        \begin{column}{0.37\textwidth}
+            \begin{itemize}\setlength{\itemsep}{7pt}
+                \item Varredura de dez valores, de 200 a 5000, na instância média (conjunto 1)
+                \item $W_{cap} = 1900$ teve o menor $Z$ entre os pesos com violação média abaixo de 1 paciente-dia
+                \item Com $W_{cap}$ acima de 275, exceder a capacidade nunca compensa. A violação que persiste em todos os pesos vem da busca, e não do peso, o que motivou a etapa de reparo
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Parâmetros do algoritmo memético}
+    \slidecites{talbi2009metaheuristics}
+    \centering
+    \footnotesize
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Parâmetro} & \textbf{Valor} \\
+        \midrule
+        Tamanho da população & 30 \\
+        População inicial gulosa / aleatória & 20\% / 80\% \\
+        Tamanho do torneio & 3 indivíduos \\
+        Taxa de cruzamento & 0,9 \\
+        Taxa de mutação & 5\% dos pacientes \\
+        Mutação reforçada & 35\% dos pacientes, após 5 gerações sem melhora \\
+        Elite / imigrantes & 10\% / 10\% da população \\
+        Busca local & Elite + 30\% da população \\
+        Candidatos por movimento do VND & 10 quartos, escolhidos entre 30 sorteados \\
+        Limite de avaliações do VND & $250 \cdot |P|$ por chamada \\
+        $W_{cap}$ & 1900 \\
+        Reparo da capacidade & Antes e depois do VND, a cada geração \\
+        \bottomrule
+    \end{tabular}
+\end{frame}
+
+\end{document}
