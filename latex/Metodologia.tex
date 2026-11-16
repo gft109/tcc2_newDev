@@ -431,21 +431,14 @@ A avaliação de desempenho de algoritmos heurísticos exige um planejamento exp
 \begin{itemize}
     \item \textbf{Eficácia (qualidade da solução):} A qualidade das alocações geradas é avaliada primariamente pelo valor final alcançado na função objetivo $Z$, conforme a Equação~\eqref{eq:objetivo}. Como o PBA é um problema de minimização, valores menores indicam um melhor balanceamento das restrições flexíveis. Adicionalmente, para cada solução são registrados o valor de cada parcela de $Z$ e métricas operacionais explícitas, como o número de pacientes-dia em quarto de especialidade inadequada, o número de transferências, o número de quartos-dia mistos, a violação de capacidade ($V_{cap}$), a taxa de ocupação média e por especialidade e o pico de ocupação diária do hospital. Para que as duas abordagens sejam avaliadas de forma idêntica, $Z$, suas parcelas e todas as métricas operacionais são recalculados a partir das variáveis de alocação $x_{p,r,d}$ de cada solução, pelo mesmo avaliador utilizado na heurística, e não a partir das variáveis auxiliares do modelo exato. Isso é necessário porque as variáveis $t_{p,r,d}$, $f_{r,d}$, $m_{r,d}$ e $b_{r,d}$ aparecem apenas em restrições de desigualdade, conforme as Equações~\eqref{eq:transferencia} a~\eqref{eq:quarto-misto}, e poderiam valer 1 sem que a transferência ou o quarto misto correspondente ocorresse. O que as mantém em zero é a minimização da função objetivo, garantida apenas no ótimo. Nas 40 execuções do Gurobi, o valor de $Z$ recalculado coincidiu com o valor da função objetivo reportado pelo \textit{solver}, o que indica que essas variáveis não estavam infladas nas soluções obtidas.
 
-    Como a abordagem heurística trata a capacidade como restrição flexível durante a busca local, a viabilidade das soluções reportadas é verificada à parte. Para que a violação, quando houver, possa ser comparada entre portes, o valor absoluto de $V_{cap}$, conforme a Equação~\eqref{eq:violacao-capacidade}, não basta, pois tende a crescer com o porte da instância. Por esse motivo, $V_{cap}$ é comparada à carga de internação $N_{pd}$, isto é, ao número total de pacientes-dia da instância:
+    Como a abordagem heurística trata a capacidade como restrição flexível durante a busca local, a viabilidade das soluções reportadas é verificada à parte, pela condição $V_{cap} = 0$, conforme a Equação~\eqref{eq:violacao-capacidade}. Para comparar métricas entre portes, utiliza-se a carga de internação $N_{pd}$, isto é, o número total de pacientes-dia da instância:
 
     \begin{equation}
         N_{pd} = \sum_{p \in P} |D_p|
         \label{eq:carga-internacao}
     \end{equation}
     
-    em que $|D_p|$ é o número de dias de internação do paciente $p$. Como cada unidade de $V_{cap}$ corresponde a um paciente-dia, a violação nunca excede a carga de internação ($V_{cap} \leq N_{pd}$), que funciona, assim, como seu limite superior. A razão entre as duas grandezas define a taxa de violação de capacidade $\rho_{cap}$:
-    
-    \begin{equation}
-        \rho_{cap} = \frac{V_{cap}}{N_{pd}} \times 100\%
-        \label{eq:taxa-violacao}
-    \end{equation}
-    
-    que expressa a porcentagem da demanda de internação que ficou sem leito. Assim, $\rho_{cap} = 0\%$ indica uma solução viável, e valores próximos de zero indicam soluções próximas da viabilidade.
+    em que $|D_p|$ é o número de dias de internação do paciente $p$.
 
     Para atestar a eficácia do algoritmo memético, as soluções heurísticas são comparadas às obtidas pelo método exato, com o \textit{solver} Gurobi, executado sobre o modelo completo da \autoref{sec:modelagem-matematica} com o mesmo teto de tempo concedido a cada execução da heurística. Ao final do tempo, o Gurobi fornece a melhor solução inteira encontrada (limite superior), o melhor limite inferior ($LB$, do inglês \textit{lower bound}) do \textit{branch-and-bound} e o \textit{gap} de otimalidade entre eles. Quando o \textit{gap} é nulo, a solução é ótima comprovada. Caso contrário, o limite inferior indica o quanto, no máximo, qualquer solução poderia melhorar.
 
@@ -514,7 +507,7 @@ Para cada porte de instância, cada um dos dez conjuntos é resolvido uma vez pe
     \end{adjustbox}
 \end{table}
 
-O teto de tempo cresce com o porte da instância na mesma proporção que o número de pacientes. Como cada porte tem quatro vezes mais pacientes que o anterior, o teto é multiplicado por quatro a cada porte, partindo de 30 segundos na instância pequena, o que mantém constante o tempo disponível por paciente, de 0,3 segundo. Todos os portes utilizam o mesmo número de execuções da heurística, 10 por conjunto.
+O teto de tempo cresce com o porte da instância na mesma proporção que o número de pacientes. Como cada porte tem quatro vezes mais pacientes que o anterior, o teto é multiplicado por quatro a cada porte, partindo de 30 segundos na instância pequena, o que mantém constante o tempo disponível por paciente, de 0,3 segundo. Todos os portes utilizam o mesmo número de execuções da heurística, 10 por conjunto. O teto é o mesmo para cada execução, e não para o total. Como o Gurobi é determinístico e executado uma única vez por conjunto, enquanto a heurística é executada 10 vezes, o tempo total dedicado à heurística em cada conjunto é dez vezes maior. Por isso, a comparação com tempo equivalente é a que usa o $Z$ médio das execuções da heurística, e a execução de menor $F$ deve ser lida como o melhor resultado de dez tentativas.
 
 As instâncias têm semente fixa (\autoref{sec:gerador-instancias}), mas cada execução da heurística utiliza uma sequência aleatória própria, de modo que as execuções de um mesmo conjunto constituem amostras independentes. Na heurística, o teto inclui o tempo gasto na etapa de reparo (\autoref{sec:reparo}). Na abordagem exata, o teto de tempo se aplica à otimização, mas, a fim de possibilitar a geração de algum resultado, o tempo de construção do modelo no Gurobi não é contabilizado. Na instância muito grande, por exemplo, essa construção leva quase cinco minutos.
 

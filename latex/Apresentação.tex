@@ -188,7 +188,7 @@
 
     \vspace{0.3cm}
     \begin{block}{Objetivo}
-        Desenvolver um algoritmo heurístico para o \textbf{planejamento tático do censo hospitalar}, que mantenha soluções de boa qualidade em instâncias de grande porte, e compará-lo com um método exato sob o mesmo teto de tempo.
+        Desenvolver um algoritmo heurístico para o \textbf{planejamento tático do censo hospitalar}, que mantenha soluções de boa qualidade em instâncias de grande porte, e compará-lo com um método exato sob o mesmo teto de tempo por execução.
     \end{block}
 \end{frame}
 
@@ -403,7 +403,7 @@
         \begin{column}{0.48\textwidth}
             \textbf{Comparação}
             \begin{itemize}
-                \item Mesmo teto de tempo para o Gurobi e para a heurística
+                \item Mesmo teto de tempo por execução (Gurobi roda 1 vez, heurística 10 vezes)
                 \item Teto proporcional ao porte, 0,3 s por paciente
                 \item Instâncias geradas com semente fixa (reprodutíveis)
             \end{itemize}
@@ -598,7 +598,7 @@
     \begin{tabular}{lccc}
         \toprule
         \textbf{Porte} & \textbf{\textit{Gap} do Gurobi} & \textbf{$Z$ da heurística em relação à solução do Gurobi} & \textbf{Excesso máx. da heurística sobre o ótimo} \\
-        & $(Z_{Gurobi} - LB_{Gurobi})/Z_{Gurobi}$ & (mesmo teto de tempo) & $(Z - L)/L$ \\
+        & $(Z_{Gurobi} - LB_{Gurobi})/Z_{Gurobi}$ & (mesmo teto por execução) & $(Z - L)/L$ \\
         \midrule
         Pequena      & 1,0\% a 16,0\%        & 1,6\% acima     & 8,2\%        \\
         Média        & 60,5\% a 81,3\%       & 66,1\% abaixo   & 19,3\%       \\
@@ -712,42 +712,21 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Viabilidade e efeito do reparo}
+\begin{frame}{Viabilidade e custo do reparo}
     \centering
     \small
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{lccc}
+    \begin{tabular}{lcc}
         \toprule
-        \textbf{Porte} & \textbf{Execuções viáveis} & \textbf{Tempo gasto no reparo} & \textbf{$Z$ médio em relação à versão sem reparo} \\
+        \textbf{Porte} & \textbf{Execuções viáveis} & \textbf{Tempo gasto no reparo} \\
         \midrule
-        Pequena      & 100/100 & 7,6\%  & $-1{,}3\%$ \\
-        Média        & 100/100 & 20,3\% & $-1{,}2\%$ \\
-        Grande       & 100/100 & 24,8\% & $-6{,}1\%$ \\
-        Muito grande & 100/100 & 26,1\% & $-13{,}7\%$ \\
+        Pequena      & 100/100 & 7,6\% \\
+        Média        & 100/100 & 20,3\% \\
+        Grande       & 100/100 & 24,8\% \\
+        Muito grande & 100/100 & 26,1\% \\
         \bottomrule
     \end{tabular}
     \end{adjustbox}
-
-    \vspace{0.4cm}
-    \normalsize
-    \begin{columns}[t]
-        \begin{column}{0.48\textwidth}
-            \begin{block}{Sem reparo (execução anterior do protocolo)}
-                \begin{itemize}
-                    \item Grande: 5 de 100 execuções viáveis
-                    \item Muito grande: nenhuma execução viável
-                \end{itemize}
-            \end{block}
-        \end{column}
-        \begin{column}{0.48\textwidth}
-            \begin{block}{Com reparo, em relação à versão sem reparo}
-                \begin{itemize}
-                    \item Transferências caem de 10\% a 24\%
-                    \item Quartos mistos sobem de 9\% a 15\% a partir da média
-                \end{itemize}
-            \end{block}
-        \end{column}
-    \end{columns}
 \end{frame}
 
 \begin{frame}{Eficiência computacional: tempo até o alvo}
@@ -821,9 +800,10 @@
         \item \textbf{Instância pequena:} o modelo exato é tratável. A heurística fica, em média, 1,6\% acima do Gurobi e no máximo 8,2\% acima do ótimo
         \item \textbf{Instância média:} o Gurobi não fecha o \textit{gap} dentro do teto. A heurística obtém o menor $Z$ nos 10 conjuntos e fica, em média, no máximo 19,3\% acima do ótimo
         \item \textbf{Grande e muito grande:} o Gurobi praticamente não otimiza dentro do teto, e sua solução equivale a uma alocação ao acaso. A heurística continua encontrando soluções efetivas, com $Z$ próximo do valor por paciente-dia do mínimo estrutural.
-        \item \textbf{Reparo:} 400 de 400 execuções viáveis e $Z$ médio de 1,2\% a 13,7\% menor que sem o reparo
+        \item \textbf{Reparo:} 400 de 400 execuções viáveis, com 8\% a 26\% do teto gasto no reparo
         \item \textbf{Estabilidade:} coeficiente de variação de 1,1\% a 1,9\% entre execuções
         \item Reduzir a especialidade inadequada exige mudar a distribuição dos quartos, uma decisão estratégica do hospital
+        \item A abordagem tem \textbf{potencial} para problemas reais, mas ainda não os atende (escopo simplificado, instâncias sintéticas)
     \end{itemize}
 \end{frame}
 
@@ -833,7 +813,7 @@
         \begin{column}{0.48\textwidth}
             \begin{block}{Limitações}
                 \begin{itemize}\setlength{\itemsep}{4pt}
-                    \item Reparo consome de 8\% a 26\% do teto e aumenta os quartos mistos
+                    \item Reparo consome de 8\% a 26\% do teto e pode aumentar os quartos mistos
                     \item Limites inferiores fracos nas instâncias grande e muito grande
                     \item Estagnação na instância pequena
                     \item Instâncias sintéticas e determinísticas
