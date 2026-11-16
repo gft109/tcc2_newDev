@@ -150,9 +150,9 @@
     \vspace{0.35cm}
     \raggedright
     \begin{itemize}\setlength{\itemsep}{5pt}
-        \item A demanda cresce com o aumento e o envelhecimento da população, enquanto os recursos financeiros e físicos são limitados
-        \item No SUS, somam-se o subfinanciamento histórico e a sobrecarga das emergências, associada principalmente à falta de leitos de internação
-        \item Usar melhor os leitos existentes é uma necessidade para a qualidade e a segurança do atendimento
+        \item Demanda crescente com o aumento e o envelhecimento da população, enquanto os recursos financeiros e físicos são limitados
+        \item No SUS, somam-se o subfinanciamento histórico e a sobrecarga das emergências
+        \item Utilizar melhor os recursos existentes, especialmente os leitos hospitalares, é fundamental para garantir a qualidade e a segurança do atendimento
     \end{itemize}
 \end{frame}
 
@@ -202,11 +202,11 @@
             lit/.style={box, text width=6.2cm, minimum height=11mm, font=\footnotesize},
             dec/.style={box, text width=5.2cm, minimum height=11mm, font=\footnotesize, fill=primary!25}]
         \node[font=\small\bfseries, text=primary] (h1) {Na literatura};
-        \node[lit, below=2mm of h1] (l1) {Métodos exatos não escalam, resolvem só até 250 pacientes \cite{ceschia2012modeling} ou não acham solução viável em uma hora \cite{demeester2010hybrid}};
-        \node[lit, below=3mm of l1] (l2) {Alocar a quartos, e não a leitos, reduz o espaço de busca \cite{ceschia2012modeling}, e a política de gênero pode ser linearizada \cite{ceschia2011local}};
-        \node[lit, below=3mm of l2] (l3) {Objetivos conflitantes são agregados em uma soma ponderada, com pesos definidos \textit{a priori} \cite{schafer2023combining, talbi2009metaheuristics}};
-        \node[lit, below=3mm of l3] (l4) {O algoritmo genético explora bem o espaço de busca, mas é limitado no ajuste fino, que a busca local supre \cite{talbi2009metaheuristics}};
-        \node[dec, right=14mm of l1] (d1) {Heurística para os portes maiores, com o método exato como referência};
+        \node[lit, below=2mm of h1] (l1) {\textbf{Escalabilidade:} Métodos exatos não escalam, resolvem cenários menores \cite{ceschia2012modeling} ou não acham solução viável em tempo hábil \cite{demeester2010hybrid}};
+        \node[lit, below=3mm of l1] (l2) {\textbf{Escopo:} Alocar a quartos, e não a leitos, reduz o espaço de busca \cite{ceschia2012modeling}, e a política de gênero pode ser linearizada \cite{ceschia2011local}};
+        \node[lit, below=3mm of l2] (l3) {\textbf{Multiobjetivo:} Objetivos conflitantes são agregados em uma soma ponderada, com pesos definidos \textit{a priori} \cite{schafer2023combining, talbi2009metaheuristics}};
+        \node[lit, below=3mm of l3] (l4) {\textbf{Refinamento:} O algoritmo genético explora bem o espaço de busca, mas é limitado no ajuste fino, que a busca local supre \cite{talbi2009metaheuristics}};
+        \node[dec, right=14mm of l1] (d1) {Uso de uma heurística, com o método exato como referência};
         \node[dec, right=14mm of l2] (d2) {Modelo de programação linear inteira por quarto e por dia};
         \node[dec, right=14mm of l3] (d3) {Função objetivo única, com pesos fixos};
         \node[dec, right=14mm of l4] (d4) {\textbf{Algoritmo memético}, genético com busca local VND};
